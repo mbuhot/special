@@ -187,7 +187,11 @@ export const webAppSteps: StepHandlers<WebAppStepArgs, WebAppServices, WebAppCon
   },
   async "given-entity"(args, env) {
     const attrs = Object.fromEntries(env.refs.substituteIds(args.pairs));
-    const created = await postJson(env, "/__spec__/factory", { entity: args.Entity, attrs });
+    const created = await postJson(env, "/__spec__/factory", {
+      entity: args.Entity,
+      ref: args.Ref,
+      attrs,
+    });
     env.refs.declare(args.Ref, { entity: args.Entity, id: String(created["id"]) });
   },
   async "has-field"(args, env) {

@@ -32,6 +32,24 @@ defmodule Invoicing.SpecSupport.FactoryTest do
     assert Factory.reload("Invoice", invoice.id)["customer"] == invoice.customer_id
   end
 
+  test "names an invoice after its ref" do
+    invoice = Factory.create("Invoice", %{"status" => "draft"}, "INV-009")
+
+    assert Factory.reload("Invoice", invoice.id)["number"] == "INV-009"
+  end
+
+  test "an explicit number overrides the ref" do
+    invoice = Factory.create("Invoice", %{"number" => "INV-010"}, "INV-009")
+
+    assert Factory.reload("Invoice", invoice.id)["number"] == "INV-010"
+  end
+
+  test "names a customer after its ref" do
+    customer = Factory.create("Customer", %{}, "Acme")
+
+    assert Factory.reload("Customer", customer.id)["name"] == "Acme"
+  end
+
   test "reloads a line item with its line total" do
     invoice = Factory.create("Invoice", %{"number" => "INV-004"})
 

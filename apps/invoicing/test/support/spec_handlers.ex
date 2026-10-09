@@ -96,7 +96,7 @@ defmodule Invoicing.SpecHandlers do
 
   step "given-entity", %{entity: entity, ref: ref_name, pairs: pairs}, ctx do
     attributes = Map.new(pairs, fn [field, value] -> {field, resolve_value(ctx, value)} end)
-    record = Factory.create(entity, attributes)
+    record = Factory.create(entity, attributes, ref_name)
     Ctx.put_ref(ctx, ref_name, %{entity: entity, id: record.id})
   end
 

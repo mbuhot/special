@@ -17,11 +17,24 @@ defmodule Invoicing.SpecSupport.Factory do
 
   @relationship_attributes %{"customer" => "customer_id", "invoice" => "invoice_id"}
 
+  @natural_keys %{
+    Invoice => "number",
+    Customer => "name",
+    LineItem => "description",
+    User => "email"
+  }
+
   @doc "Creates a record of the named entity from spec-spelled attributes."
-  def create(entity_name, attrs) do
+  def create(entity_name, attrs), do: create(entity_name, attrs, nil)
+
+  @doc "Creates a record whose natural key defaults to the scenario ref."
+  def create(entity_name, attrs, ref) do
+    resource = resource_for!(entity_name)
+
     attrs
     |> normalize_keys()
-    |> build(resource_for!(entity_name))
+    |> put_natural_key(resource, ref)
+    |> build(resource)
   end
 
   @doc "Returns the record's fields, calculations included, as a string-keyed map."
@@ -78,6 +91,11 @@ defmodule Invoicing.SpecSupport.Factory do
       :error -> raise ArgumentError, "unknown entity #{inspect(entity_name)}"
     end
   end
+
+  defp put_natural_key(attrs, _resource, nil), do: attrs
+
+  defp put_natural_key(attrs, resource, ref),
+    do: Map.put_new(attrs, Map.fetch!(@natural_keys, resource), ref)
 
   defp normalize_keys(attrs) do
     Map.new(attrs, fn {field, value} ->

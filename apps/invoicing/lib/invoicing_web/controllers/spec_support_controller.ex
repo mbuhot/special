@@ -19,8 +19,8 @@ defmodule InvoicingWeb.SpecSupportController do
     json(conn, %{ok: true})
   end
 
-  def factory(conn, %{"entity" => entity_name, "attrs" => attrs}) do
-    record = Factory.create(entity_name, attrs)
+  def factory(conn, %{"entity" => entity_name, "attrs" => attrs} = params) do
+    record = Factory.create(entity_name, attrs, params["ref"])
     fields = Factory.reload(entity_name, record.id)
     json(conn, fields |> Map.put("id", record.id) |> jsonable())
   end

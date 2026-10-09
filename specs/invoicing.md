@@ -62,8 +62,8 @@ Narrate: The invoice status changes to void.
 ## Scenario: Invoice list shows every invoice
 
 Given a Customer "Acme"
-Given an Invoice "INV-001" with number INV-001, status draft, customer Acme
-Given an Invoice "INV-002" with number INV-002, status sent, customer Acme
+Given an Invoice "INV-001" with status draft, customer Acme
+Given an Invoice "INV-002" with status sent, customer Acme
 When Accounts opens Invoice list
 Then Accounts sees "INV-001" in "Invoices"
 And Accounts sees "INV-002" in "Invoices"

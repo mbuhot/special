@@ -28,39 +28,143 @@ defmodule InvoicingWeb.Layouts do
   attr :flash, :map, required: true, doc: "the map of flash messages"
 
   attr :current_user, :map, default: nil, doc: "the signed-in user"
+  attr :current_path, :string, default: nil, doc: "the path of the page being shown"
   attr :width, :atom, default: :narrow, values: [:narrow, :wide], doc: "the page content width"
 
   slot :inner_block, required: true
 
   def app(assigns) do
     ~H"""
-    <header class="navbar px-4 sm:px-6 lg:px-8">
-      <div class="flex-1">
-        <.link navigate={~p"/dashboard"} class="text-lg font-semibold">Dashboard</.link>
-        <.link navigate={~p"/invoices"} class="ml-4">Invoices</.link>
-        <.link navigate={~p"/contacts"} class="ml-4">Contacts</.link>
-        <.link navigate={~p"/companies"} class="ml-4">Companies</.link>
-        <.link navigate={~p"/pipeline"} class="ml-4">Pipeline</.link>
-      </div>
-      <div class="flex-none flex items-center gap-4">
-        <span :if={@current_user} id="current-user" class="text-sm">{@current_user.email}</span>
-        <.theme_toggle />
-      </div>
-    </header>
+    <div class="flex min-h-screen bg-base-100 text-base-content">
+      <.sidebar :if={@current_user} current_user={@current_user} current_path={@current_path} />
 
-    <main class="px-4 py-20 sm:px-6 lg:px-8">
-      <div class={[
-        "mx-auto space-y-4",
-        @width == :narrow && "max-w-2xl",
-        @width == :wide && "max-w-7xl"
-      ]}>
-        {render_slot(@inner_block)}
-      </div>
-    </main>
+      <main class="min-w-0 flex-1 px-4 py-8 sm:px-8">
+        <div class={[
+          "mx-auto space-y-4",
+          @width == :narrow && "max-w-2xl",
+          @width == :wide && "max-w-7xl"
+        ]}>
+          {render_slot(@inner_block)}
+        </div>
+      </main>
+    </div>
 
     <.flash_group flash={@flash} />
     """
   end
+
+  attr :current_user, :map, required: true
+  attr :current_path, :string, default: nil
+
+  defp sidebar(assigns) do
+    ~H"""
+    <nav
+      aria-label="Main"
+      class="sticky top-0 flex h-screen w-60 flex-none flex-col gap-6 border-r border-base-300 bg-base-100 px-4 py-5"
+    >
+      <div class="px-3 py-1 text-lg font-bold">Ledger CRM</div>
+
+      <div class="flex flex-col gap-1">
+        <.nav_link
+          :for={item <- nav_items()}
+          id={item.id}
+          path={item.path}
+          icon={item.icon}
+          label={item.label}
+          active={active_nav?(item, @current_path)}
+        />
+      </div>
+
+      <div class="flex-1"></div>
+
+      <div id="signed-in-as" class="flex flex-col gap-0.5 border-t border-base-300 px-3 pt-3">
+        <div class="text-sm font-semibold">{role_label(@current_user.role)}</div>
+        <div class="truncate text-xs text-base-content/60">{@current_user.email}</div>
+      </div>
+
+      <.theme_toggle />
+    </nav>
+    """
+  end
+
+  attr :id, :string, required: true
+  attr :path, :string, required: true
+  attr :icon, :string, required: true
+  attr :label, :string, required: true
+  attr :active, :boolean, required: true
+
+  defp nav_link(assigns) do
+    ~H"""
+    <.link
+      id={@id}
+      navigate={@path}
+      aria-current={@active && "page"}
+      class={[
+        "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm",
+        @active && "bg-primary/10 font-semibold text-primary",
+        !@active && "font-medium text-base-content/80 hover:bg-base-200"
+      ]}
+    >
+      <.icon name={@icon} class="size-5 flex-none" />
+      <span>{@label}</span>
+    </.link>
+    """
+  end
+
+  defp nav_items do
+    [
+      %{
+        id: "nav-dashboard",
+        path: ~p"/dashboard",
+        icon: "hero-home",
+        label: "Dashboard",
+        prefixes: ["/dashboard"]
+      },
+      %{
+        id: "nav-contacts",
+        path: ~p"/contacts",
+        icon: "hero-users",
+        label: "Contacts",
+        prefixes: ["/contacts"]
+      },
+      %{
+        id: "nav-companies",
+        path: ~p"/companies",
+        icon: "hero-building-office-2",
+        label: "Companies",
+        prefixes: ["/companies"]
+      },
+      %{
+        id: "nav-pipeline",
+        path: ~p"/pipeline",
+        icon: "hero-funnel",
+        label: "Pipeline",
+        prefixes: ["/pipeline", "/deals"]
+      },
+      %{
+        id: "nav-invoices",
+        path: ~p"/invoices",
+        icon: "hero-document-text",
+        label: "Invoices",
+        prefixes: ["/invoices"]
+      }
+    ]
+  end
+
+  defp active_nav?(_item, nil), do: false
+
+  defp active_nav?(item, current_path) do
+    Enum.any?(
+      item.prefixes,
+      &(current_path == &1 or String.starts_with?(current_path, &1 <> "/"))
+    )
+  end
+
+  @doc "Returns the label shown for a user's role."
+  def role_label(:sales), do: "Sales rep"
+  def role_label(:manager), do: "Sales manager"
+  def role_label(:accountant), do: "Accounts"
+  def role_label(:admin), do: "Admin"
 
   @doc """
   Shows the flash group with standard titles and content.

@@ -23,4 +23,13 @@ defmodule Invoicing.CRM do
       define :create_activity, action: :create
     end
   end
+
+  @doc "Newest activities first, with contact names loaded."
+  def list_recent_activities!(limit \\ 5, opts \\ []) do
+    Invoicing.CRM.Activity
+    |> Ash.Query.sort(occurred_at: :desc, id: :desc)
+    |> Ash.Query.limit(limit)
+    |> Ash.Query.load(contact: [:full_name])
+    |> Ash.read!(opts)
+  end
 end

@@ -4,7 +4,8 @@ defmodule Invoicing.CRM.Activity do
   use Ash.Resource,
     domain: Invoicing.CRM,
     data_layer: AshPostgres.DataLayer,
-    authorizers: [Ash.Policy.Authorizer]
+    authorizers: [Ash.Policy.Authorizer],
+    primary_read_warning?: false
 
   alias Invoicing.CRM.Activity.AssignUser
 

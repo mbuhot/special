@@ -72,7 +72,12 @@ defmodule InvoicingWeb.DealLive.Board do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user} width={:wide}>
+    <Layouts.app
+      flash={@flash}
+      current_user={@current_user}
+      current_path={@current_path}
+      width={:wide}
+    >
       <.header>
         Pipeline
         <:actions>

@@ -16,12 +16,23 @@ defmodule InvoicingWeb.UserAuth do
     end
   end
 
-  @doc "LiveView mount hook that assigns the signed-in user or redirects to the login page."
+  @doc "LiveView mount hook that assigns the signed-in user and current path or redirects to the login page."
   def on_mount(:require_user, _params, session, socket) do
     case fetch_user(session["user_id"]) do
-      nil -> {:halt, Phoenix.LiveView.redirect(socket, to: ~p"/login")}
-      user -> {:cont, Phoenix.Component.assign(socket, :current_user, user)}
+      nil ->
+        {:halt, Phoenix.LiveView.redirect(socket, to: ~p"/login")}
+
+      user ->
+        {:cont, socket |> Phoenix.Component.assign(:current_user, user) |> track_current_path()}
     end
+  end
+
+  defp track_current_path(socket) do
+    socket
+    |> Phoenix.Component.assign(:current_path, nil)
+    |> Phoenix.LiveView.attach_hook(:current_path, :handle_params, fn _params, uri, socket ->
+      {:cont, Phoenix.Component.assign(socket, :current_path, URI.parse(uri).path)}
+    end)
   end
 
   defp fetch_user(nil), do: nil

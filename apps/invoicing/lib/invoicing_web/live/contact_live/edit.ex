@@ -67,7 +67,7 @@ defmodule InvoicingWeb.ContactLive.Edit do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user}>
+    <Layouts.app flash={@flash} current_user={@current_user} current_path={@current_path}>
       <.header>
         <span id="contact-name">{@contact_name}</span>
       </.header>

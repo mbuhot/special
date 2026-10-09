@@ -97,5 +97,7 @@ defmodule Invoicing.Pipeline.Deal do
       allow_nil?: false,
       attribute_writable?: true,
       public?: true
+
+    has_many :tasks, Invoicing.Pipeline.Task, sort: [due_date: :asc]
   end
 end

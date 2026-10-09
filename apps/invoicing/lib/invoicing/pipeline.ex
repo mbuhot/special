@@ -14,5 +14,12 @@ defmodule Invoicing.Pipeline do
       define :win_deal, action: :win
       define :lose_deal, action: :lose
     end
+
+    resource Invoicing.Pipeline.Task do
+      define :create_task, action: :create
+      define :list_tasks, action: :read, args: [:deal_id]
+      define :complete_task, action: :complete
+      define :get_task, action: :read, get_by: [:id]
+    end
   end
 end

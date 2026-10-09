@@ -10,6 +10,7 @@ defmodule InvoicingWeb.SpecSupportController do
     Invoicing.Billing.LineItem,
     Invoicing.Billing.Invoice,
     Invoicing.CRM.Activity,
+    Invoicing.Pipeline.Task,
     Invoicing.Pipeline.Deal,
     Invoicing.CRM.Contact,
     Invoicing.CRM.Company,

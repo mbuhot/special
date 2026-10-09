@@ -87,7 +87,7 @@ defmodule InvoicingWeb.DealLive.Board do
             id={"deal-#{deal.id}"}
             class="card bg-base-200 p-3 space-y-1"
           >
-            <.link navigate={~p"/deals/#{deal.id}/edit"} class="font-medium">{deal.name}</.link>
+            <.link navigate={~p"/deals/#{deal.id}"} class="font-medium">{deal.name}</.link>
             <p :if={deal.amount}>{deal.amount}</p>
             <p class="text-sm">{deal.company.name}</p>
             <div :if={@can_change_deals} class="flex flex-wrap gap-1">

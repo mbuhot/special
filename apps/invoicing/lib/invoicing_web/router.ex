@@ -45,6 +45,7 @@ defmodule InvoicingWeb.Router do
       live "/pipeline", DealLive.Board
       live "/deals/new/edit", DealLive.Edit, :new
       live "/deals/:id/edit", DealLive.Edit, :edit
+      live "/deals/:id", DealLive.Show
     end
   end
 

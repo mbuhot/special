@@ -1,4 +1,4 @@
-import { button, field, region, surface } from "../packages/specdsl-core/src/index.ts";
+import { button, field, region, surface, table } from "../packages/specdsl-core/src/index.ts";
 
 const transitionButton = (transition: string) =>
   button({
@@ -37,6 +37,26 @@ export const pipelineSurfaces = {
       Save: button({ css: "#save-deal", lv: "#save-deal" }),
       "Deal name": region({ css: "#deal-name", lv: "#deal-name" }),
       Stage: region({ css: "#deal-stage", lv: "#deal-stage" }),
+    },
+  }),
+  "Deal page": surface({
+    route: "/deals/{id}",
+    controls: {
+      "Deal name": region({ css: "#deal-name", lv: "#deal-name" }),
+      Stage: region({ css: "#deal-stage", lv: "#deal-stage" }),
+      Tasks: table({ css: "#tasks", lv: "#tasks" }),
+      "Overdue tasks": region({ css: "#overdue-tasks", lv: "#overdue-tasks" }),
+      "Task title": field({ css: "#task-title", lv: "task[title]", form: "#task-form" }),
+      "Task due date": field({
+        css: "#task-due-date",
+        lv: "task[due_date]",
+        form: "#task-form",
+      }),
+      "Add task": button({ css: "#add-task", lv: "#add-task" }),
+      "Complete task": button({
+        css: "button[data-complete-task]",
+        lv: "button[data-complete-task]",
+      }),
     },
   }),
 };

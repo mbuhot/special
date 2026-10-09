@@ -8,7 +8,7 @@ defmodule Invoicing.SpecSupport.Factory do
   alias Invoicing.CRM
   alias Invoicing.CRM.{Activity, Company, Contact}
   alias Invoicing.Pipeline
-  alias Invoicing.Pipeline.Deal
+  alias Invoicing.Pipeline.{Deal, Task}
 
   @resources %{
     "Activity" => Activity,
@@ -17,6 +17,7 @@ defmodule Invoicing.SpecSupport.Factory do
     "Deal" => Deal,
     "Invoice" => Invoice,
     "LineItem" => LineItem,
+    "Task" => Task,
     "User" => User
   }
 
@@ -25,18 +26,23 @@ defmodule Invoicing.SpecSupport.Factory do
   @relationship_attributes %{
     "company" => "company_id",
     "contact" => "contact_id",
+    "deal" => "deal_id",
     "invoice" => "invoice_id",
     "owner" => "owner_id",
     "user" => "user_id"
   }
 
-  @owner_relationship_attributes %{"user" => "owner_id"}
+  @resource_relationship_attributes %{
+    Deal => %{"user" => "owner_id"},
+    Task => %{"user" => "assignee_id"}
+  }
 
   @natural_keys %{
     Invoice => "number",
     Company => "name",
     Deal => "name",
     LineItem => "description",
+    Task => "title",
     User => "email"
   }
 
@@ -131,6 +137,18 @@ defmodule Invoicing.SpecSupport.Factory do
     |> Billing.create_line_item!(authorize?: false)
   end
 
+  defp build(attrs, Task) do
+    {status, task_attrs} = Map.pop(attrs, "status")
+
+    task_attrs
+    |> Map.put_new("title", "Task #{System.unique_integer([:positive])}")
+    |> Map.put_new("due_date", "2026-02-01")
+    |> Map.put_new_lazy("deal_id", fn -> create("Deal", %{}).id end)
+    |> Map.put_new_lazy("assignee_id", fn -> create("User", %{"role" => "accountant"}).id end)
+    |> Pipeline.create_task!(authorize?: false)
+    |> put_status(status)
+  end
+
   defp build(attrs, User) do
     attrs
     |> Map.put_new_lazy("email", fn ->
@@ -177,10 +195,9 @@ defmodule Invoicing.SpecSupport.Factory do
     end)
   end
 
-  defp relationship_attributes_for(Deal),
-    do: Map.merge(@relationship_attributes, @owner_relationship_attributes)
-
-  defp relationship_attributes_for(_resource), do: @relationship_attributes
+  defp relationship_attributes_for(resource) do
+    Map.merge(@relationship_attributes, Map.get(@resource_relationship_attributes, resource, %{}))
+  end
 
   defp to_field_map(record, resource) do
     attribute_fields = Ash.Resource.Info.public_attributes(resource)

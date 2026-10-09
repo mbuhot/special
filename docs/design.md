@@ -2,11 +2,11 @@
 
 A Markdown spec language with one closed vocabulary and three uses:
 
-| Use | Where |
-|---|---|
-| Planning and acceptance criteria | Spec in a Linear ticket |
-| Executable tests | Playwright (browser) and ExUnit (in-process Phoenix) |
-| Narrated demo video | Playwright demo mode, pocket-tts, ffmpeg |
+| Use                              | Where                                                |
+| -------------------------------- | ---------------------------------------------------- |
+| Planning and acceptance criteria | Spec in a Linear ticket                              |
+| Executable tests                 | Playwright (browser) and ExUnit (in-process Phoenix) |
+| Narrated demo video              | Playwright demo mode, pocket-tts, ffmpeg             |
 
 ## Layers
 
@@ -44,28 +44,34 @@ Markdown. `#` is the feature. Each `##` is a section whose kind the dialect defi
 # Invoicing
 
 ## Model
+
 - Customer: name, email
 - Invoice: number, status, total. Belongs to Customer. Has many LineItem.
 - Invoice.status: draft -> sent -> paid, draft -> void
 - LineItem: description, quantity, unit price
 
 ## Surfaces
+
 - Invoice list: table "Invoices", button "New invoice"
 - Invoice editor: field "Quantity", field "Unit price", region "Totals", button "Send"
 
 ## Actors
+
 - Accounts: role accountant
 
 ## Context
+
 - Clock: 2026-01-15T09:00:00Z
 
 ## Steps
+
 - <Actor> creates an invoice for <Customer> means
   - <Actor> opens Invoice list
   - <Actor> clicks "New invoice"
   - <Actor> selects <Customer> in "Customer"
 
 ## Scenario: Line total updates as quantity changes
+
 Given a Customer "Acme"
 Given an Invoice "INV-001" with status draft, customer Acme
 When Accounts opens Invoice editor for INV-001
@@ -80,16 +86,16 @@ Narrate: The line total updates as the quantity changes.
 
 Used for section items and steps.
 
-| Syntax | Meaning |
-|---|---|
-| `word` | literal token, case-insensitive |
-| `<Slot>` | slot bound to namespace `Slot` |
-| `<Slot:kind>` | slot bound to namespace `Slot`, entry must have `kind` |
-| `<Slot.kind>` | slot that captures the kind enum of namespace `Slot` |
-| `"<Slot>"` | slot whose source text is double-quoted |
-| `[ ... ]` | optional group |
-| `<A> <B>, ...` | preceding element repeats, comma separated |
-| `<on\|off>` | inline enum |
+| Syntax         | Meaning                                                |
+| -------------- | ------------------------------------------------------ |
+| `word`         | literal token, case-insensitive                        |
+| `<Slot>`       | slot bound to namespace `Slot`                         |
+| `<Slot:kind>`  | slot bound to namespace `Slot`, entry must have `kind` |
+| `<Slot.kind>`  | slot that captures the kind enum of namespace `Slot`   |
+| `"<Slot>"`     | slot whose source text is double-quoted                |
+| `[ ... ]`      | optional group                                         |
+| `<A> <B>, ...` | preceding element repeats, comma separated             |
+| `<on\|off>`    | inline enum                                            |
 
 Compiles to a parser at dialect load. Longest match wins; ambiguity between two steps is a dialect load error.
 
@@ -124,11 +130,11 @@ Dialect extension is object spread. A derived dialect adds; it does not remove o
 
 ## Lint checks
 
-| Check | Rule |
-|---|---|
-| coverage | every entry in `declared` is used by at least one `usedBy` emission |
-| sequence | within a scenario, consecutive `observed` emissions follow a declared `machine` transition |
-| referenced | every entry in `declared` is referenced by some step |
+| Check      | Rule                                                                                       |
+| ---------- | ------------------------------------------------------------------------------------------ |
+| coverage   | every entry in `declared` is used by at least one `usedBy` emission                        |
+| sequence   | within a scenario, consecutive `observed` emissions follow a declared `machine` transition |
+| referenced | every entry in `declared` is referenced by some step                                       |
 
 ## AST JSON
 
@@ -137,16 +143,42 @@ Dialect extension is object spread. A derived dialect adds; it does not remove o
   "dialect": { "name": "invoicing", "version": "1", "stepIds": ["opens", "enters", "sees"] },
   "contexts": { "clock": { "DateTime": "2026-01-15T09:00:00Z" } },
   "actors": { "Accounts": { "Role": "accountant", "extra": {} } },
-  "surfaces": { "Invoice editor": { "route": "/invoices/{id}/edit", "controls": { "Quantity": { "kind": "field", "locators": { "css": "#qty", "lv": "input[name='line[quantity]']" } } } } },
-  "scenarios": [{
-    "name": "Line total updates as quantity changes",
-    "source": { "file": "specs/invoicing.md", "line": 20 },
-    "steps": [
-      { "id": "given-entity", "line": 21, "args": { "Entity": "Customer", "Ref": "Acme", "pairs": [] } },
-      { "id": "opens", "line": 23, "args": { "Actor": "Accounts", "Surface": "Invoice editor", "Ref": "INV-001" }, "narrate": "Accounts opens the Invoice editor." },
-      { "id": "narrate", "line": 26, "text": "The line total updates as the quantity changes.", "modes": ["demo"] }
-    ]
-  }]
+  "surfaces": {
+    "Invoice editor": {
+      "route": "/invoices/{id}/edit",
+      "controls": {
+        "Quantity": {
+          "kind": "field",
+          "locators": { "css": "#qty", "lv": "input[name='line[quantity]']" }
+        }
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Line total updates as quantity changes",
+      "source": { "file": "specs/invoicing.md", "line": 20 },
+      "steps": [
+        {
+          "id": "given-entity",
+          "line": 21,
+          "args": { "Entity": "Customer", "Ref": "Acme", "pairs": [] }
+        },
+        {
+          "id": "opens",
+          "line": 23,
+          "args": { "Actor": "Accounts", "Surface": "Invoice editor", "Ref": "INV-001" },
+          "narrate": "Accounts opens the Invoice editor."
+        },
+        {
+          "id": "narrate",
+          "line": 26,
+          "text": "The line total updates as the quantity changes.",
+          "modes": ["demo"]
+        }
+      ]
+    }
+  ]
 }
 ```
 
@@ -154,12 +186,12 @@ The lock file `dialects/<name>.lock.json` lists step ids, slot names and types, 
 
 ## Runtimes
 
-| Concern | Elixir | Playwright |
-|---|---|---|
-| UI steps | Phoenix.LiveViewTest | browser |
+| Concern      | Elixir                                | Playwright                               |
+| ------------ | ------------------------------------- | ---------------------------------------- |
+| UI steps     | Phoenix.LiveViewTest                  | browser                                  |
 | Domain steps | direct Ash action calls, Ecto sandbox | test-support Plug on the app, `:e2e` env |
-| Actor | conn per actor, logged in | browser context per actor |
-| Demo | none | hold, highlight, TTS, timestamps, ffmpeg |
+| Actor        | conn per actor, logged in             | browser context per actor                |
+| Demo         | none                                  | hold, highlight, TTS, timestamps, ffmpeg |
 
 Domain semantics (factory, reload, clock, jobs) are implemented once in Elixir. The Plug exposes them over HTTP for Playwright.
 

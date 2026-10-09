@@ -13,29 +13,29 @@ specs/invoicing.md ──► specdsl bind ──► specs/invoicing.ast.json
 
 ## Layout
 
-| Path | Holds |
-|---|---|
-| `dialects/` | The vocabulary, as TypeScript: sections, step patterns, contexts, surfaces with locators, checks |
-| `specs/` | Specs in Markdown and their bound AST |
-| `packages/specdsl-core` | Parse, bind, lint, lock. CLI `specdsl` |
-| `packages/specdsl-playwright` | Browser runtime: test mode and demo mode |
-| `packages/specdsl-linear` | Pull specs from Linear issues, lint, attach videos |
-| `elixir/spec_dsl` | Elixir runtime: AST loader, `SpecDSL.Case`, `SpecDSL.Handlers` |
-| `apps/invoicing` | Sample Phoenix + Ash app, the system under test |
-| `docs/design.md` | Design |
+| Path                          | Holds                                                                                            |
+| ----------------------------- | ------------------------------------------------------------------------------------------------ |
+| `dialects/`                   | The vocabulary, as TypeScript: sections, step patterns, contexts, surfaces with locators, checks |
+| `specs/`                      | Specs in Markdown and their bound AST                                                            |
+| `packages/specdsl-core`       | Parse, bind, lint, lock. CLI `specdsl`                                                           |
+| `packages/specdsl-playwright` | Browser runtime: test mode and demo mode                                                         |
+| `packages/specdsl-linear`     | Pull specs from Linear issues, lint, attach videos                                               |
+| `elixir/spec_dsl`             | Elixir runtime: AST loader, `SpecDSL.Case`, `SpecDSL.Handlers`                                   |
+| `apps/invoicing`              | Sample Phoenix + Ash app, the system under test                                                  |
+| `docs/design.md`              | Design                                                                                           |
 
 ## Commands
 
-| Task | Command |
-|---|---|
-| Install | `pnpm install` |
-| Bind a spec | `cd packages/specdsl-core && pnpm exec specdsl bind ../../specs/invoicing.md --dialect ../../dialects/invoicing.ts --out ../../specs/invoicing.ast.json` |
-| Lint a spec | `pnpm exec specdsl lint ../../specs/invoicing.md --dialect ../../dialects/invoicing.ts` |
-| Regenerate the lock | `pnpm exec specdsl lock --dialect ../../dialects/invoicing.ts --out ../../dialects/invoicing.lock.json` |
-| Core tests | `pnpm --filter @special/specdsl-core test` |
-| Scenarios in ExUnit | `cd apps/invoicing && mix test test/spec` |
-| Scenarios in a browser | `pnpm e2e` |
-| Demo videos | `pnpm demo` |
+| Task                   | Command                                                                                                                                                  |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Install                | `pnpm install`                                                                                                                                           |
+| Bind a spec            | `cd packages/specdsl-core && pnpm exec specdsl bind ../../specs/invoicing.md --dialect ../../dialects/invoicing.ts --out ../../specs/invoicing.ast.json` |
+| Lint a spec            | `pnpm exec specdsl lint ../../specs/invoicing.md --dialect ../../dialects/invoicing.ts`                                                                  |
+| Regenerate the lock    | `pnpm exec specdsl lock --dialect ../../dialects/invoicing.ts --out ../../dialects/invoicing.lock.json`                                                  |
+| Core tests             | `pnpm --filter @special/specdsl-core test`                                                                                                               |
+| Scenarios in ExUnit    | `cd apps/invoicing && mix test test/spec`                                                                                                                |
+| Scenarios in a browser | `pnpm e2e`                                                                                                                                               |
+| Demo videos            | `pnpm demo`                                                                                                                                              |
 
 ## Prerequisites
 
@@ -50,16 +50,20 @@ specs/invoicing.md ──► specdsl bind ──► specs/invoicing.ast.json
 # Invoicing
 
 ## Model
+
 - Invoice: number, status, total. Belongs to Customer. Has many LineItem.
 - Invoice.status: draft -> sent -> paid, draft -> void
 
 ## Surfaces
+
 - Invoice editor: field "Quantity", region "Totals", button "Send"
 
 ## Actors
+
 - Accounts: role accountant
 
 ## Scenario: Line total updates as quantity changes
+
 Given a Customer "Acme"
 Given an Invoice "INV-001" with status draft, customer Acme
 Given a LineItem "Consulting" with invoice INV-001, quantity 1, unit price 100
@@ -75,11 +79,11 @@ Narrate: The line total updates as the quantity changes.
 
 ## Adding vocabulary
 
-| Change | Where |
-|---|---|
-| A new screen or control | `surface(...)` in the project dialect with `css`, `lv` and `form` locators |
-| A new step shape | `step(pattern, ...)` in the dialect, a handler in `packages/specdsl-playwright/src/handlers` and in `apps/invoicing/test/support/spec_handlers.ex` |
-| A new context | `context(...)` in the dialect, setup and teardown in both runtimes |
-| A composite step | `## Steps` section of the spec |
+| Change                  | Where                                                                                                                                              |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A new screen or control | `surface(...)` in the project dialect with `css`, `lv` and `form` locators                                                                         |
+| A new step shape        | `step(pattern, ...)` in the dialect, a handler in `packages/specdsl-playwright/src/handlers` and in `apps/invoicing/test/support/spec_handlers.ex` |
+| A new context           | `context(...)` in the dialect, setup and teardown in both runtimes                                                                                 |
+| A composite step        | `## Steps` section of the spec                                                                                                                     |
 
 Runtimes check handler coverage against `dialects/<name>.lock.json`.

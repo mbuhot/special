@@ -15,6 +15,7 @@ describe("binding the invoicing spec", () => {
       "Voiding a draft invoice",
       "Invoice list shows every invoice",
       "Creating an invoice from the list",
+      "A manager sees an invoice once it is sent",
     ]);
   });
 
@@ -37,6 +38,17 @@ describe("binding the invoicing spec", () => {
       ["given-entity", "given-entity", "opens", "clicks", "sees", "has-field", "narrate"],
       ["given-entity", "given-entity", "given-entity", "opens", "sees", "sees", "narrate"],
       ["given-entity", "opens", "clicks", "is-on", "sees", "narrate"],
+      [
+        "given-entity",
+        "given-entity",
+        "opens",
+        "clicks",
+        "sees",
+        "caption",
+        "opens",
+        "sees",
+        "narrate",
+      ],
     ]);
   });
 
@@ -81,7 +93,10 @@ describe("binding the invoicing spec", () => {
   });
 
   it("emits actors and the surfaces the spec uses", () => {
-    expect(ast.actors).toEqual({ Accounts: { Role: "accountant", extra: {} } });
+    expect(ast.actors).toEqual({
+      Accounts: { Role: "accountant", extra: {} },
+      Manager: { Role: "admin", extra: {} },
+    });
     expect(ast.surfaces["Invoice editor"]?.route).toBe("/invoices/{id}/edit");
     const quantity = ast.surfaces["Invoice editor"]?.controls["Quantity"];
     expect(quantity?.kind).toBe("field");

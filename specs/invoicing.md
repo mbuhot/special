@@ -15,6 +15,7 @@
 ## Actors
 
 - Accounts: role accountant
+- Manager: role admin
 
 ## Scenario: Line total updates as quantity changes
 
@@ -77,3 +78,15 @@ And Accounts clicks "New invoice"
 Then Accounts is on Invoice editor
 And Accounts sees "draft" in "Status"
 Narrate: A new draft invoice opens in the editor.
+
+## Scenario: A manager sees an invoice once it is sent
+
+Given a Customer "Acme"
+Given an Invoice "INV-001" with status draft, customer Acme
+When Accounts opens Invoice editor for INV-001
+And Accounts clicks "Send"
+Then Accounts sees "sent" in "Status"
+Caption: The manager now reviews the same invoice.
+When Manager opens Invoice editor for INV-001
+Then Manager sees "sent" in "Status"
+Narrate: The manager sees the invoice with status sent.

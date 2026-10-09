@@ -199,10 +199,10 @@ describe("extending a shared entity from another file", () => {
       ),
     );
     expect(result.ast.model["Customer"]?.relations).toEqual([
-      { kind: "has-many", entity: "Invoice" },
+      { kind: "has-many", entity: "Invoice", name: "invoice" },
     ]);
     expect(result.ast.model["Invoice"]?.relations).toEqual([
-      { kind: "belongs-to", entity: "Customer" },
+      { kind: "belongs-to", entity: "Customer", name: "customer" },
     ]);
   });
 

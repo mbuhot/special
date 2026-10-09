@@ -118,21 +118,33 @@ describe("binding the invoicing spec", () => {
 
   it("emits each Model entity with its fields and relations", () => {
     expect(ast.model["Invoice"]).toMatchObject({
-      fields: ["number", "status", "total"],
+      fields: [
+        { name: "number", type: "text", required: true },
+        { name: "status", type: "enum", values: ["draft", "sent", "paid", "void"] },
+        { name: "total", type: "money" },
+      ],
       relations: [
-        { kind: "belongs-to", entity: "Company" },
-        { kind: "has-many", entity: "LineItem" },
+        { kind: "belongs-to", entity: "Company", name: "company" },
+        { kind: "has-many", entity: "LineItem", name: "line_item" },
       ],
     });
     expect(ast.model["LineItem"]).toMatchObject({
-      fields: ["description", "quantity", "unit price"],
-      relations: [{ kind: "belongs-to", entity: "Invoice" }],
+      fields: [
+        { name: "description", type: "text", required: true },
+        { name: "quantity", type: "integer", required: true },
+        { name: "unit price", type: "money", required: true },
+      ],
+      relations: [{ kind: "belongs-to", entity: "Invoice", name: "invoice" }],
     });
     expect(ast.model["Company"]).toEqual({
-      fields: ["name", "domain", "industry"],
+      fields: [
+        { name: "name", type: "text", required: true },
+        { name: "domain", type: "url" },
+        { name: "industry", type: "text" },
+      ],
       relations: [
-        { kind: "has-many", entity: "Contact" },
-        { kind: "has-many", entity: "Invoice" },
+        { kind: "has-many", entity: "Contact", name: "contact" },
+        { kind: "has-many", entity: "Invoice", name: "invoice" },
       ],
       machines: {},
     });

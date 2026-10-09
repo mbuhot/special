@@ -43,15 +43,20 @@ export type {
   BindResult,
   BindSuccess,
   Declaration,
+  EntityNode,
   Emission,
+  FieldNode,
+  FieldType,
   NarrationNode,
   Reference,
+  RelationNode,
   Scenario,
   ScenarioNode,
   SpecAst,
   StepNode,
   SurfaceNode,
 } from "./ast.js";
+export { FIELD_TYPES } from "./ast.js";
 export { lint } from "./lint.js";
 export type { LintWarning } from "./lint.js";
 export { lockFile } from "./lock.js";

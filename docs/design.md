@@ -44,10 +44,10 @@ Markdown. `#` is the feature. Each `##` is a section whose kind the dialect defi
 
 ## Model
 
-- Customer: name, email
-- Invoice: number, status, total. Belongs to Customer. Has many LineItem.
+- Customer: name (text, required), email (email)
+- Invoice: number (text, required), status, total (money). Belongs to Customer as billed to. Has many LineItem.
 - Invoice.status: draft -> sent -> paid, draft -> void
-- LineItem: description, quantity, unit price
+- LineItem: description (text, required), quantity (integer, required), unit price (money, required)
 - Customer has many Invoice
 
 ## Surfaces
@@ -92,24 +92,31 @@ Narrate: The line total updates as the quantity changes.
 
 The `Story:` line is the first line of a scenario and states who needs what and why. Demo mode speaks it over the opening card, and lint warns when a scenario has none.
 
+Model fields are `<Field> [(<Type>[, required])]`. An untyped field has no declared type. Types are `text`, `email`, `phone`, `url`, `money`, `integer`, `decimal`, `date`, `datetime`, `boolean` and `one of a, b, c` (enum). An unknown type is a bind error. A state machine line (`Invoice.status: draft -> sent`) types its field as `one of <states>`; a field declared with a different type or a different value set is a bind error.
+
+Relations take a role: `Belongs to User as owner`, `Has many Task as work`. The relation name defaults to the entity name in snake case.
+
 A surface listed as `<Surface> (shared): ...` (or declared with `shared: true` in the dialect) is present on every page, so its controls resolve from any step; the step's `Surface` argument names the shared surface and the actor stays on the page they were on.
 
 ## Pattern mini-language
 
 Used for section items and steps.
 
-| Syntax         | Meaning                                                         |
-| -------------- | --------------------------------------------------------------- |
-| `word`         | literal token, case-insensitive                                 |
-| `<Slot>`       | slot bound to namespace `Slot`                                  |
-| `<Slot:kind>`  | slot bound to namespace `Slot`, entry must have `kind`          |
-| `<Slot:a\|b>`  | slot bound to namespace `Slot`, entry must have kind `a` or `b` |
-| `<Slot.kind>`  | slot that captures the kind enum of namespace `Slot`            |
-| `<Alias=Slot>` | slot named `Alias` bound to namespace `Slot`                    |
-| `"<Slot>"`     | slot whose source text is double-quoted                         |
-| `[ ... ]`      | optional group                                                  |
-| `<A> <B>, ...` | preceding element repeats, comma separated                      |
-| `<on\|off>`    | inline enum                                                     |
+| Syntax         | Meaning                                                             |
+| -------------- | ------------------------------------------------------------------- |
+| `word`         | literal token, case-insensitive                                     |
+| `<Slot>`       | slot bound to namespace `Slot`                                      |
+| `<Slot:kind>`  | slot bound to namespace `Slot`, entry must have `kind`              |
+| `<Slot:a\|b>`  | slot bound to namespace `Slot`, entry must have kind `a` or `b`     |
+| `<Slot.kind>`  | slot that captures the kind enum of namespace `Slot`                |
+| `<Alias=Slot>` | slot named `Alias` bound to namespace `Slot`                        |
+| `"<Slot>"`     | slot whose source text is double-quoted                             |
+| `[ ... ]`      | optional group                                                      |
+| `<A> <B>, ...` | preceding element repeats, comma separated                          |
+| `<on\|off>`    | inline enum                                                         |
+| `(<Slot>)`     | slot captured from one parenthesised token, without the parentheses |
+
+A parenthesised group in the text, such as `(text, required)`, is one token and keeps its commas. A repeated unit may end in an optional group (`<Field> [(<Type>)], ...`); a repeated slot that is absent from an iteration captures an empty string so lists stay aligned.
 
 Compiles to a parser at dialect load. Longest match wins; ambiguity between two steps is a dialect load error.
 
@@ -191,10 +198,14 @@ Merging is add-only: redeclaring an entity, actor, or surface is an error naming
   },
   "model": {
     "Invoice": {
-      "fields": ["number", "status", "total"],
+      "fields": [
+        { "name": "number", "type": "text", "required": true },
+        { "name": "status", "type": "enum", "values": ["draft", "sent", "paid", "void"] },
+        { "name": "total", "type": "money" }
+      ],
       "relations": [
-        { "kind": "belongs-to", "entity": "Customer" },
-        { "kind": "has-many", "entity": "LineItem" }
+        { "kind": "belongs-to", "entity": "Customer", "name": "billed to" },
+        { "kind": "has-many", "entity": "LineItem", "name": "line_item" }
       ],
       "machines": {
         "status": {

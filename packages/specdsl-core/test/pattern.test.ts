@@ -144,3 +144,28 @@ describe("pattern matching against declared names", () => {
     expect(match?.slots).toEqual({ Field: "unit price", Ref: "A B" });
   });
 });
+
+describe("pattern matching parenthesised annotations", () => {
+  const fieldList = compilePattern("<Entity>: <Field> [(<Type>)], ...");
+
+  it("captures each field with its annotation and a blank for an unannotated field", () => {
+    const match = fieldList("Contact: first name (text, required), email, phone (phone)");
+    expect(match?.slots).toEqual({ Entity: "Contact" });
+    expect(match?.lists["Field"]).toEqual(["first name", "email", "phone"]);
+    expect(match?.lists["Type"]).toEqual(["text, required", "", "phone"]);
+  });
+
+  it("keeps the commas of an annotation inside it", () => {
+    const match = fieldList("Activity: kind (one of note, call, meeting, required), body");
+    expect(match?.lists["Field"]).toEqual(["kind", "body"]);
+    expect(match?.lists["Type"]).toEqual(["one of note, call, meeting, required", ""]);
+  });
+
+  it("matches a literal parenthesised word in a pattern", () => {
+    const match = compilePattern('<Surface>[ (shared)]: <Control.kind> "<Control>"')(
+      'Sidebar (shared): link "Home"',
+    );
+    expect(match?.slots["Surface"]).toBe("Sidebar");
+    expect(match?.optionals).toEqual([true]);
+  });
+});

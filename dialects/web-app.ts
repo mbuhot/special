@@ -15,6 +15,7 @@ export default dialect({
     Actor: ns(),
     Ref: ns({ scope: "scenario" }),
     Name: freeText,
+    Type: freeText,
     Value: freeText,
     Text: freeText,
     Role: freeText,
@@ -32,9 +33,19 @@ export default dialect({
     Model: section({
       occurs: "once",
       items: [
-        { pattern: "<Entity>: <Field>, ...", declares: ["Entity", "Field"] },
+        { pattern: "<Entity>: <Field> [(<Type>)], ...", declares: ["Entity", "Field"] },
         { pattern: "Belongs to <Entity>", references: ["Entity"], relation: "belongs-to" },
+        {
+          pattern: "Belongs to <Entity> as <Relation=Name>",
+          references: ["Entity"],
+          relation: "belongs-to",
+        },
         { pattern: "Has many <Entity>", references: ["Entity"], relation: "has-many" },
+        {
+          pattern: "Has many <Entity> as <Relation=Name>",
+          references: ["Entity"],
+          relation: "has-many",
+        },
         {
           pattern: "<Entity> has many <Target=Entity>",
           references: ["Entity"],
@@ -42,6 +53,16 @@ export default dialect({
         },
         {
           pattern: "<Entity> belongs to <Target=Entity>",
+          references: ["Entity"],
+          relation: "belongs-to",
+        },
+        {
+          pattern: "<Entity> has many <Target=Entity> as <Relation=Name>",
+          references: ["Entity"],
+          relation: "has-many",
+        },
+        {
+          pattern: "<Entity> belongs to <Target=Entity> as <Relation=Name>",
           references: ["Entity"],
           relation: "belongs-to",
         },

@@ -2,7 +2,7 @@
 
 ## Model
 
-- Contact: first name, last name, email, phone. Belongs to Company.
+- Contact: first name (text, required), last name (text, required), email (email), phone (phone). Belongs to Company.
 
 ## Policies
 

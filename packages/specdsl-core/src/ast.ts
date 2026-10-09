@@ -42,9 +42,37 @@ export interface StateMachineNode {
   transitions: { from: string; to: string }[];
 }
 
+export const FIELD_TYPES = [
+  "text",
+  "email",
+  "phone",
+  "url",
+  "money",
+  "integer",
+  "decimal",
+  "date",
+  "datetime",
+  "boolean",
+] as const;
+
+export type FieldType = (typeof FIELD_TYPES)[number] | "enum";
+
+export interface FieldNode {
+  name: string;
+  type?: FieldType;
+  required?: true;
+  values?: string[];
+}
+
+export interface RelationNode {
+  kind: "belongs-to" | "has-many";
+  entity: string;
+  name: string;
+}
+
 export interface EntityNode {
-  fields: string[];
-  relations: { kind: "belongs-to" | "has-many"; entity: string }[];
+  fields: FieldNode[];
+  relations: RelationNode[];
   machines: Record<string, StateMachineNode>;
 }
 

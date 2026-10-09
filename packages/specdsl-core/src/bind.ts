@@ -1,11 +1,14 @@
-import type {
-  Analysis,
-  BindError,
-  BindResult,
-  EntityNode,
-  Scenario,
-  SpecAst,
-  SurfaceNode,
+import {
+  FIELD_TYPES,
+  type Analysis,
+  type BindError,
+  type BindResult,
+  type EntityNode,
+  type FieldNode,
+  type FieldType,
+  type Scenario,
+  type SpecAst,
+  type SurfaceNode,
 } from "./ast.js";
 import type { Dialect, ResolvedRule, ResolvedSection } from "./dialect.js";
 import {
@@ -50,6 +53,17 @@ interface PendingItem {
 
 const REDECLARATION_GUARDED = new Set(["Entity", "Actor", "Surface"]);
 
+interface FieldSpec {
+  type?: FieldType;
+  required?: true;
+  values?: string[];
+}
+
+interface Site {
+  file: string;
+  line: number;
+}
+
 /**
  * Binds a parsed spec to a dialect: matches sections, declares namespace entries, expands composite steps
  * and resolves scenario steps. Surfaces and controls come from the dialect's `Surface` and `Control` namespaces.
@@ -80,6 +94,8 @@ class Binder {
   private readonly composites: Composite[] = [];
 
   private readonly scenarioSites = new Map<string, string>();
+  private readonly fieldSites = new Map<string, Site>();
+  private readonly machineSites = new Map<string, Site>();
 
   constructor(
     private readonly sources: readonly ParsedSource[],
@@ -94,6 +110,7 @@ class Binder {
       .flatMap((classified) => this.matchItems(classified));
     pending.forEach((item) => this.declare(item));
     pending.forEach((item) => this.complete(item));
+    this.reconcileMachineFields();
     sections
       .filter((classified) => classified.definition.body === "composites")
       .forEach((classified) => this.collectComposites(classified));
@@ -325,14 +342,15 @@ class Binder {
   }
 
   private applyRelation(item: PendingItem): void {
-    const { owner: ownerName, target } = relationEnds(item);
+    const { owner: ownerName, target, name: relationName } = relationEnds(item);
     if (item.rule.relation !== "belongs-to" || ownerName === undefined || target === undefined) {
       return;
     }
     const owner = this.registry.lookup("Entity", ownerName, "");
     const targetEntry = this.registry.lookup("Entity", target, "");
     if (owner !== undefined && targetEntry !== undefined) {
-      const name = targetEntry.name.charAt(0).toLowerCase() + targetEntry.name.slice(1);
+      const name =
+        relationName ?? targetEntry.name.charAt(0).toLowerCase() + targetEntry.name.slice(1);
       this.registry.declare({
         namespace: "Field",
         name,
@@ -399,21 +417,55 @@ class Binder {
       return;
     }
     const entity = this.entityNode(name);
-    for (const field of valuesOf(item.match, "Field")) {
-      entity?.fields.includes(field) || entity?.fields.push(field);
+    const canonicalName = this.registry.lookup("Entity", name, "")?.name ?? name;
+    const specs = flatten(item.match.lists["Type"] ?? []);
+    valuesOf(item.match, "Field").forEach((field, index) => {
+      entity !== undefined &&
+        this.recordField(item, canonicalName, entity, field, specs[index] ?? "");
+    });
+  }
+
+  private recordField(
+    item: PendingItem,
+    entityName: string,
+    entity: EntityNode,
+    name: string,
+    specText: string,
+  ): void {
+    const label = `${entityName}.${name}`;
+    const parsed = parseFieldSpec(specText, label);
+    const spec = typeof parsed === "string" ? {} : parsed;
+    typeof parsed === "string" && this.report(item.file, item.line, parsed);
+    const existing = entity.fields.find((field) => field.name === name);
+    if (existing === undefined) {
+      entity.fields.push(fieldNode(name, spec));
+      this.fieldSites.set(label, { file: item.file, line: item.line });
+    } else if (spec.type !== undefined) {
+      this.mergeField(item, label, existing, spec);
+    }
+  }
+
+  private mergeField(item: PendingItem, label: string, existing: FieldNode, spec: FieldSpec): void {
+    if (existing.type === undefined) {
+      Object.assign(existing, fieldNode(existing.name, spec));
+    } else if (!sameFieldSpec(existing, spec)) {
+      this.report(item.file, item.line, `${label} is already declared with a different type`);
     }
   }
 
   private recordRelation(item: PendingItem): void {
-    const { owner, target } = relationEnds(item);
+    const { owner, target, name: relationName } = relationEnds(item);
     const kind = item.rule.relation;
     if (kind === undefined || owner === undefined || target === undefined) {
       return;
     }
     const targetName = this.registry.lookup("Entity", target, "")?.name;
     const relations = this.entityNode(owner)?.relations;
-    const known = relations?.some((seen) => seen.kind === kind && seen.entity === targetName);
-    targetName === undefined || known || relations?.push({ kind, entity: targetName });
+    const name = relationName ?? (targetName === undefined ? "" : defaultRelationName(targetName));
+    const known = relations?.some(
+      (seen) => seen.kind === kind && seen.entity === targetName && seen.name === name,
+    );
+    targetName === undefined || known || relations?.push({ kind, entity: targetName, name });
   }
 
   private entityNode(name: string): EntityNode | undefined {
@@ -425,11 +477,13 @@ class Binder {
     return this.model[canonicalName];
   }
 
-  private recordMachine(entity: string, field: string, chains: string[][]): void {
+  private recordMachine(item: PendingItem, entity: string, field: string, chains: string[][]) {
     const machines = this.entityNode(entity)?.machines;
     if (machines === undefined) {
       return;
     }
+    this.machineSites.has(`${entity}.${field}`) ||
+      this.machineSites.set(`${entity}.${field}`, { file: item.file, line: item.line });
     const machine = (machines[field] ??= { states: [], transitions: [] });
     for (const chain of chains) {
       chain.forEach((state) => machine.states.includes(state) || machine.states.push(state));
@@ -438,6 +492,31 @@ class Binder {
         machine.transitions.some((seen) => seen.from === from && seen.to === to) ||
           machine.transitions.push({ from, to });
       });
+    }
+  }
+
+  private reconcileMachineFields(): void {
+    for (const [entityName, entity] of Object.entries(this.model)) {
+      for (const [fieldName, machine] of Object.entries(entity.machines)) {
+        const field = entity.fields.find((candidate) => candidate.name === fieldName);
+        field !== undefined &&
+          this.reconcileMachineField(`${entityName}.${fieldName}`, field, machine.states);
+      }
+    }
+  }
+
+  private reconcileMachineField(label: string, field: FieldNode, states: string[]): void {
+    const site = this.machineSites.get(label);
+    if (field.type === undefined) {
+      field.type = "enum";
+      field.values = [...states];
+    } else if (site !== undefined && !sameSet(field.values ?? [], states)) {
+      const declared = field.type === "enum" ? `one of ${field.values?.join(", ")}` : field.type;
+      this.report(
+        site.file,
+        site.line,
+        `${label} is declared as ${declared} but its states are one of ${states.join(", ")}`,
+      );
     }
   }
 
@@ -452,7 +531,7 @@ class Binder {
       return;
     }
     const chains = chainsOf(item.match.lists["State"] ?? []);
-    this.recordMachine(entity, field, chains);
+    this.recordMachine(item, entity, field, chains);
     for (const chain of chains) {
       chain.slice(1).forEach((to, index) => {
         const from = chain[index] as string;
@@ -637,11 +716,61 @@ function flatten(values: readonly ListValue[]): string[] {
   return values.flatMap((value) => (typeof value === "string" ? [value] : flatten(value)));
 }
 
-function relationEnds(item: PendingItem): { owner?: string; target?: string } {
+function relationEnds(item: PendingItem): { owner?: string; target?: string; name?: string } {
   const extensionTarget = item.match.slots["Target"];
-  return extensionTarget === undefined
-    ? { owner: item.entity, target: item.match.slots["Entity"] }
-    : { owner: item.match.slots["Entity"], target: extensionTarget };
+  const name = item.match.slots["Relation"];
+  const ends =
+    extensionTarget === undefined
+      ? { owner: item.entity, target: item.match.slots["Entity"] }
+      : { owner: item.match.slots["Entity"], target: extensionTarget };
+  return name === undefined ? ends : { ...ends, name };
+}
+
+function defaultRelationName(entityName: string): string {
+  return entityName.replace(/([a-z0-9])([A-Z])/g, "$1_$2").toLowerCase();
+}
+
+function fieldNode(name: string, spec: FieldSpec): FieldNode {
+  return {
+    name,
+    ...(spec.type === undefined ? {} : { type: spec.type }),
+    ...(spec.required === undefined ? {} : { required: spec.required }),
+    ...(spec.values === undefined ? {} : { values: spec.values }),
+  };
+}
+
+function sameSet(first: readonly string[], second: readonly string[]): boolean {
+  return first.length === second.length && first.every((value) => second.includes(value));
+}
+
+function sameFieldSpec(field: FieldNode, spec: FieldSpec): boolean {
+  return (
+    field.type === spec.type &&
+    (field.required ?? false) === (spec.required ?? false) &&
+    sameSet(field.values ?? [], spec.values ?? [])
+  );
+}
+
+/** Parses the text inside a field's parentheses: `<type>[, required]` or `one of a, b, c[, required]`. */
+function parseFieldSpec(text: string, label: string): FieldSpec | string {
+  if (text === "") {
+    return {};
+  }
+  const parts = text.split(",").map((part) => part.trim());
+  const required = parts[parts.length - 1]?.toLowerCase() === "required";
+  const [head = "", ...rest] = required ? parts.slice(0, -1) : parts;
+  const flag = required ? { required: true as const } : {};
+  const enumeration = /^one of\s+(\S.*)$/i.exec(head);
+  if (enumeration !== null) {
+    const values = [enumeration[1] as string, ...rest];
+    return values.some((value) => value === "")
+      ? `Empty value in "one of" list "${text}" for ${label}`
+      : { type: "enum", values, ...flag };
+  }
+  const type = FIELD_TYPES.find((known) => known === head.toLowerCase());
+  return type !== undefined && rest.length === 0
+    ? { type, ...flag }
+    : `Unknown field type "${text}" for ${label} (expected ${FIELD_TYPES.join(", ")} or one of a, b, c)`;
 }
 
 function referencedValues(match: Match, namespace: string): string[] {

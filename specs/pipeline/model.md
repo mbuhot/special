@@ -2,11 +2,11 @@
 
 ## Model
 
-- Deal: name, amount, close date, stage. Belongs to Company. Belongs to Contact. Belongs to User.
+- Deal: name (text, required), amount (money), close date (date), stage. Belongs to Company. Belongs to Contact. Belongs to User as owner.
 - Deal.stage: lead -> qualified -> proposal -> won, lead -> lost, qualified -> lost, proposal -> lost
 - Company has many Deal
 - Contact has many Deal
-- Task: title, due date, status. Belongs to Deal. Belongs to User.
+- Task: title (text, required), due date (date, required), status. Belongs to Deal. Belongs to User as assignee.
 - Task.status: open -> done
 - Deal has many Task
 

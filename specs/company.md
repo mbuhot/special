@@ -2,7 +2,7 @@
 
 ## Model
 
-- Company: name, domain, industry. Has many Contact.
+- Company: name (text, required), domain (url), industry (text). Has many Contact.
 
 ## Policies
 

@@ -47,26 +47,70 @@ defmodule SpecDSL.Scenario do
         }
 
   defstruct [:name, :source, :story, steps: []]
+
+  @doc "Returns the names of the actors the steps mention, in order of first appearance."
+  @spec actors(t()) :: [String.t()]
+  def actors(%__MODULE__{steps: steps}) do
+    steps
+    |> Enum.flat_map(fn
+      %SpecDSL.Step{args: %{actor: actor_name}} when is_binary(actor_name) -> [actor_name]
+      _step -> []
+    end)
+    |> Enum.uniq()
+  end
+end
+
+defmodule SpecDSL.Field do
+  @moduledoc "A field of a model entity: its spelling, optional type, requiredness and enum values."
+
+  @type type ::
+          :text
+          | :email
+          | :phone
+          | :url
+          | :money
+          | :integer
+          | :decimal
+          | :date
+          | :datetime
+          | :boolean
+          | :enum
+  @type t :: %__MODULE__{
+          name: String.t(),
+          type: type() | nil,
+          required: boolean(),
+          values: [String.t()] | nil
+        }
+
+  defstruct [:name, :type, :values, required: false]
 end
 
 defmodule SpecDSL.Entity do
   @moduledoc "A domain entity declared in the spec's Model section."
 
-  @type relation :: %{kind: :belongs_to | :has_many, entity: String.t()}
+  @type relation :: %{
+          kind: :belongs_to | :has_many,
+          entity: String.t(),
+          name: String.t() | nil
+        }
   @type machine :: %{states: [String.t()], transitions: [%{from: String.t(), to: String.t()}]}
   @type t :: %__MODULE__{
-          fields: [String.t()],
+          fields: [SpecDSL.Field.t()],
           relations: [relation()],
           machines: %{String.t() => machine()}
         }
 
   defstruct fields: [], relations: [], machines: %{}
+
+  @doc "The spelling of each field, in declaration order."
+  @spec field_names(t()) :: [String.t()]
+  def field_names(%__MODULE__{fields: fields}), do: Enum.map(fields, & &1.name)
 end
 
 defmodule SpecDSL.AST do
   @moduledoc "Loads the AST JSON emitted by the spec compiler into structs."
 
-  alias SpecDSL.{Control, Entity, Scenario, Step, Surface}
+  alias SpecDSL.{Control, Entity, Field, Scenario, Step, Surface}
 
   @type t :: %__MODULE__{
           dialect: %{name: String.t(), version: String.t(), step_ids: [String.t()]},
@@ -103,6 +147,19 @@ defmodule SpecDSL.AST do
     "form" => :form
   }
   @relation_kinds %{"belongs-to" => :belongs_to, "has-many" => :has_many}
+  @field_types %{
+    "text" => :text,
+    "email" => :email,
+    "phone" => :phone,
+    "url" => :url,
+    "money" => :money,
+    "integer" => :integer,
+    "decimal" => :decimal,
+    "date" => :date,
+    "datetime" => :datetime,
+    "boolean" => :boolean,
+    "enum" => :enum
+  }
   @step_modes %{"test" => :test, "demo" => :demo, "domain" => :domain}
 
   @doc "Reads and decodes an AST JSON file."
@@ -153,16 +210,31 @@ defmodule SpecDSL.AST do
   defp build_entity({name, raw}) do
     {name,
      %Entity{
-       fields: Map.get(raw, "fields", []),
+       fields: raw |> Map.get("fields", []) |> Enum.map(&build_field/1),
        relations: raw |> Map.get("relations", []) |> Enum.map(&build_relation/1),
        machines: raw |> Map.get("machines", %{}) |> Map.new(&build_machine/1)
      }}
   end
 
+  defp build_field(name) when is_binary(name), do: %Field{name: name}
+
+  defp build_field(raw) do
+    %Field{
+      name: Map.fetch!(raw, "name"),
+      type: raw |> Map.get("type") |> build_field_type(),
+      required: Map.get(raw, "required", false),
+      values: Map.get(raw, "values")
+    }
+  end
+
+  defp build_field_type(nil), do: nil
+  defp build_field_type(type), do: fetch_known!(@field_types, type, "field type")
+
   defp build_relation(raw) do
     %{
       kind: fetch_known!(@relation_kinds, Map.fetch!(raw, "kind"), "relation kind"),
-      entity: Map.fetch!(raw, "entity")
+      entity: Map.fetch!(raw, "entity"),
+      name: Map.get(raw, "name")
     }
   end
 

@@ -1,7 +1,7 @@
 defmodule SpecDSL.ASTTest do
   use ExUnit.Case, async: true
 
-  alias SpecDSL.{AST, Control, Entity, Scenario, Step, Surface}
+  alias SpecDSL.{AST, Control, Entity, Field, Scenario, Step, Surface}
 
   setup_all do
     {:ok, ast: AST.load!("test/fixtures/invoicing.ast.json")}
@@ -100,10 +100,19 @@ defmodule SpecDSL.ASTTest do
       AST.from_map(%{
         "model" => %{
           "Invoice" => %{
-            "fields" => ["number", "status", "total"],
+            "fields" => [
+              %{"name" => "number", "type" => "text", "required" => true},
+              %{
+                "name" => "status",
+                "type" => "enum",
+                "values" => ["draft", "sent"]
+              },
+              %{"name" => "total", "type" => "money"},
+              %{"name" => "notes"}
+            ],
             "relations" => [
-              %{"kind" => "belongs-to", "entity" => "Customer"},
-              %{"kind" => "has-many", "entity" => "LineItem"}
+              %{"kind" => "belongs-to", "entity" => "Customer", "name" => "owner"},
+              %{"kind" => "has-many", "entity" => "LineItem", "name" => "line_item"}
             ],
             "machines" => %{
               "status" => %{
@@ -117,10 +126,15 @@ defmodule SpecDSL.ASTTest do
 
     assert ast.model == %{
              "Invoice" => %Entity{
-               fields: ["number", "status", "total"],
+               fields: [
+                 %Field{name: "number", type: :text, required: true},
+                 %Field{name: "status", type: :enum, values: ["draft", "sent"]},
+                 %Field{name: "total", type: :money},
+                 %Field{name: "notes"}
+               ],
                relations: [
-                 %{kind: :belongs_to, entity: "Customer"},
-                 %{kind: :has_many, entity: "LineItem"}
+                 %{kind: :belongs_to, entity: "Customer", name: "owner"},
+                 %{kind: :has_many, entity: "LineItem", name: "line_item"}
                ],
                machines: %{
                  "status" => %{
@@ -130,6 +144,25 @@ defmodule SpecDSL.ASTTest do
                }
              }
            }
+  end
+
+  test "lists the names of an entity's fields" do
+    ast =
+      AST.from_map(%{
+        "model" => %{
+          "Invoice" => %{"fields" => [%{"name" => "number", "type" => "text"}, "status"]}
+        }
+      })
+
+    assert Entity.field_names(ast.model["Invoice"]) == ["number", "status"]
+  end
+
+  test "rejects an unknown field type" do
+    assert_raise ArgumentError, ~r/unknown field type "huge"/, fn ->
+      AST.from_map(%{
+        "model" => %{"Invoice" => %{"fields" => [%{"name" => "size", "type" => "huge"}]}}
+      })
+    end
   end
 
   test "reads the actions each role may perform per entity" do

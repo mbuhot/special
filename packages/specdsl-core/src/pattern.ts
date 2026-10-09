@@ -246,6 +246,7 @@ class PatternParser {
 }
 
 function makeRepeat(elements: Element[], separator: string): RepeatElement {
+  const trailingOptionals = takeTrailingOptionals(elements);
   const unit: Element[] = [];
   while (elements.length > 0) {
     const last = elements[elements.length - 1] as Element;
@@ -257,14 +258,25 @@ function makeRepeat(elements: Element[], separator: string): RepeatElement {
   if (unit.length === 0) {
     throw new PatternError(`Nothing to repeat before '${separator} ...'`);
   }
+  unit.push(...trailingOptionals);
   markRepeated(unit);
   return { type: "repeat", separator, unit: markSpans(unit) };
+}
+
+function takeTrailingOptionals(elements: Element[]): Element[] {
+  const taken: Element[] = [];
+  while (elements[elements.length - 1]?.type === "optional") {
+    taken.unshift(elements.pop() as Element);
+  }
+  return taken;
 }
 
 function markRepeated(elements: Element[]): void {
   for (const element of elements) {
     if (element.type === "slot") {
       element.descriptor.occurrence = "repeated";
+    } else if (element.type === "optional") {
+      markRepeated(element.elements);
     } else if (element.type === "composite") {
       for (const segment of element.segments) {
         if (segment.type === "slot") {
@@ -490,6 +502,17 @@ function tokenizeText(text: string): TextToken[] {
   return tokens;
 }
 
+function closingParenthesis(text: string, open: number): number {
+  let depth = 0;
+  for (let index = open; index < text.length; index += 1) {
+    depth += text[index] === "(" ? 1 : text[index] === ")" ? -1 : 0;
+    if (depth === 0) {
+      return /[\s,:]/.test(text[index + 1] ?? " ") ? index + 1 : -1;
+    }
+  }
+  return -1;
+}
+
 function readTextToken(text: string, start: number, tokens: TextToken[]): number {
   if (text[start] === '"') {
     const close = text.indexOf('"', start + 1);
@@ -497,6 +520,11 @@ function readTextToken(text: string, start: number, tokens: TextToken[]): number
       tokens.push({ text: text.slice(start + 1, close), quoted: true, start, end: close + 1 });
       return close + 1;
     }
+  }
+  const groupEnd = text[start] === "(" ? closingParenthesis(text, start) : -1;
+  if (groupEnd >= 0) {
+    tokens.push({ text: text.slice(start, groupEnd), quoted: false, start, end: groupEnd });
+    return groupEnd;
   }
   let end = start;
   while (end < text.length && !/[\s,]/.test(text[end] as string)) {
@@ -707,7 +735,9 @@ function* matchRepeat(
   bindings: Bindings,
 ): Generator<MatchState> {
   const emptyIteration: Bindings = { slots: {}, lists: {}, optionals: {} };
-  for (const iteration of matchFrom(element.unit, 0, input, position, emptyIteration)) {
+  const optionalNames = optionalSlotNames(element.unit);
+  for (const found of matchFrom(element.unit, 0, input, position, emptyIteration)) {
+    const iteration = { ...found, bindings: withAbsentSlots(found.bindings, optionalNames) };
     const merged = mergeIteration(bindings, iteration.bindings);
     const separator = input.tokens[iteration.position];
     if (separator !== undefined && !separator.quoted && separator.text === element.separator) {
@@ -715,6 +745,24 @@ function* matchRepeat(
     }
     yield { position: iteration.position, bindings: merged };
   }
+}
+
+function optionalSlotNames(unit: Element[]): string[] {
+  return unit.flatMap((element) =>
+    element.type === "optional"
+      ? collectDescriptors(element.elements).map((descriptor) => descriptor.name)
+      : [],
+  );
+}
+
+function withAbsentSlots(bindings: Bindings, names: string[]): Bindings {
+  const absent = names.filter((name) => bindings.slots[name] === undefined);
+  return absent.length === 0
+    ? bindings
+    : {
+        ...bindings,
+        slots: { ...bindings.slots, ...Object.fromEntries(absent.map((name) => [name, ""])) },
+      };
 }
 
 function withSlot(bindings: Bindings, name: string, value: string): Bindings {

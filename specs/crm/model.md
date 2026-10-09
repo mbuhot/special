@@ -2,7 +2,7 @@
 
 ## Model
 
-- Activity: kind, body, occurred at. Belongs to Contact. Belongs to User.
+- Activity: kind (one of note, call, email, meeting, required), body (text, required), occurred at (datetime, required). Belongs to Contact. Belongs to User as author.
 - Contact has many Activity
 
 ## Policies

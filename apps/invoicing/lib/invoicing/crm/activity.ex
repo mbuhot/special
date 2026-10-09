@@ -78,7 +78,8 @@ defmodule Invoicing.CRM.Activity do
       attribute_writable?: true,
       public?: true
 
-    belongs_to :user, Invoicing.Accounts.User,
+    belongs_to :author, Invoicing.Accounts.User,
+      source_attribute: :user_id,
       allow_nil?: false,
       attribute_writable?: true,
       public?: true

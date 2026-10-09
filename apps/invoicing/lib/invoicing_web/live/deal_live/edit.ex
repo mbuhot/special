@@ -74,7 +74,7 @@ defmodule InvoicingWeb.DealLive.Edit do
   defp deal_name(deal), do: deal.name
 
   defp deal_stage(nil), do: nil
-  defp deal_stage(deal), do: Atom.to_string(deal.stage)
+  defp deal_stage(deal), do: Format.label(deal.stage)
 
   @impl true
   def render(assigns) do

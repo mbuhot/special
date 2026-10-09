@@ -3,6 +3,8 @@ defmodule Invoicing.Application do
   # for more information on OTP Applications
   @moduledoc false
 
+  use Boundary, top_level?: true, check: [in: false, out: false]
+
   use Application
 
   @impl true

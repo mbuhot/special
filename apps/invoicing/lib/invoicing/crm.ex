@@ -1,7 +1,11 @@
 defmodule Invoicing.CRM do
   @moduledoc "Companies, contacts and the activities logged against them."
 
-  use Ash.Domain
+  use Ash.Domain, extensions: [AshBoundary]
+
+  boundary do
+    deps([Invoicing])
+  end
 
   resources do
     resource Invoicing.CRM.Company do
@@ -22,6 +26,14 @@ defmodule Invoicing.CRM do
       define :list_activities, action: :read, args: [:contact_id]
       define :create_activity, action: :create
     end
+  end
+
+  @doc "Returns the kinds an activity can have."
+  def activity_kinds do
+    Invoicing.CRM.Activity
+    |> Ash.Resource.Info.attribute(:kind)
+    |> Map.fetch!(:constraints)
+    |> Keyword.fetch!(:one_of)
   end
 
   @doc "Newest activities first, with contact names loaded."

@@ -17,6 +17,11 @@ defmodule InvoicingWeb do
   those modules here.
   """
 
+  use Boundary,
+    top_level?: true,
+    check: [aliases: true, apps: [:ash]],
+    deps: [Invoicing, Invoicing.Accounts, Invoicing.Billing, Invoicing.CRM, Invoicing.Pipeline]
+
   def static_paths, do: ~w(assets fonts images favicon.ico robots.txt)
 
   def router do
@@ -86,9 +91,11 @@ defmodule InvoicingWeb do
       import Phoenix.HTML
       # Core UI components
       import InvoicingWeb.CoreComponents
+      import InvoicingWeb.RecordComponents
 
       # Common modules used in templates
       alias Phoenix.LiveView.JS
+      alias InvoicingWeb.Format
       alias InvoicingWeb.Layouts
 
       # Routes generation with the ~p sigil

@@ -1,6 +1,8 @@
 defmodule Invoicing.SpecSupport.Factory do
   @moduledoc "Creates and reloads records addressed by spec entity name and spec field spelling."
 
+  use Boundary, top_level?: true, check: [in: false, out: false]
+
   alias Invoicing.Accounts
   alias Invoicing.Accounts.User
   alias Invoicing.Billing
@@ -29,7 +31,8 @@ defmodule Invoicing.SpecSupport.Factory do
     "deal" => "deal_id",
     "invoice" => "invoice_id",
     "owner" => "owner_id",
-    "user" => "user_id"
+    "user" => "user_id",
+    "author" => "user_id"
   }
 
   @resource_relationship_attributes %{
@@ -96,7 +99,7 @@ defmodule Invoicing.SpecSupport.Factory do
     |> Map.put_new("kind", "note")
     |> Map.put_new("body", "Activity #{sequence}")
     |> Map.put_new_lazy("contact_id", fn -> create("Contact", %{}).id end)
-    |> Map.put_new_lazy("user_id", fn -> create("User", %{"role" => "accountant"}).id end)
+    |> Map.put_new_lazy("user_id", fn -> create("User", %{"role" => "sales"}).id end)
     |> CRM.create_activity!(authorize?: false)
   end
 

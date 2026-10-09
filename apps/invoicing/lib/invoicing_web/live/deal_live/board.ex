@@ -4,7 +4,6 @@ defmodule InvoicingWeb.DealLive.Board do
   use InvoicingWeb, :live_view
 
   alias Invoicing.Pipeline
-  alias Invoicing.Pipeline.Deal
 
   @stages [:lead, :qualified, :proposal, :won, :lost]
 
@@ -13,7 +12,7 @@ defmodule InvoicingWeb.DealLive.Board do
     socket =
       socket
       |> assign(:stages, @stages)
-      |> assign(:can_change_deals, Ash.can?({Deal, :create}, socket.assigns.current_user))
+      |> assign(:can_change_deals, Pipeline.can_create_deal?(socket.assigns.current_user))
       |> assign_deals()
 
     {:ok, socket}
@@ -24,19 +23,10 @@ defmodule InvoicingWeb.DealLive.Board do
     actor = socket.assigns.current_user
     deal = Pipeline.get_deal!(id, actor: actor)
 
-    case Ash.update(deal, %{}, action: transition_action(transition), actor: actor) do
+    case Pipeline.transition_deal(deal, Pipeline.parse_deal_transition(transition), actor: actor) do
       {:ok, _moved_deal} -> {:noreply, assign_deals(socket)}
       {:error, _error} -> {:noreply, put_flash(socket, :error, "Deal could not be moved")}
     end
-  end
-
-  defp transition_action(transition) do
-    Enum.find(transition_actions(), &(Atom.to_string(&1) == transition)) ||
-      raise ArgumentError, "unknown transition #{inspect(transition)}"
-  end
-
-  defp transition_actions do
-    Deal |> AshStateMachine.Info.state_machine_transitions() |> Enum.map(& &1.action)
   end
 
   defp assign_deals(socket) do
@@ -54,15 +44,8 @@ defmodule InvoicingWeb.DealLive.Board do
 
   defp permitted_transitions(deal, socket) do
     deal.stage
-    |> transitions_from()
-    |> Enum.filter(&Ash.can?({deal, &1}, socket.assigns.current_user))
-  end
-
-  defp transitions_from(stage) do
-    Deal
-    |> AshStateMachine.Info.state_machine_transitions()
-    |> Enum.filter(&(stage in List.wrap(&1.from)))
-    |> Enum.map(& &1.action)
+    |> Pipeline.deal_transitions_from()
+    |> Enum.filter(&Pipeline.can_transition_deal?(socket.assigns.current_user, deal, &1))
   end
 
   defp transition_label(transition), do: transition |> Atom.to_string() |> String.capitalize()

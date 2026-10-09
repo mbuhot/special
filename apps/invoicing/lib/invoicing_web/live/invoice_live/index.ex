@@ -5,7 +5,6 @@ defmodule InvoicingWeb.InvoiceLive.Index do
 
   alias Invoicing.Billing
   alias Invoicing.CRM
-  alias Invoicing.Billing.Invoice
   alias InvoicingWeb.AmountFormat
 
   @impl true
@@ -21,7 +20,7 @@ defmodule InvoicingWeb.InvoiceLive.Index do
 
     socket =
       socket
-      |> assign(:can_create_invoice, Ash.can?({Invoice, :create}, current_user))
+      |> assign(:can_create_invoice, Billing.can_create_invoice?(current_user))
       |> stream(:invoices, invoices)
 
     {:ok, socket}

@@ -30,7 +30,7 @@ Narrate: The note text is typed into the activity body.
 And Sales rep clicks "Log activity"
 Then Sales rep sees "Called-about-renewal" in "Timeline"
 Narrate: The note appears in the timeline.
-And Sales rep sees "2026-01-15" in "Timeline"
+And Sales rep sees "15 Jan 2026" in "Timeline"
 Narrate: The note carries today's date. The timeline now shows the logged note.
 
 ## Scenario: Activity timeline advances with the clock
@@ -47,7 +47,7 @@ Narrate: The activity kind is set to meeting.
 And Sales rep enters Kickoff into "Activity body"
 Narrate: The meeting text Kickoff is typed into the activity body.
 And Sales rep clicks "Log activity"
-Then Sales rep sees "2026-01-17" in "Timeline"
+Then Sales rep sees "17 Jan 2026" in "Timeline"
 Narrate: The meeting appears in the timeline. It is dated two days after the contact page was opened.
 
 ## Scenario: Timeline shows who logged each activity and when

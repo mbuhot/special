@@ -1,7 +1,11 @@
 defmodule Invoicing.Accounts do
   @moduledoc "Users who can sign in."
 
-  use Ash.Domain
+  use Ash.Domain, extensions: [AshBoundary]
+
+  boundary do
+    deps([Invoicing])
+  end
 
   resources do
     resource Invoicing.Accounts.User do

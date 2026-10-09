@@ -80,9 +80,9 @@ defmodule InvoicingWeb.InvoiceLive.Edit do
 
     assign(socket,
       invoice: invoice,
-      can_send: Ash.can?({invoice, :send}, current_user),
-      can_mark_paid: Ash.can?({invoice, :mark_paid}, current_user),
-      can_void: Ash.can?({invoice, :void}, current_user),
+      can_send: Billing.can_send_invoice?(current_user, invoice),
+      can_mark_paid: Billing.can_mark_invoice_paid?(current_user, invoice),
+      can_void: Billing.can_void_invoice?(current_user, invoice),
       rows: Enum.map(invoice.line_items, &row_from_line_item/1),
       total: invoice.total
     )

@@ -58,7 +58,7 @@ defmodule InvoicingWeb.CompanyLiveTest do
     {:ok, view, _html} = live(conn, ~p"/companies/#{acme.id}")
 
     invoices_table = view |> element("#company-invoices") |> render()
-    assert invoices_table =~ ~r/INV-001.*draft.*INV-002.*draft/s
+    assert invoices_table =~ ~r/INV-001.*Draft.*INV-002.*Draft/s
     refute invoices_table =~ "INV-003"
   end
 

@@ -78,7 +78,7 @@ defmodule InvoicingWeb.Layouts do
       <div class="flex-1"></div>
 
       <div id="signed-in-as" class="flex flex-col gap-0.5 border-t border-base-300 px-3 pt-3">
-        <div class="text-sm font-semibold">{role_label(@current_user.role)}</div>
+        <div class="text-sm font-semibold">{InvoicingWeb.Format.role_label(@current_user.role)}</div>
         <div class="truncate text-xs text-base-content/60">{@current_user.email}</div>
       </div>
 
@@ -159,12 +159,6 @@ defmodule InvoicingWeb.Layouts do
       &(current_path == &1 or String.starts_with?(current_path, &1 <> "/"))
     )
   end
-
-  @doc "Returns the label shown for a user's role."
-  def role_label(:sales), do: "Sales rep"
-  def role_label(:manager), do: "Sales manager"
-  def role_label(:accountant), do: "Accounts"
-  def role_label(:admin), do: "Admin"
 
   @doc """
   Shows the flash group with standard titles and content.

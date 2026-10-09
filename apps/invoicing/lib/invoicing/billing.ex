@@ -1,7 +1,11 @@
 defmodule Invoicing.Billing do
   @moduledoc "Invoices and line items."
 
-  use Ash.Domain
+  use Ash.Domain, extensions: [AshBoundary]
+
+  boundary do
+    deps([Invoicing, Invoicing.CRM])
+  end
 
   require Ash.Query
 
@@ -21,6 +25,20 @@ defmodule Invoicing.Billing do
       define :update_line_item, action: :update
       define :get_line_item, action: :read, get_by: [:id]
     end
+  end
+
+  @doc "Lists the company's invoices ordered by number."
+  def list_company_invoices(company_id, opts \\ []) do
+    list_invoices(with_company_query(opts, company_id))
+  end
+
+  @doc "Lists the company's invoices ordered by number, raising on error."
+  def list_company_invoices!(company_id, opts \\ []) do
+    list_invoices!(with_company_query(opts, company_id))
+  end
+
+  defp with_company_query(opts, company_id) do
+    Keyword.put(opts, :query, filter: [company_id: company_id], sort: [number: :asc])
   end
 
   @doc "Returns the number of invoices in status draft or sent."

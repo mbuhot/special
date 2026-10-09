@@ -10,7 +10,7 @@ defmodule Invoicing.MixProject do
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps(),
-      compilers: [:phoenix_live_view] ++ Mix.compilers(),
+      compilers: [:boundary, :phoenix_live_view] ++ Mix.compilers(),
       listeners: [Phoenix.CodeReloader],
       consolidate_protocols: Mix.env() != :dev
     ]
@@ -46,6 +46,7 @@ defmodule Invoicing.MixProject do
       {:sourceror, "~> 1.8", only: [:dev, :test, :e2e]},
       {:ash_phoenix, "~> 2.0"},
       {:ash_postgres, "~> 2.0"},
+      {:ash_boundary, "~> 0.2.0"},
       {:ash, "~> 3.0"},
       {:igniter, "~> 0.6", only: [:dev, :test, :e2e]},
       {:phoenix, "~> 1.8.15"},

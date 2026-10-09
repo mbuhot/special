@@ -28,7 +28,7 @@ defmodule InvoicingWeb.ContactLive.Edit do
   def handle_event("save", _params, socket) do
     case Form.submit(socket.assigns.form, params: nil) do
       {:ok, contact} ->
-        saved_contact = Ash.load!(contact, :full_name, authorize?: false)
+        saved_contact = CRM.get_contact!(contact.id, load: [:full_name], authorize?: false)
 
         {:noreply,
          socket

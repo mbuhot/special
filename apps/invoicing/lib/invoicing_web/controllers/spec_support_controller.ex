@@ -1,6 +1,8 @@
 defmodule InvoicingWeb.SpecSupportController do
   @moduledoc "JSON endpoints that let an external runtime reset, seed and inspect the app."
 
+  use Boundary, top_level?: true, check: [in: false, out: false]
+
   use InvoicingWeb, :controller
 
   alias Invoicing.{Clock, Repo}

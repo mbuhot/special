@@ -4,13 +4,12 @@ defmodule InvoicingWeb.CompanyLive.Index do
   use InvoicingWeb, :live_view
 
   alias Invoicing.CRM
-  alias Invoicing.CRM.Company
 
   @impl true
   def mount(_params, _session, socket) do
     socket =
       socket
-      |> assign(:can_create_company, Ash.can?({Company, :create}, socket.assigns.current_user))
+      |> assign(:can_create_company, CRM.can_create_company?(socket.assigns.current_user))
       |> assign(:filter_form, to_form(%{"search" => ""}, as: :filter))
       |> assign_companies("")
 

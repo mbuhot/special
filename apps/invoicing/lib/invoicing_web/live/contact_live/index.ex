@@ -4,7 +4,6 @@ defmodule InvoicingWeb.ContactLive.Index do
   use InvoicingWeb, :live_view
 
   alias Invoicing.CRM
-  alias Invoicing.CRM.Contact
 
   @impl true
   def mount(_params, _session, socket) do
@@ -12,7 +11,7 @@ defmodule InvoicingWeb.ContactLive.Index do
 
     socket =
       socket
-      |> assign(:can_create_contact, Ash.can?({Contact, :create}, current_user))
+      |> assign(:can_create_contact, CRM.can_create_contact?(current_user))
       |> assign(
         :companies,
         CRM.list_companies!(nil, actor: current_user, query: [sort: [name: :asc]])

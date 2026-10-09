@@ -13,7 +13,7 @@ seed_user.("manager@example.com", :manager)
 seed_user.("accounts@example.com", :accountant)
 seed_user.("admin@example.com", :admin)
 
-if CRM.list_companies!(authorize?: false) == [] do
+if CRM.list_companies!(nil, authorize?: false) == [] do
   CRM.create_company!(%{name: "Acme", domain: "acme.example", industry: "Manufacturing"},
     authorize?: false
   )

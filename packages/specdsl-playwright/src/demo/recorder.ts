@@ -3,10 +3,12 @@ import type { NarrationNode } from "@special/specdsl-core";
 import type { WebAppContextStates, WebAppServices } from "../handlers/web-app.js";
 import type { ResolvedControl, ScenarioEnv, StepHooks, StepInvocation } from "../runtime.js";
 import type { ClipPlacement } from "./assemble.js";
+import { signInNarration } from "./narration.js";
 import type { Clip } from "./tts.js";
 
 const MINIMUM_HOLD_SECONDS = 1.2;
 const CAPTION_HOLD_SECONDS = 2.5;
+const SIGN_IN_STEP_ID = "sign-in";
 const HIGHLIGHT_OUTLINE = "3px solid #ff5a1f";
 
 type Env = ScenarioEnv<WebAppServices, WebAppContextStates>;
@@ -24,6 +26,7 @@ const CONTROL_STEP_IDS: readonly string[] = [
 ];
 
 export interface TimelineEntry {
+  actor: string;
   stepId: string;
   line: number;
   narration: string | null;
@@ -37,28 +40,26 @@ export interface RecorderConfiguration {
   screenshotDirectory: string;
 }
 
-interface VideoClock {
+export interface ActorRecording {
+  actor: string;
+  page: Page;
   video: Video;
   recordingStartedAt: number;
   trimStartMilliseconds: number;
+  placements: ClipPlacement[];
 }
 
 /** Performs steps with highlight, hold, screenshot and title cards while logging a timeline. */
 export class DemoRecorder implements StepHooks<WebAppServices, WebAppContextStates> {
   readonly timeline: TimelineEntry[] = [];
-  readonly placements: ClipPlacement[] = [];
-  private videoClock: VideoClock | undefined;
-  private lastPage: Page | undefined;
+  private readonly recordings = new Map<string, ActorRecording>();
+  private lastActorName: string | undefined;
   private stepCount = 0;
 
   constructor(private readonly configuration: RecorderConfiguration) {}
 
-  get video(): Video | undefined {
-    return this.videoClock?.video;
-  }
-
-  get trimStartSeconds(): number {
-    return (this.videoClock?.trimStartMilliseconds ?? 0) / 1000;
+  get actorRecordings(): ActorRecording[] {
+    return [...this.recordings.values()];
   }
 
   async aroundStep(
@@ -69,8 +70,8 @@ export class DemoRecorder implements StepHooks<WebAppServices, WebAppContextStat
     const stepNumber = ++this.stepCount;
     const narration = this.configuration.narrationByLine.get(invocation.line) ?? null;
     const clip = narration === null ? undefined : this.configuration.clipsByText.get(narration);
-    const page = this.pageFor(invocation, env);
-    this.startVideoClock(invocation, page, env);
+    await this.beginRecording(invocation, env);
+    const page = this.currentRecording?.page;
     const startSeconds = this.elapsedSeconds();
     const presentation = presentationOf(invocation.id);
 
@@ -81,21 +82,17 @@ export class DemoRecorder implements StepHooks<WebAppServices, WebAppContextStat
       await this.performWithHighlight(invocation, page, perform, presentation, clip, narration);
     }
 
-    await this.captureScreenshot(this.pageFor(invocation, env), stepNumber);
-    this.logStep(invocation, narration, clip, startSeconds);
+    await this.captureScreenshot(page, stepNumber);
+    this.logStep(invocation.id, invocation.line, narration, clip, startSeconds);
   }
 
   async onNarration(node: NarrationNode): Promise<void> {
-    if (node.id !== "caption" || this.lastPage === undefined) return;
+    const recording = this.currentRecording;
+    if (node.id !== "caption" || recording === undefined) return;
+    const clip = this.configuration.clipsByText.get(node.text);
     const startSeconds = this.elapsedSeconds();
-    await showCard(this.lastPage, node.text, CAPTION_HOLD_SECONDS);
-    this.record({
-      stepId: node.id,
-      line: node.line,
-      narration: node.text,
-      startSeconds,
-      clipSeconds: 0,
-    });
+    this.logStep(node.id, node.line, node.text, clip, startSeconds);
+    await showCard(recording.page, node.text, Math.max(clip?.seconds ?? 0, CAPTION_HOLD_SECONDS));
   }
 
   private async performWithHighlight(
@@ -116,51 +113,67 @@ export class DemoRecorder implements StepHooks<WebAppServices, WebAppContextStat
     if (highlighted) await setOutline(page, selector, "");
   }
 
-  private pageFor(invocation: StepInvocation, env: Env): Page | undefined {
-    const actorName = invocation.args["Actor"];
-    if (typeof actorName === "string") this.lastPage = env.context("actor", actorName).page;
-    return this.lastPage;
+  private get currentRecording(): ActorRecording | undefined {
+    return this.lastActorName === undefined ? undefined : this.recordings.get(this.lastActorName);
   }
 
-  private startVideoClock(invocation: StepInvocation, page: Page | undefined, env: Env): void {
+  private async beginRecording(invocation: StepInvocation, env: Env): Promise<void> {
     const actorName = invocation.args["Actor"];
-    if (invocation.id !== "opens" || this.videoClock !== undefined) return;
-    if (page === undefined || typeof actorName !== "string") return;
+    if (typeof actorName !== "string") return;
+    this.lastActorName = actorName;
+    if (this.recordings.has(actorName)) return;
+    const { page, email, recordingStartedAt } = env.context("actor", actorName);
     const video = page.video();
     if (video === null) return;
-    const { recordingStartedAt } = env.context("actor", actorName);
-    this.videoClock = {
+    this.recordings.set(actorName, {
+      actor: actorName,
+      page,
       video,
       recordingStartedAt,
       trimStartMilliseconds: Date.now() - recordingStartedAt,
-    };
+      placements: [],
+    });
+    await this.showSignInCard(invocation, actorName, email);
+  }
+
+  private async showSignInCard(
+    invocation: StepInvocation,
+    actorName: string,
+    email: string,
+  ): Promise<void> {
+    const recording = this.recordings.get(actorName);
+    if (recording === undefined) return;
+    const narration = signInNarration(actorName, email);
+    const clip = this.configuration.clipsByText.get(narration);
+    this.logStep(SIGN_IN_STEP_ID, invocation.line, narration, clip, this.elapsedSeconds());
+    await showCard(recording.page, narration, holdSeconds(clip));
   }
 
   private elapsedSeconds(): number {
-    if (this.videoClock === undefined) return 0;
-    const { recordingStartedAt, trimStartMilliseconds } = this.videoClock;
+    const recording = this.currentRecording;
+    if (recording === undefined) return 0;
+    const { recordingStartedAt, trimStartMilliseconds } = recording;
     return (Date.now() - recordingStartedAt - trimStartMilliseconds) / 1000;
   }
 
   private logStep(
-    invocation: StepInvocation,
+    stepId: string,
+    line: number,
     narration: string | null,
     clip: Clip | undefined,
     startSeconds: number,
   ): void {
-    if (this.videoClock === undefined || narration === null) return;
-    this.record({
-      stepId: invocation.id,
-      line: invocation.line,
+    const recording = this.currentRecording;
+    if (recording === undefined || narration === null) return;
+    this.timeline.push({
+      actor: recording.actor,
+      stepId,
+      line,
       narration,
       startSeconds,
       clipSeconds: clip?.seconds ?? 0,
     });
-    if (clip !== undefined) this.placements.push({ file: clip.file, startSeconds });
-  }
-
-  private record(entry: TimelineEntry): void {
-    if (this.videoClock !== undefined) this.timeline.push(entry);
+    if (clip !== undefined) recording.placements.push({ file: clip.file, startSeconds });
   }
 
   private async captureScreenshot(page: Page | undefined, stepNumber: number): Promise<void> {

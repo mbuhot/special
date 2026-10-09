@@ -93,6 +93,11 @@ const DURATION_UNIT_MILLISECONDS = {
 
 type DurationUnit = keyof typeof DURATION_UNIT_MILLISECONDS;
 
+/** Email address the actor signs in with. */
+export function actorEmail(actorName: string): string {
+  return `${actorName}@example.com`.toLowerCase();
+}
+
 export const webAppContexts: ContextHandlers<WebAppServices, WebAppContextStates> = {
   app: {
     async setup(env) {
@@ -118,7 +123,7 @@ export const webAppContexts: ContextHandlers<WebAppServices, WebAppContextStates
   actor: {
     async setup(env, request) {
       const name = request.key ?? "";
-      const email = `${name}@example.com`.toLowerCase();
+      const email = actorEmail(name);
       await postJson(env, "/__spec__/factory", {
         entity: "User",
         attrs: { email, role: request.actor?.role ?? "" },

@@ -3,9 +3,17 @@ import { join } from "node:path";
 import { test } from "@playwright/test";
 import type { Scenario, SpecAst } from "@special/specdsl-core";
 import { assemble } from "./demo/assemble.js";
-import { planNarration, scenarioSlug } from "./demo/narration.js";
+import {
+  planCaptions,
+  planNarration,
+  scenarioActors,
+  scenarioSlug,
+  signInNarration,
+} from "./demo/narration.js";
 import { DemoRecorder } from "./demo/recorder.js";
+import type { ActorRecording } from "./demo/recorder.js";
 import { synthesizeAll } from "./demo/tts.js";
+import { actorEmail } from "./handlers/web-app.js";
 import type { WebAppServices } from "./handlers/web-app.js";
 import { demoOutputDirectory } from "./paths.js";
 import { loadSpecs, webAppRuntime } from "./specs.js";
@@ -27,7 +35,14 @@ async function produceDemo(
   mkdirSync(screenshotDirectory, { recursive: true });
 
   const narrationByLine = planNarration(scenario);
-  const clipsByText = await synthesizeAll(narrationByLine.values());
+  const signInTexts = scenarioActors(scenario).map((actorName) =>
+    signInNarration(actorName, actorEmail(actorName)),
+  );
+  const clipsByText = await synthesizeAll([
+    ...narrationByLine.values(),
+    ...planCaptions(scenario),
+    ...signInTexts,
+  ]);
   const recorder = new DemoRecorder({ narrationByLine, clipsByText, screenshotDirectory });
 
   await specRuntime.runScenario(
@@ -37,19 +52,25 @@ async function produceDemo(
     { modes: ["demo"], hooks: recorder },
   );
 
-  const rawVideoPath = await recorder.video?.path();
-  if (rawVideoPath === undefined) throw new Error(`no video recorded for "${scenario.name}"`);
-  await assemble({
-    rawVideo: rawVideoPath,
-    trimStartSeconds: recorder.trimStartSeconds,
-    placements: recorder.placements,
-    outputPath: join(outputDirectory, "demo.mp4"),
-  });
+  const recordings = recorder.actorRecordings;
+  if (recordings.length === 0) throw new Error(`no video recorded for "${scenario.name}"`);
+  for (const recording of recordings) {
+    await assemble({
+      rawVideo: await recording.video.path(),
+      trimStartSeconds: recording.trimStartMilliseconds / 1000,
+      placements: recording.placements,
+      outputPath: join(outputDirectory, videoFileName(recording, recordings.length)),
+    });
+  }
   rmSync(rawVideoDirectory, { recursive: true, force: true });
   writeFileSync(
     join(outputDirectory, "timeline.json"),
     `${JSON.stringify(recorder.timeline, null, 2)}\n`,
   );
+}
+
+function videoFileName(recording: ActorRecording, actorCount: number): string {
+  return actorCount === 1 ? "demo.mp4" : `demo-${scenarioSlug(recording.actor)}.mp4`;
 }
 
 function selected(scenario: Scenario): boolean {

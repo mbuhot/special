@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
   bindSource,
@@ -8,13 +9,9 @@ import {
   lineOf,
   specWith,
 } from "./helpers.js";
-import type { SpecSource } from "../src/index.js";
+import { baseSourcesFor, type SpecSource } from "../src/index.js";
 
-const INVOICING_FILES = [
-  "customer.md",
-  "invoicing/model.md",
-  "invoicing/surfaces.md",
-  "invoicing/policies.md",
+const INVOICING_FEATURE_FILES = [
   "invoicing/line-totals.md",
   "invoicing/sending.md",
   "invoicing/settling.md",
@@ -28,7 +25,10 @@ function readSpecSource(name: string): SpecSource {
   };
 }
 
-const invoicingSources = INVOICING_FILES.map(readSpecSource);
+const invoicingBaseSources = baseSourcesFor(
+  fileURLToPath(new URL("../../../specs/invoicing", import.meta.url)),
+);
+const invoicingSources = [...invoicingBaseSources, ...INVOICING_FEATURE_FILES.map(readSpecSource)];
 const lineTotalsSource = readSpecSource("invoicing/line-totals.md");
 
 describe("binding the invoicing spec", () => {
@@ -107,7 +107,7 @@ describe("binding the invoicing spec", () => {
         Ref: "INV-001",
         pairs: [
           ["status", "draft"],
-          ["customer", "Acme"],
+          ["company", "Acme"],
         ],
       },
     });
@@ -146,7 +146,7 @@ describe("binding the invoicing spec", () => {
     expect(ast.model["Invoice"]).toMatchObject({
       fields: ["number", "status", "total"],
       relations: [
-        { kind: "belongs-to", entity: "Customer" },
+        { kind: "belongs-to", entity: "Company" },
         { kind: "has-many", entity: "LineItem" },
       ],
     });
@@ -154,9 +154,12 @@ describe("binding the invoicing spec", () => {
       fields: ["description", "quantity", "unit price"],
       relations: [{ kind: "belongs-to", entity: "Invoice" }],
     });
-    expect(ast.model["Customer"]).toEqual({
-      fields: ["name", "email"],
-      relations: [{ kind: "has-many", entity: "Invoice" }],
+    expect(ast.model["Company"]).toEqual({
+      fields: ["name", "domain", "industry"],
+      relations: [
+        { kind: "has-many", entity: "Contact" },
+        { kind: "has-many", entity: "Invoice" },
+      ],
       machines: {},
     });
   });

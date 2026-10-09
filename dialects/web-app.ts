@@ -36,6 +36,16 @@ export default dialect({
         { pattern: "Belongs to <Entity>", references: ["Entity"], relation: "belongs-to" },
         { pattern: "Has many <Entity>", references: ["Entity"], relation: "has-many" },
         {
+          pattern: "<Entity> has many <Target=Entity>",
+          references: ["Entity"],
+          relation: "has-many",
+        },
+        {
+          pattern: "<Entity> belongs to <Target=Entity>",
+          references: ["Entity"],
+          relation: "belongs-to",
+        },
+        {
           pattern: "<Entity>.<Field>: <State> -> ..., ...",
           declares: ["State"],
           references: ["Entity", "Field"],

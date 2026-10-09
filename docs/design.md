@@ -48,6 +48,7 @@ Markdown. `#` is the feature. Each `##` is a section whose kind the dialect defi
 - Invoice: number, status, total. Belongs to Customer. Has many LineItem.
 - Invoice.status: draft -> sent -> paid, draft -> void
 - LineItem: description, quantity, unit price
+- Customer has many Invoice
 
 ## Surfaces
 
@@ -97,6 +98,7 @@ Used for section items and steps.
 | `<Slot>`       | slot bound to namespace `Slot`                         |
 | `<Slot:kind>`  | slot bound to namespace `Slot`, entry must have `kind` |
 | `<Slot.kind>`  | slot that captures the kind enum of namespace `Slot`   |
+| `<Alias=Slot>` | slot named `Alias` bound to namespace `Slot`           |
 | `"<Slot>"`     | slot whose source text is double-quoted                |
 | `[ ... ]`      | optional group                                         |
 | `<A> <B>, ...` | preceding element repeats, comma separated             |

@@ -185,3 +185,35 @@ describe("extending the base from a feature spec", () => {
     });
   });
 });
+
+describe("extending a shared entity from another file", () => {
+  it("a project file extends a shared entity's relations", () => {
+    const result = bindSourcesSuccess(
+      baseSpec(),
+      featureWith(
+        "## Model",
+        "- Customer has many Invoice",
+        "- Invoice belongs to Customer",
+        "",
+        ...restoringScenario,
+      ),
+    );
+    expect(result.ast.model["Customer"]?.relations).toEqual([
+      { kind: "has-many", entity: "Invoice" },
+    ]);
+    expect(result.ast.model["Invoice"]?.relations).toEqual([
+      { kind: "belongs-to", entity: "Customer" },
+    ]);
+  });
+
+  it("an extension line naming an undeclared entity is an error", () => {
+    const result = bindSources(
+      baseSpec(),
+      featureWith("## Model", "- Customer has many Shipment", "", ...restoringScenario),
+    );
+    expect(result).toEqual({
+      ok: false,
+      errors: [{ file: FEATURE_FILE, line: 4, message: 'Unknown Entity "Shipment"' }],
+    });
+  });
+});

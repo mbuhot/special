@@ -303,7 +303,7 @@ class Binder {
         namespace,
         (ancestor) => item.match.slots[ancestor],
       );
-      for (const value of valuesOf(item.match, namespace)) {
+      for (const value of referencedValues(item.match, namespace)) {
         const known =
           "key" in scopeKey && this.registry.lookup(namespace, value, scopeKey.key) !== undefined;
         known || this.report(item.file, item.line, `Unknown ${namespace} "${value}"`);
@@ -312,11 +312,11 @@ class Binder {
   }
 
   private applyRelation(item: PendingItem): void {
-    const target = item.match.slots["Entity"];
-    if (item.rule.relation !== "belongs-to" || item.entity === undefined || target === undefined) {
+    const { owner: ownerName, target } = relationEnds(item);
+    if (item.rule.relation !== "belongs-to" || ownerName === undefined || target === undefined) {
       return;
     }
-    const owner = this.registry.lookup("Entity", item.entity, "");
+    const owner = this.registry.lookup("Entity", ownerName, "");
     const targetEntry = this.registry.lookup("Entity", target, "");
     if (owner !== undefined && targetEntry !== undefined) {
       const name = targetEntry.name.charAt(0).toLowerCase() + targetEntry.name.slice(1);
@@ -392,14 +392,15 @@ class Binder {
   }
 
   private recordRelation(item: PendingItem): void {
-    const target = item.match.slots["Entity"];
+    const { owner, target } = relationEnds(item);
     const kind = item.rule.relation;
-    if (kind === undefined || item.entity === undefined || target === undefined) {
+    if (kind === undefined || owner === undefined || target === undefined) {
       return;
     }
     const targetName = this.registry.lookup("Entity", target, "")?.name;
-    targetName !== undefined &&
-      this.entityNode(item.entity)?.relations.push({ kind, entity: targetName });
+    const relations = this.entityNode(owner)?.relations;
+    const known = relations?.some((seen) => seen.kind === kind && seen.entity === targetName);
+    targetName === undefined || known || relations?.push({ kind, entity: targetName });
   }
 
   private entityNode(name: string): EntityNode | undefined {
@@ -616,6 +617,19 @@ function bestRule(
 
 function flatten(values: readonly ListValue[]): string[] {
   return values.flatMap((value) => (typeof value === "string" ? [value] : flatten(value)));
+}
+
+function relationEnds(item: PendingItem): { owner?: string; target?: string } {
+  const extensionTarget = item.match.slots["Target"];
+  return extensionTarget === undefined
+    ? { owner: item.entity, target: item.match.slots["Entity"] }
+    : { owner: item.match.slots["Entity"], target: extensionTarget };
+}
+
+function referencedValues(match: Match, namespace: string): string[] {
+  return Object.values(match.kinds)
+    .filter((slot) => slot.capture === "entry" && slot.namespace === namespace)
+    .flatMap((slot) => valuesOf(match, slot.name));
 }
 
 function valuesOf(match: Match, namespace: string): string[] {

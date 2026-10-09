@@ -2,7 +2,7 @@
  * Pattern mini-language: compiles a pattern string into a matcher over text.
  *
  * Syntax: `word` (case-insensitive literal, `a|an` alternatives), `<Slot>`, `<Slot:kind>`,
- * `<Slot.kind>`, `"<Slot>"` (quoted source), `<on|off>` / `<Name=on|off>` (enumeration),
+ * `<Slot.kind>`, `<Alias=Slot>` (slot named Alias in namespace Slot), `"<Slot>"` (quoted source),`<on|off>` / `<Name=on|off>` (enumeration),
  * `[ ... ]` (optional group), `<A> <B>, ...` and `<A> -> ...` (repeat with separator).
  * A bare slot followed by another slot takes one token; otherwise it takes one or more tokens.
  */
@@ -350,13 +350,19 @@ function parseSlot(body: string, source: SlotSource, occurrence: SlotOccurrence)
     const namespace = body.slice(0, -".kind".length);
     return { ...base, name: body, namespace, capture: "kind" };
   }
-  const [name, constraint] = body.split(":");
-  if (name === undefined || !/^[A-Za-z][A-Za-z0-9_]*$/.test(name)) {
+  const [alias, declaration] = body.includes("=") ? body.split("=") : [undefined, body];
+  const [namespace, constraint] = (declaration as string).split(":");
+  const name = alias ?? namespace;
+  if (!isIdentifier(name) || !isIdentifier(namespace)) {
     throw new PatternError(`Invalid slot name in <${body}>`);
   }
   return constraint === undefined
-    ? { ...base, name, namespace: name, capture: "entry" }
-    : { ...base, name, namespace: name, constraint, capture: "entry" };
+    ? { ...base, name, namespace, capture: "entry" }
+    : { ...base, name, namespace, constraint, capture: "entry" };
+}
+
+function isIdentifier(text: string | undefined): text is string {
+  return text !== undefined && /^[A-Za-z][A-Za-z0-9_]*$/.test(text);
 }
 
 function parseEnumeration(

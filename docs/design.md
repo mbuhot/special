@@ -59,6 +59,11 @@ Markdown. `#` is the feature. Each `##` is a section whose kind the dialect defi
 
 - Accounts: role accountant
 
+## Policies
+
+- Invoice: accountant may read
+- Invoice: admin may read, mark paid
+
 ## Context
 
 - Clock: 2026-01-15T09:00:00Z
@@ -77,6 +82,7 @@ Given an Invoice "INV-001" with status draft, customer Acme
 When Accounts opens Invoice editor for INV-001
 And Accounts enters 3 into "Quantity"
 Then Accounts sees "300.00" in "Totals"
+Then Accounts may not mark paid INV-001
 Narrate: The line total updates as the quantity changes.
 ```
 
@@ -125,7 +131,7 @@ Dialect extension is object spread. A derived dialect adds; it does not remove o
 1. Match each `##` to a section kind. Unknown heading is an error.
 2. Declaration pass over items marked `declares`, populating namespaces. Surfaces declared in the dialect are pre-populated.
 3. Expand composite steps from `## Steps`.
-4. Resolution pass over step lists. Each step parses against the step patterns. Slots resolve against namespaces with kind checks. `Ref` is scenario scoped and must be declared by an earlier step in the same scenario.
+4. Resolution pass over step lists. Each step parses against the step patterns. Slots resolve against namespaces with kind checks. `Ref` is scenario scoped and must be declared by an earlier step in the same scenario. Slots resolve Ref first, so an `Action` slot resolves in the scope of the Ref's entity.
 5. Emit AST or a list of errors with file and line.
 
 ## Lint checks
@@ -173,6 +179,7 @@ Dialect extension is object spread. A derived dialect adds; it does not remove o
       }
     }
   },
+  "policies": { "Invoice": { "accountant": ["read"], "admin": ["read", "mark paid"] } },
   "scenarios": [
     {
       "name": "Line total updates as quantity changes",

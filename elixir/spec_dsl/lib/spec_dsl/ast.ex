@@ -73,10 +73,19 @@ defmodule SpecDSL.AST do
           actors: %{String.t() => %{atom() => term()}},
           surfaces: %{String.t() => Surface.t()},
           model: %{String.t() => Entity.t()},
+          policies: %{String.t() => %{String.t() => [String.t()]}},
           scenarios: [Scenario.t()]
         }
 
-  defstruct [:dialect, contexts: %{}, actors: %{}, surfaces: %{}, model: %{}, scenarios: []]
+  defstruct [
+    :dialect,
+    contexts: %{},
+    actors: %{},
+    surfaces: %{},
+    model: %{},
+    policies: %{},
+    scenarios: []
+  ]
 
   @control_kinds %{
     "field" => :field,
@@ -118,6 +127,7 @@ defmodule SpecDSL.AST do
         |> Map.new(fn {name, config} -> {name, atomize_keys(config)} end),
       surfaces: surfaces,
       model: raw |> Map.get("model", %{}) |> Map.new(&build_entity/1),
+      policies: Map.get(raw, "policies", %{}),
       scenarios: raw |> Map.get("scenarios", []) |> Enum.map(&build_scenario(&1, surfaces))
     }
   end

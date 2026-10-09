@@ -120,4 +120,14 @@ defmodule SpecDSL.ASTTest do
              }
            }
   end
+
+  test "reads the actions each role may perform per entity" do
+    ast = AST.from_map(%{"policies" => %{"Invoice" => %{"admin" => ["read", "mark paid"]}}})
+
+    assert ast.policies == %{"Invoice" => %{"admin" => ["read", "mark paid"]}}
+  end
+
+  test "reads no policies when the AST has none" do
+    assert AST.from_map(%{}).policies == %{}
+  end
 end

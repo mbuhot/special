@@ -117,7 +117,7 @@ export class ScenarioResolver {
     const resolved = new Map<string, string>();
     const declaring = new Set(step.declares ?? []);
     const deferred: SlotDescriptor[] = [];
-    for (const descriptor of step.matcher.slots) {
+    for (const descriptor of this.resolutionOrder(step)) {
       const value = match.slots[descriptor.name];
       if (value === undefined) {
         continue;
@@ -137,6 +137,13 @@ export class ScenarioResolver {
     }
     this.nodes.push(this.stepNode(step, match, line, resolved, pairs));
     step.emits !== undefined && this.emit(step.emits, resolved, scope);
+  }
+
+  private resolutionOrder(step: ResolvedStep): SlotDescriptor[] {
+    const isScenarioScoped = (descriptor: SlotDescriptor): boolean =>
+      this.environment.dialect.namespaces[descriptor.namespace]?.scope === "scenario";
+    const { slots } = step.matcher;
+    return [...slots.filter(isScenarioScoped), ...slots.filter((slot) => !isScenarioScoped(slot))];
   }
 
   private resolveInto(

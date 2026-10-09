@@ -395,3 +395,71 @@ describe("surfaces declared only by the spec", () => {
     expect(steps?.[1]?.args).toEqual({ Actor: "Accounts", Surface: "Archive", Control: "Restore" });
   });
 });
+
+describe("policies", () => {
+  const POLICIES = [
+    "## Policies",
+    "- Invoice: admin may read, mark paid",
+    "- Invoice: accountant may read",
+    "- Invoice: admin may void",
+    "",
+  ];
+
+  it("emits policies keyed by entity and role", () => {
+    const { ast } = bindSuccess(specWith(...POLICIES));
+    expect(ast.policies).toEqual({
+      Invoice: { admin: ["read", "mark paid", "void"], accountant: ["read"] },
+    });
+  });
+
+  it("resolves an action in the scope of the ref's entity", () => {
+    const source = specWith(
+      ...POLICIES,
+      "## Scenario: Admin rights",
+      ...DRAFT_INVOICE,
+      "Then Accounts may mark paid INV-001",
+    );
+    const step = bindSuccess(source).ast.scenarios[0]?.steps[3];
+    expect(step).toEqual({
+      id: "may",
+      line: lineOf(source, "Then Accounts may mark paid"),
+      args: { Actor: "Accounts", Action: "mark paid", Ref: "INV-001" },
+      narrate: "Accounts may mark paid INV-001.",
+    });
+  });
+
+  it("reports an action no policy declares for the entity", () => {
+    const source = specWith(
+      ...POLICIES,
+      "## Scenario: Unknown right",
+      ...DRAFT_INVOICE,
+      "Then Accounts may archive INV-001",
+    );
+    expect(bindSource(source)).toEqual({
+      ok: false,
+      errors: [
+        {
+          file: "spec.md",
+          line: lineOf(source, "Accounts may archive"),
+          message: 'Unknown Action "archive" on Invoice',
+        },
+      ],
+    });
+  });
+
+  it("distinguishes may not from may", () => {
+    const source = specWith(
+      ...POLICIES,
+      "## Scenario: Denied",
+      ...DRAFT_INVOICE,
+      "Then Accounts may not void INV-001",
+      "And Accounts may read INV-001",
+    );
+    const steps = bindSuccess(source).ast.scenarios[0]?.steps.slice(3);
+    expect(steps?.map((entry) => entry.id)).toEqual(["may-not", "may"]);
+    expect(steps?.[0]).toMatchObject({
+      args: { Actor: "Accounts", Action: "void", Ref: "INV-001" },
+      narrate: "Accounts may not void INV-001.",
+    });
+  });
+});

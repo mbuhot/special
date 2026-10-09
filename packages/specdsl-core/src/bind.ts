@@ -45,6 +45,7 @@ class Binder {
   private readonly contexts: SpecAst["contexts"] = {};
   private readonly actors: SpecAst["actors"] = {};
   private readonly model: SpecAst["model"] = {};
+  private readonly policies: SpecAst["policies"] = {};
   private readonly listedSurfaces = new Set<string>();
   private readonly usedSurfaces = new Set<string>();
   private readonly composites: Composite[] = [];
@@ -222,6 +223,8 @@ class Binder {
       this.declareTransitions(item);
     } else if (item.rule.emits === "Control") {
       this.declareControls(item);
+    } else if (item.rule.emits === "Policy") {
+      this.declarePolicies(item);
     }
   }
 
@@ -273,6 +276,37 @@ class Binder {
       const name = match.slots[keyNamespace];
       const fields = scalars.filter(([slot]) => slot !== keyNamespace);
       name !== undefined && (this.actors[name] = { ...Object.fromEntries(fields), extra: {} });
+    } else if (rule.output === "policies") {
+      this.recordPolicy(item);
+    }
+  }
+
+  private recordPolicy(item: PendingItem): void {
+    const entity = this.registry.lookup("Entity", item.match.slots["Entity"] ?? "", "")?.name;
+    const role = item.match.slots["Role"];
+    if (entity === undefined || role === undefined) {
+      return;
+    }
+    const roles = (this.policies[entity] ??= {});
+    const actions = (roles[role] ??= []);
+    for (const action of valuesOf(item.match, "Action")) {
+      actions.includes(action) || actions.push(action);
+    }
+  }
+
+  private declarePolicies(item: PendingItem): void {
+    const entity = this.registry.lookup("Entity", item.match.slots["Entity"] ?? "", "")?.name;
+    const role = item.match.slots["Role"];
+    if (entity === undefined || role === undefined) {
+      return;
+    }
+    for (const action of valuesOf(item.match, "Action")) {
+      this.analysis.declarations.push({
+        kind: "Policy",
+        key: `${entity}.${role}:${action}`,
+        line: item.line,
+        data: { Entity: entity, Role: role, Action: action },
+      });
     }
   }
 
@@ -443,6 +477,7 @@ class Binder {
       actors: this.actors,
       surfaces: this.surfaceNodes(),
       model: this.model,
+      policies: this.policies,
       scenarios,
     };
     return { ok: true, file: this.file, ast, analysis: this.analysis };

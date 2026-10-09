@@ -8,6 +8,7 @@ export default dialect({
   namespaces: {
     Entity: ns(),
     Field: ns({ scope: "Entity" }),
+    Action: ns({ scope: "Entity" }),
     State: ns({ scope: "Field" }),
     Surface: ns(),
     Control: ns({ scope: "Surface", kinds: ["field", "button", "region", "table", "link"] }),
@@ -55,6 +56,18 @@ export default dialect({
     Actors: section({
       occurs: "once",
       items: [{ pattern: "<Actor>: role <Role>", declares: ["Actor"], output: "actors" }],
+    }),
+    Policies: section({
+      occurs: "once",
+      items: [
+        {
+          pattern: "<Entity>: <Role> may <Action>, ...",
+          declares: ["Action"],
+          references: ["Entity"],
+          emits: "Policy",
+          output: "policies",
+        },
+      ],
     }),
     Context: section({
       occurs: "once",
@@ -115,6 +128,23 @@ export default dialect({
     step("job <Job> runs", {
       uses: ["data"],
       narrate: ({ Job }) => `The ${Job} job runs.`,
+    }),
+    step("<Actor> may <Action> <Ref>", {
+      id: "may",
+      uses: ["data"],
+      emits: { kind: "PolicyUse", fields: { Actor: "Actor", Action: "Action", Ref: "Ref" } },
+      narrate: ({ Actor, Action, Ref }) => `${Actor} may ${Action} ${Ref}.`,
+    }),
+    step("<Actor> may not <Action> <Ref>", {
+      id: "may-not",
+      uses: ["data"],
+      emits: { kind: "PolicyUse", fields: { Actor: "Actor", Action: "Action", Ref: "Ref" } },
+      narrate: ({ Actor, Action, Ref }) => `${Actor} may not ${Action} ${Ref}.`,
+    }),
+    step('<Actor> does not see "<Control>"', {
+      id: "does-not-see",
+      uses: ["actor"],
+      narrate: ({ Actor, Control }) => `${Actor} does not see ${Control}.`,
     }),
   ],
   checks: [

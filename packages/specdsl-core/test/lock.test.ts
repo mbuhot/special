@@ -18,6 +18,9 @@ describe("lock file", () => {
       "has-field",
       "time-advances",
       "job-runs",
+      "may",
+      "may-not",
+      "does-not-see",
     ]);
   });
 

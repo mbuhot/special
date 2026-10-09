@@ -7,7 +7,7 @@ export type SectionBody = "steps" | "composites";
 export type ControlKind = "field" | "button" | "region" | "table" | "link";
 export type StepMode = "test" | "demo";
 export type ItemRelation = "belongs-to" | "has-many";
-export type ItemOutput = "actors" | "contexts";
+export type ItemOutput = "actors" | "contexts" | "policies";
 
 export interface NamespaceDefinition {
   scope?: string;

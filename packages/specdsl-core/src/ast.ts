@@ -52,6 +52,7 @@ export interface SpecAst {
   actors: Record<string, Record<string, string | Record<string, string>>>;
   surfaces: Record<string, SurfaceNode>;
   model: Record<string, EntityNode>;
+  policies: Record<string, Record<string, string[]>>;
   scenarios: Scenario[];
 }
 

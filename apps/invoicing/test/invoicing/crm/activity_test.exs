@@ -1,5 +1,5 @@
 defmodule Invoicing.CRM.ActivityTest do
-  use Invoicing.DataCase
+  use Invoicing.DataCase, async: true
 
   alias Invoicing.{Accounts, Clock, CRM}
 
@@ -17,8 +17,6 @@ defmodule Invoicing.CRM.ActivityTest do
         %{first_name: "Ada", last_name: "Lovelace", company_id: company.id},
         authorize?: false
       )
-
-    on_exit(&Clock.unfreeze/0)
 
     %{sales_rep: sales_rep, admin: admin, ada: ada}
   end

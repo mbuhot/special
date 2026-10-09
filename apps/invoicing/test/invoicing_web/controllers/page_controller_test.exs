@@ -1,5 +1,5 @@
 defmodule InvoicingWeb.PageControllerTest do
-  use InvoicingWeb.ConnCase
+  use InvoicingWeb.ConnCase, async: true
 
   test "GET /", %{conn: conn} do
     conn = get(conn, ~p"/")

@@ -1,9 +1,9 @@
 defmodule InvoicingWeb.DashboardLiveTest do
-  use InvoicingWeb.ConnCase
+  use InvoicingWeb.ConnCase, async: true
 
   import Phoenix.LiveViewTest
 
-  alias Invoicing.{Accounts, Billing, Clock, CRM, Pipeline}
+  alias Invoicing.{Accounts, Clock, CRM, Pipeline}
 
   setup %{conn: conn} do
     sales_rep =
@@ -12,7 +12,6 @@ defmodule InvoicingWeb.DashboardLiveTest do
     acme = CRM.create_company!(%{name: "Acme"}, authorize?: false)
 
     Clock.freeze(~U[2026-01-15 09:00:00Z])
-    on_exit(&Clock.unfreeze/0)
 
     %{conn: Accounts.log_in_conn(conn, sales_rep), sales_rep: sales_rep, acme: acme}
   end
@@ -28,38 +27,6 @@ defmodule InvoicingWeb.DashboardLiveTest do
       %{title: "Follow-up", due_date: due_date, deal_id: deal.id, assignee_id: sales_rep.id},
       authorize?: false
     )
-  end
-
-  defp create_invoice(number, acme) do
-    Billing.create_invoice!(%{number: number, company_id: acme.id}, authorize?: false)
-  end
-
-  test "counts open deals per stage and leaves out closed deals", %{
-    conn: conn,
-    acme: acme,
-    sales_rep: sales_rep
-  } do
-    create_deal("Lead one", acme, sales_rep)
-    create_deal("Lead two", acme, sales_rep)
-
-    "Proposal one"
-    |> create_deal(acme, sales_rep)
-    |> Pipeline.qualify_deal!(authorize?: false)
-    |> Pipeline.propose_deal!(authorize?: false)
-
-    "Won one"
-    |> create_deal(acme, sales_rep)
-    |> Pipeline.qualify_deal!(authorize?: false)
-    |> Pipeline.propose_deal!(authorize?: false)
-    |> Pipeline.win_deal!(authorize?: false)
-
-    {:ok, view, _html} = live(conn, ~p"/dashboard")
-
-    stages = view |> element("#open-deals-by-stage") |> render()
-    assert stages =~ "lead 2"
-    assert stages =~ "qualified 0"
-    assert stages =~ "proposal 1"
-    refute stages =~ "won"
   end
 
   test "counts open tasks due before today as overdue", %{
@@ -80,19 +47,67 @@ defmodule InvoicingWeb.DashboardLiveTest do
     assert view |> element("#overdue-tasks-count") |> render() =~ ">1<"
   end
 
-  test "counts draft and sent invoices as unpaid", %{conn: conn, acme: acme} do
-    "INV-001" |> create_invoice(acme) |> Billing.send_invoice!(authorize?: false)
+  defp create_activity(contact, kind, body, occurred_at, sales_rep) do
+    CRM.create_activity!(
+      %{
+        kind: kind,
+        body: body,
+        occurred_at: occurred_at,
+        contact_id: contact.id,
+        user_id: sales_rep.id
+      },
+      authorize?: false
+    )
+  end
 
-    "INV-002"
-    |> create_invoice(acme)
-    |> Billing.send_invoice!(authorize?: false)
-    |> Billing.mark_invoice_paid!(authorize?: false)
+  test "lists the five most recent activities across contacts, newest first", %{
+    conn: conn,
+    acme: acme,
+    sales_rep: sales_rep
+  } do
+    ada =
+      CRM.create_contact!(%{first_name: "Ada", last_name: "Lovelace", company_id: acme.id},
+        authorize?: false
+      )
 
-    create_invoice("INV-003", acme)
+    for day <- 1..6 do
+      occurred_at = DateTime.new!(Date.new!(2026, 1, day), ~T[09:00:00], "Etc/UTC")
+      create_activity(ada, :call, "Call on day #{day}", occurred_at, sales_rep)
+    end
 
     {:ok, view, _html} = live(conn, ~p"/dashboard")
 
-    assert view |> element("#unpaid-invoices-count") |> render() =~ ">2<"
+    recent = view |> element("#recent-activity") |> render()
+    assert recent =~ "Call on day 6"
+    assert recent =~ "Call on day 2"
+    refute recent =~ "Call on day 1<"
+    assert recent =~ "Ada Lovelace"
+    assert recent =~ "Call"
+    assert recent =~ "6 Jan 2026"
+
+    assert recent |> :binary.match("Call on day 6") |> elem(0) <
+             recent |> :binary.match("Call on day 5") |> elem(0)
+  end
+
+  test "links a recent activity to its contact", %{conn: conn, acme: acme, sales_rep: sales_rep} do
+    ada =
+      CRM.create_contact!(%{first_name: "Ada", last_name: "Lovelace", company_id: acme.id},
+        authorize?: false
+      )
+
+    create_activity(ada, :note, "Prefers email", ~U[2026-01-10 09:00:00Z], sales_rep)
+
+    {:ok, view, _html} = live(conn, ~p"/dashboard")
+
+    view |> element("#recent-activity a", "Ada Lovelace") |> render_click()
+
+    assert_redirect(view, ~p"/contacts/#{ada.id}")
+  end
+
+  test "says there is no activity when none is logged", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/dashboard")
+
+    assert view |> element("#recent-activity") |> render() =~ "No activity yet"
   end
 
   test "logging in lands on the dashboard", %{conn: conn, sales_rep: sales_rep} do

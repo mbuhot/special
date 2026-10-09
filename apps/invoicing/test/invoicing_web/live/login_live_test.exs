@@ -1,5 +1,5 @@
 defmodule InvoicingWeb.LoginLiveTest do
-  use InvoicingWeb.ConnCase
+  use InvoicingWeb.ConnCase, async: true
 
   import Phoenix.LiveViewTest
 

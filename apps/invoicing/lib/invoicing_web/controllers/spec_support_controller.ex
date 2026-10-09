@@ -34,13 +34,13 @@ defmodule InvoicingWeb.SpecSupportController do
   end
 
   def clock(conn, %{"at" => nil}) do
-    Clock.unfreeze()
+    Clock.unfreeze_globally()
     json(conn, %{frozen: false})
   end
 
   def clock(conn, %{"at" => instant}) do
     {:ok, frozen_at, _utc_offset} = DateTime.from_iso8601(instant)
-    Clock.freeze(frozen_at)
+    Clock.freeze_globally(frozen_at)
     json(conn, %{frozen: true, at: DateTime.to_iso8601(frozen_at)})
   end
 

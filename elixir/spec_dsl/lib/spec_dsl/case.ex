@@ -1,34 +1,65 @@
 defmodule SpecDSL.Case do
-  @moduledoc "Defines one ExUnit test per scenario found in AST JSON files matched by a glob."
+  @moduledoc "Defines one ExUnit module per AST JSON file matched by a glob, with one test per scenario."
 
   alias SpecDSL.AST
 
-  @doc "Expands the `:ast` glob and defines a test per scenario that runs through the `:handlers` module."
+  @wildcard_characters ["*", "?", "[", "{"]
+
+  @doc "Expands the `:ast` glob and defines a nested async test module per file that runs its scenarios through the `:handlers` module."
   defmacro __using__(opts) do
     glob = Keyword.fetch!(opts, :ast)
     handlers = Keyword.fetch!(opts, :handlers)
-    async = Keyword.get(opts, :async, false)
+    async = Keyword.get(opts, :async, true)
     register = Keyword.get(opts, :register, true)
 
-    paths =
+    pattern =
       glob
       |> Code.eval_quoted([], __CALLER__)
       |> elem(0)
       |> Path.expand()
+
+    base_directory = static_prefix(pattern)
+
+    feature_modules =
+      pattern
       |> Path.wildcard()
       |> Enum.sort()
+      |> Enum.map(fn path ->
+        module = feature_module(__CALLER__.module, base_directory, path)
+        feature_module_definition(module, path, handlers, async, register)
+      end)
 
     quote do
-      use ExUnit.Case, async: unquote(async), register: unquote(register)
-      unquote_splicing(Enum.map(paths, &external_resource/1))
-      unquote_splicing(Enum.flat_map(paths, &scenario_tests(&1, handlers)))
+      (unquote_splicing(feature_modules))
     end
   end
 
-  defp external_resource(path) do
+  defp feature_module_definition(module, path, handlers, async, register) do
     quote do
-      @external_resource unquote(path)
+      defmodule unquote(module) do
+        use ExUnit.Case, async: unquote(async), register: unquote(register)
+        @external_resource unquote(path)
+        unquote_splicing(scenario_tests(path, handlers))
+      end
     end
+  end
+
+  defp static_prefix(pattern) do
+    pattern
+    |> Path.split()
+    |> Enum.take_while(fn segment -> not String.contains?(segment, @wildcard_characters) end)
+    |> Path.join()
+  end
+
+  defp feature_module(parent, base_directory, path) do
+    segments =
+      path
+      |> Path.relative_to(base_directory)
+      |> String.replace_suffix(".ast.json", "")
+      |> Path.split()
+      |> Enum.map(&(&1 |> String.replace("-", "_") |> Macro.camelize()))
+
+    Module.concat([parent | segments])
   end
 
   defp scenario_tests(path, handlers) do

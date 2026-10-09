@@ -1,5 +1,5 @@
 defmodule Invoicing.Billing.InvoiceTest do
-  use Invoicing.DataCase, async: false
+  use Invoicing.DataCase, async: true
 
   alias Invoicing.{Accounts, Billing, Clock, CRM}
 
@@ -84,7 +84,6 @@ defmodule Invoicing.Billing.InvoiceTest do
     admin: admin
   } do
     Clock.freeze(~U[2026-01-15 09:00:00Z])
-    on_exit(&Clock.unfreeze/0)
     company_id = invoice.company_id
 
     primary_contact =

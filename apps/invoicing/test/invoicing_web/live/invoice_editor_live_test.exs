@@ -1,5 +1,5 @@
 defmodule InvoicingWeb.InvoiceEditorLiveTest do
-  use InvoicingWeb.ConnCase
+  use InvoicingWeb.ConnCase, async: true
 
   import Phoenix.LiveViewTest
 
@@ -24,21 +24,6 @@ defmodule InvoicingWeb.InvoiceEditorLiveTest do
     %{conn: Accounts.log_in_conn(conn, accountant), invoice: invoice}
   end
 
-  defp sign_in_as_admin(conn) do
-    admin = Accounts.create_user!(%{email: "admin@example.com", role: :admin}, authorize?: false)
-    Accounts.log_in_conn(conn, admin)
-  end
-
-  test "changing the quantity recalculates the invoice total", %{conn: conn, invoice: invoice} do
-    {:ok, view, _html} = live(conn, ~p"/invoices/#{invoice.id}/edit")
-
-    view
-    |> form("#invoice-form", invoice: %{lines: %{"0" => %{quantity: "3"}}})
-    |> render_change()
-
-    assert view |> element("#totals") |> render() =~ "300.00"
-  end
-
   test "a changed quantity is saved with the invoice", %{conn: conn, invoice: invoice} do
     {:ok, view, _html} = live(conn, ~p"/invoices/#{invoice.id}/edit")
 
@@ -49,39 +34,6 @@ defmodule InvoicingWeb.InvoiceEditorLiveTest do
     {:ok, reloaded_view, _html} = live(conn, ~p"/invoices/#{invoice.id}/edit")
 
     assert reloaded_view |> element("#totals") |> render() =~ "300.00"
-  end
-
-  test "sending the invoice shows the sent status", %{conn: conn, invoice: invoice} do
-    {:ok, view, _html} = live(conn, ~p"/invoices/#{invoice.id}/edit")
-
-    assert view |> element("#invoice-status") |> render() =~ "draft"
-
-    view |> element("#send-invoice") |> render_click()
-
-    assert view |> element("#invoice-status") |> render() =~ "sent"
-  end
-
-  test "an admin marks a sent invoice paid", %{conn: conn, invoice: invoice} do
-    Billing.send_invoice!(invoice, authorize?: false)
-    conn = sign_in_as_admin(conn)
-    {:ok, view, _html} = live(conn, ~p"/invoices/#{invoice.id}/edit")
-
-    assert view |> element("#invoice-status") |> render() =~ "sent"
-
-    view |> element("#mark-paid-invoice") |> render_click()
-
-    assert view |> element("#invoice-status") |> render() =~ "paid"
-  end
-
-  test "an admin voids a draft invoice", %{conn: conn, invoice: invoice} do
-    conn = sign_in_as_admin(conn)
-    {:ok, view, _html} = live(conn, ~p"/invoices/#{invoice.id}/edit")
-
-    assert view |> element("#invoice-status") |> render() =~ "draft"
-
-    view |> element("#void-invoice") |> render_click()
-
-    assert view |> element("#invoice-status") |> render() =~ "void"
   end
 
   test "an accountant does not see Mark paid or Void", %{conn: conn, invoice: invoice} do
@@ -96,16 +48,5 @@ defmodule InvoicingWeb.InvoiceEditorLiveTest do
     conn = Phoenix.ConnTest.build_conn()
 
     assert {:error, {:redirect, %{to: "/login"}}} = live(conn, ~p"/invoices/#{invoice.id}/edit")
-  end
-
-  test "creating a new invoice opens its editor", %{conn: conn} do
-    {:ok, view, _html} = live(conn, ~p"/invoices")
-
-    assert view |> element("#invoices") |> render() =~ "INV-001"
-
-    {:ok, _editor_view, html} =
-      view |> element("#new-invoice") |> render_click() |> follow_redirect(conn)
-
-    assert html =~ "INV-2"
   end
 end

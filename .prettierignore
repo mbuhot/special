@@ -1,0 +1,12 @@
+pnpm-lock.yaml
+apps/*/assets/
+apps/*/priv/
+apps/*/AGENTS.md
+apps/*/README.md
+elixir/*/deps/
+elixir/*/_build/
+apps/*/deps/
+apps/*/_build/
+*.ast.json
+*.lock.json
+demo-output/

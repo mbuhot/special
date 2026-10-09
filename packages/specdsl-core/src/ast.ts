@@ -27,11 +27,13 @@ export type ScenarioNode = StepNode | NarrationNode;
 export interface Scenario {
   name: string;
   source: { file: string; line: number };
+  story?: string;
   steps: ScenarioNode[];
 }
 
 export interface SurfaceNode {
   route?: string;
+  shared?: true;
   controls: Record<string, { kind: ControlKind | string; locators: Record<string, string> }>;
 }
 

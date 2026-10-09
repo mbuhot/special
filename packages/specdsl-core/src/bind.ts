@@ -144,6 +144,7 @@ class Binder {
         namespace: "Surface",
         name: surfaceName,
         scopeKey: "",
+        shared: surface.shared === true,
         origin: "dialect",
         line: 0,
         data: {},
@@ -195,7 +196,19 @@ class Binder {
         this.declareValue(item, namespace, value, index),
       );
     }
+    this.markSharedSurface(item);
     this.recordEntity(item);
+  }
+
+  private markSharedSurface(item: PendingItem): void {
+    const surfaceName = item.match.slots["Surface"];
+    if (
+      item.rule.emits === "Control" &&
+      item.match.optionals[0] === true &&
+      surfaceName !== undefined
+    ) {
+      this.registry.markShared(surfaceName);
+    }
   }
 
   private declareValue(item: PendingItem, namespace: string, value: string, index: number): void {
@@ -517,8 +530,9 @@ class Binder {
       file,
       report: (line, message) => this.report(file, line, message),
     });
-    const steps = resolver.resolve(lines);
-    return { name, source: { file, line: section.line }, steps };
+    const { story, steps } = resolver.resolve(lines);
+    const source = { file, line: section.line };
+    return story === undefined ? { name, source, steps } : { name, source, story, steps };
   }
 
   private rejectDuplicateScenario(file: string, line: number, name: string): void {
@@ -545,7 +559,11 @@ class Binder {
     const controls = this.registry
       .inScope("Control", name)
       .map((entry) => [entry.name, controlNode(entry, definition)]);
-    const node: SurfaceNode = { controls: Object.fromEntries(controls) };
+    const shared = this.registry.lookup("Surface", name, "")?.shared === true;
+    const node: SurfaceNode = {
+      ...(shared ? { shared: true as const } : {}),
+      controls: Object.fromEntries(controls),
+    };
     return definition?.route === undefined ? node : { route: definition.route, ...node };
   }
 

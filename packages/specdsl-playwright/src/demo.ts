@@ -3,13 +3,7 @@ import { join } from "node:path";
 import { test } from "@playwright/test";
 import type { Scenario, SpecAst } from "@special/specdsl-core";
 import { assemble } from "./demo/assemble.js";
-import {
-  planCaptions,
-  planNarration,
-  scenarioActors,
-  scenarioSlug,
-  signInNarration,
-} from "./demo/narration.js";
+import { planCaptions, planNarration, openingNarrations, scenarioSlug } from "./demo/narration.js";
 import { DemoRecorder } from "./demo/recorder.js";
 import type { ActorRecording } from "./demo/recorder.js";
 import { synthesizeAll } from "./demo/tts.js";
@@ -34,13 +28,17 @@ async function produceDemo(
   mkdirSync(screenshotDirectory, { recursive: true });
 
   const narrationByLine = planNarration(scenario);
-  const signInTexts = scenarioActors(scenario).map(signInNarration);
   const clipsByText = await synthesizeAll([
     ...narrationByLine.values(),
     ...planCaptions(scenario),
-    ...signInTexts,
+    ...openingNarrations(scenario),
   ]);
-  const recorder = new DemoRecorder({ narrationByLine, clipsByText, screenshotDirectory });
+  const recorder = new DemoRecorder({
+    narrationByLine,
+    clipsByText,
+    screenshotDirectory,
+    story: scenario.story,
+  });
 
   await specRuntime.runScenario(
     spec,

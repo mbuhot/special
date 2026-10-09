@@ -9,15 +9,16 @@ defmodule SpecDSL.Control do
 end
 
 defmodule SpecDSL.Surface do
-  @moduledoc "A routable screen holding named controls."
+  @moduledoc "A routable screen holding named controls; a shared surface is present on every page."
 
   @type t :: %__MODULE__{
           name: String.t(),
           route: String.t() | nil,
+          shared: boolean(),
           controls: %{String.t() => SpecDSL.Control.t()}
         }
 
-  defstruct [:name, :route, controls: %{}]
+  defstruct [:name, :route, shared: false, controls: %{}]
 end
 
 defmodule SpecDSL.Step do
@@ -36,15 +37,16 @@ defmodule SpecDSL.Step do
 end
 
 defmodule SpecDSL.Scenario do
-  @moduledoc "A named list of steps with its Markdown source position."
+  @moduledoc "A named list of steps with its user story and Markdown source position."
 
   @type t :: %__MODULE__{
           name: String.t(),
           source: %{file: String.t(), line: non_neg_integer()},
+          story: String.t() | nil,
           steps: [SpecDSL.Step.t()]
         }
 
-  defstruct [:name, :source, steps: []]
+  defstruct [:name, :source, :story, steps: []]
 end
 
 defmodule SpecDSL.Entity do
@@ -183,7 +185,13 @@ defmodule SpecDSL.AST do
         {control_name, build_control(control_name, control_raw)}
       end)
 
-    {name, %Surface{name: name, route: Map.get(raw, "route"), controls: controls}}
+    {name,
+     %Surface{
+       name: name,
+       route: Map.get(raw, "route"),
+       shared: Map.get(raw, "shared", false),
+       controls: controls
+     }}
   end
 
   defp build_control(name, raw) do
@@ -201,6 +209,7 @@ defmodule SpecDSL.AST do
     %Scenario{
       name: Map.fetch!(raw, "name"),
       source: %{file: get_in(raw, ["source", "file"]), line: get_in(raw, ["source", "line"])},
+      story: Map.get(raw, "story"),
       steps: raw |> Map.get("steps", []) |> Enum.map(&build_step(&1, surfaces))
     }
   end

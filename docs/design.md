@@ -54,6 +54,7 @@ Markdown. `#` is the feature. Each `##` is a section whose kind the dialect defi
 
 - Invoice list: table "Invoices", button "New invoice"
 - Invoice editor: field "Quantity", field "Unit price", region "Totals", button "Send"
+- Sidebar (shared): link "Dashboard", link "Invoices"
 
 ## Actors
 
@@ -77,6 +78,7 @@ Markdown. `#` is the feature. Each `##` is a section whose kind the dialect defi
 
 ## Scenario: Line total updates as quantity changes
 
+Story: As accounts, I need the line total to follow the quantity, so that the customer is billed the correct amount.
 Given a Customer "Acme"
 Given an Invoice "INV-001" with status draft, customer Acme
 When Accounts opens Invoice editor for INV-001
@@ -88,21 +90,26 @@ Narrate: The line total updates as the quantity changes.
 
 `Given`, `When`, `Then`, `And` are ignored prefixes. Step shape is determined by the pattern match.
 
+The `Story:` line is the first line of a scenario and states who needs what and why. Demo mode speaks it over the opening card, and lint warns when a scenario has none.
+
+A surface listed as `<Surface> (shared): ...` (or declared with `shared: true` in the dialect) is present on every page, so its controls resolve from any step; the step's `Surface` argument names the shared surface and the actor stays on the page they were on.
+
 ## Pattern mini-language
 
 Used for section items and steps.
 
-| Syntax         | Meaning                                                |
-| -------------- | ------------------------------------------------------ |
-| `word`         | literal token, case-insensitive                        |
-| `<Slot>`       | slot bound to namespace `Slot`                         |
-| `<Slot:kind>`  | slot bound to namespace `Slot`, entry must have `kind` |
-| `<Slot.kind>`  | slot that captures the kind enum of namespace `Slot`   |
-| `<Alias=Slot>` | slot named `Alias` bound to namespace `Slot`           |
-| `"<Slot>"`     | slot whose source text is double-quoted                |
-| `[ ... ]`      | optional group                                         |
-| `<A> <B>, ...` | preceding element repeats, comma separated             |
-| `<on\|off>`    | inline enum                                            |
+| Syntax         | Meaning                                                         |
+| -------------- | --------------------------------------------------------------- |
+| `word`         | literal token, case-insensitive                                 |
+| `<Slot>`       | slot bound to namespace `Slot`                                  |
+| `<Slot:kind>`  | slot bound to namespace `Slot`, entry must have `kind`          |
+| `<Slot:a\|b>`  | slot bound to namespace `Slot`, entry must have kind `a` or `b` |
+| `<Slot.kind>`  | slot that captures the kind enum of namespace `Slot`            |
+| `<Alias=Slot>` | slot named `Alias` bound to namespace `Slot`                    |
+| `"<Slot>"`     | slot whose source text is double-quoted                         |
+| `[ ... ]`      | optional group                                                  |
+| `<A> <B>, ...` | preceding element repeats, comma separated                      |
+| `<on\|off>`    | inline enum                                                     |
 
 Compiles to a parser at dialect load. Longest match wins; ambiguity between two steps is a dialect load error.
 
@@ -163,6 +170,15 @@ Merging is add-only: redeclaring an entity, actor, or surface is an error naming
   "contexts": { "clock": { "DateTime": "2026-01-15T09:00:00Z" } },
   "actors": { "Accounts": { "Role": "accountant", "extra": {} } },
   "surfaces": {
+    "Sidebar": {
+      "shared": true,
+      "controls": {
+        "Companies": {
+          "kind": "link",
+          "locators": { "css": "#nav-companies", "lv": "#nav-companies" }
+        }
+      }
+    },
     "Invoice editor": {
       "route": "/invoices/{id}/edit",
       "controls": {

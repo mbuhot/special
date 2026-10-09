@@ -57,7 +57,7 @@ export default dialect({
       occurs: "once",
       items: [
         {
-          pattern: '<Surface>: <Control.kind> "<Control>", ...',
+          pattern: '<Surface>[ (shared)]: <Control.kind> "<Control>", ...',
           declares: ["Surface", "Control"],
           emits: "Control",
         },
@@ -98,7 +98,7 @@ export default dialect({
       id: "enters",
       uses: ["actor"],
     }),
-    step('<Actor> clicks "<Control:button>"', {
+    step('<Actor> clicks "<Control:button|link>"', {
       uses: ["actor"],
     }),
     step('<Actor> selects <Value> in "<Control:field>"', {

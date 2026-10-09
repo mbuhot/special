@@ -155,6 +155,7 @@ A single file may hold every section. Bound with `specdsl bind`, it is its own b
 
 ## Scenario: Line total updates as quantity changes
 
+Story: As accounts, I need the line total to follow the quantity, so that the customer is billed the correct amount.
 Given a Customer "Acme"
 Given an Invoice "INV-001" with status draft, customer Acme
 Given a LineItem "Consulting" with invoice INV-001, quantity 1, unit price 100
@@ -166,6 +167,7 @@ Narrate: The line total updates as the quantity changes.
 
 - Every step matches one pattern from the dialect. Unknown words fail at bind time with a line number.
 - Nouns come from `## Model`, `## Surfaces` and `## Actors`. Quoted names are controls on the surface the actor has open.
+- `Story:` is the first line of every scenario: "As <who>, I need <what>, so that <why>." Demo mode speaks it over the opening card, and lint warns when it is missing.
 - `Narrate:` applies to the step above it and is used by demo mode only.
 
 ## Adding vocabulary

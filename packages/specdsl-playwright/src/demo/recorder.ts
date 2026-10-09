@@ -9,6 +9,7 @@ import type { Clip } from "./tts.js";
 const MINIMUM_HOLD_SECONDS = 1.2;
 const CAPTION_HOLD_SECONDS = 2.5;
 const SIGN_IN_STEP_ID = "sign-in";
+const STORY_STEP_ID = "story";
 const HIGHLIGHT_OUTLINE = "3px solid #ff5a1f";
 
 type Env = ScenarioEnv<WebAppServices, WebAppContextStates>;
@@ -39,6 +40,7 @@ export interface RecorderConfiguration {
   narrationByLine: ReadonlyMap<number, string>;
   clipsByText: ReadonlyMap<string, Clip>;
   screenshotDirectory: string;
+  story?: string | undefined;
 }
 
 export interface ActorRecording {
@@ -138,7 +140,22 @@ export class DemoRecorder implements StepHooks<WebAppServices, WebAppContextStat
       placements: [],
       endSeconds: 0,
     });
-    await this.showSignInCard(invocation, actorName);
+    this.recordings.size === 1 && this.configuration.story !== undefined
+      ? await this.showStoryCard(invocation, actorName, this.configuration.story)
+      : await this.showSignInCard(invocation, actorName);
+  }
+
+  private async showStoryCard(
+    invocation: StepInvocation,
+    actorName: string,
+    story: string,
+  ): Promise<void> {
+    const recording = this.recordings.get(actorName);
+    if (recording === undefined) return;
+    const clip = this.configuration.clipsByText.get(story);
+    this.logStep(STORY_STEP_ID, invocation.line, story, clip, this.elapsedSeconds());
+    await showCard(recording.page, story, holdSeconds(clip), `Signed in as ${actorName}`);
+    this.markPresented();
   }
 
   private async showSignInCard(invocation: StepInvocation, actorName: string): Promise<void> {
@@ -218,17 +235,34 @@ async function setOutline(page: Page, selector: string, outline: string): Promis
     .catch(() => undefined);
 }
 
-async function showCard(page: Page, text: string, seconds: number): Promise<void> {
-  await page.evaluate((cardText) => {
-    const card = document.createElement("div");
-    card.id = "demo-title-card";
-    card.textContent = cardText;
-    card.style.cssText =
-      "position:fixed;inset:0;display:flex;align-items:center;justify-content:center;" +
-      "background:rgba(15,23,42,0.94);color:#fff;font:600 36px system-ui,sans-serif;" +
-      "text-align:center;padding:64px;z-index:2147483647";
-    document.body.appendChild(card);
-  }, text);
+async function showCard(
+  page: Page,
+  text: string,
+  seconds: number,
+  subtitle?: string | undefined,
+): Promise<void> {
+  await page.evaluate(
+    ({ cardText, subtitleText }) => {
+      const card = document.createElement("div");
+      card.id = "demo-title-card";
+      const mainLine = document.createElement("div");
+      mainLine.textContent = cardText;
+      card.appendChild(mainLine);
+      if (subtitleText !== undefined) {
+        const subLine = document.createElement("div");
+        subLine.textContent = subtitleText;
+        subLine.style.cssText = "font-size:22px;font-weight:400;margin-top:28px;opacity:0.8";
+        card.appendChild(subLine);
+      }
+      card.style.cssText =
+        "position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;" +
+        "justify-content:center;" +
+        "background:rgba(15,23,42,0.94);color:#fff;font:600 36px system-ui,sans-serif;" +
+        "text-align:center;padding:64px;z-index:2147483647";
+      document.body.appendChild(card);
+    },
+    { cardText: text, subtitleText: subtitle },
+  );
   await page.waitForTimeout(seconds * 1000);
   await page.evaluate(() => document.getElementById("demo-title-card")?.remove());
 }

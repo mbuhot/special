@@ -1,7 +1,7 @@
 /**
  * Pattern mini-language: compiles a pattern string into a matcher over text.
  *
- * Syntax: `word` (case-insensitive literal, `a|an` alternatives), `<Slot>`, `<Slot:kind>`,
+ * Syntax: `word` (case-insensitive literal, `a|an` alternatives), `<Slot>`, `<Slot:kind>`, `<Slot:kind|kind>`,
  * `<Slot.kind>`, `<Alias=Slot>` (slot named Alias in namespace Slot), `"<Slot>"` (quoted source),`<on|off>` / `<Name=on|off>` (enumeration),
  * `[ ... ]` (optional group), `<A> <B>, ...` and `<A> -> ...` (repeat with separator).
  * A bare slot followed by another slot takes one token; otherwise it takes one or more tokens.
@@ -342,7 +342,7 @@ function escapeExpression(text: string): string {
 }
 
 function parseSlot(body: string, source: SlotSource, occurrence: SlotOccurrence): SlotDescriptor {
-  if (body.includes("|")) {
+  if (body.includes("|") && !body.includes(":")) {
     return parseEnumeration(body, source, occurrence);
   }
   const base = { source, occurrence, enumeration: [] as string[], argument: "included" as const };

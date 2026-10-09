@@ -17,6 +17,7 @@ export interface ResolvedControl {
 export interface ResolvedSurface {
   name: string;
   route?: string;
+  shared?: true;
   controls: Readonly<Record<string, ResolvedControl>>;
 }
 
@@ -294,7 +295,7 @@ async function executeSteps<Args, Services, States>(
     } catch (failure) {
       throw annotate(failure, scenario, node.line);
     }
-    rememberSurfaceUse(session, node.args);
+    rememberSurfaceUse(session, node.args, env.spec);
   }
 }
 
@@ -310,10 +311,12 @@ function runsIn(node: ScenarioNode, modes: readonly StepMode[]): boolean {
 function rememberSurfaceUse<Services, States>(
   session: Session<Services, States>,
   args: Record<string, unknown>,
+  spec: SpecAst,
 ): void {
   const actorName = textOf(args["Actor"]);
   const surfaceName = textOf(args["Surface"]);
-  if (actorName !== undefined && surfaceName !== undefined) {
+  const isShared = surfaceName !== undefined && spec.surfaces[surfaceName]?.shared === true;
+  if (actorName !== undefined && surfaceName !== undefined && !isShared) {
     session.rememberSurface(actorName, surfaceName);
   }
 }
@@ -358,7 +361,7 @@ function surfaceFrom(name: string, node: SurfaceNode): ResolvedSurface {
       { name: controlName, kind: control.kind, locators: control.locators },
     ]),
   );
-  return { name, route: node.route, controls };
+  return { name, route: node.route, shared: node.shared, controls };
 }
 
 function resolveControl(

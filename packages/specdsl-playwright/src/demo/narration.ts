@@ -34,6 +34,14 @@ export function signInNarration(actorName: string): string {
   return `Signed in as ${actorName}.`;
 }
 
+/** Texts spoken over the opening cards: the story for the first actor, then a sign-in line for each other actor. */
+export function openingNarrations(scenario: Scenario): string[] {
+  const [firstActor, ...otherActors] = scenarioActors(scenario);
+  const signedIn = otherActors.map(signInNarration);
+  if (scenario.story !== undefined) return [scenario.story, ...signedIn];
+  return firstActor === undefined ? signedIn : [signInNarration(firstActor), ...signedIn];
+}
+
 export function scenarioSlug(scenarioName: string): string {
   return scenarioName
     .toLowerCase()

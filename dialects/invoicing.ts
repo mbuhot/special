@@ -9,6 +9,7 @@ import {
 import { crmSurfaces } from "./crm.ts";
 import { dashboardSurfaces } from "./dashboard.ts";
 import { pipelineSurfaces } from "./pipeline.ts";
+import { shellSurfaces } from "./shell.ts";
 import webApp from "./web-app.ts";
 
 export default dialect({
@@ -17,6 +18,7 @@ export default dialect({
   version: "1",
   surfaces: {
     ...webApp.surfaces,
+    ...shellSurfaces,
     ...crmSurfaces,
     ...pipelineSurfaces,
     ...dashboardSurfaces,

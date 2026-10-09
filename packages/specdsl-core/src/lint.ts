@@ -7,11 +7,12 @@ export interface LintWarning {
   message: string;
 }
 
-/** Runs the dialect's checks (coverage, sequence, referenced) over a bound spec. */
+/** Runs the dialect's checks (coverage, sequence, referenced) and the story check over a bound spec. */
 export function lint(result: BindSuccess, dialect: Dialect): LintWarning[] {
-  return dialect.checks
-    .flatMap((definition) => runCheck(definition, result))
-    .sort((first, second) => first.file.localeCompare(second.file) || first.line - second.line);
+  return [
+    ...dialect.checks.flatMap((definition) => runCheck(definition, result)),
+    ...missingStories(result),
+  ].sort((first, second) => first.file.localeCompare(second.file) || first.line - second.line);
 }
 
 function runCheck(definition: CheckDefinition, result: BindSuccess): LintWarning[] {
@@ -102,5 +103,15 @@ function referenced(declared: string, result: BindSuccess): LintWarning[] {
       file: declaration.file,
       line: declaration.line,
       message: `${declared} ${declaration.key} is not referenced by any step`,
+    }));
+}
+
+function missingStories(result: BindSuccess): LintWarning[] {
+  return result.ast.scenarios
+    .filter((scenario) => scenario.story === undefined)
+    .map((scenario) => ({
+      file: scenario.source.file,
+      line: scenario.source.line,
+      message: `Scenario "${scenario.name}" has no Story line`,
     }));
 }

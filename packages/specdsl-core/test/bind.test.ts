@@ -47,10 +47,15 @@ describe("binding the invoicing spec", () => {
       "given-entity",
       "given-entity",
       "opens",
+      "narrate",
       "sees",
+      "narrate",
       "enters",
+      "narrate",
       "sees",
+      "narrate",
       "enters",
+      "narrate",
       "sees",
       "narrate",
     ]);
@@ -87,10 +92,13 @@ describe("binding the invoicing spec", () => {
   });
 
   it("carries a Narrate item as demo-only narration text", () => {
-    expect(ast.scenarios[0]?.steps[9]).toEqual({
+    expect(ast.scenarios[0]?.steps[14]).toEqual({
       id: "narrate",
-      line: lineOf(lineTotalsSource.markdown, "Narrate: The line total"),
-      text: "The line total updates as the quantity and the unit price change.",
+      line: lineOf(
+        lineTotalsSource.markdown,
+        "Narrate: The totals region updates to one hundred and fifty",
+      ),
+      text: "The totals region updates to one hundred and fifty. The total follows the quantity and the unit price.",
       modes: ["demo"],
     });
   });
@@ -466,5 +474,35 @@ describe("policies", () => {
     expect(steps?.[0]).toMatchObject({
       args: { Actor: "Accounts", Action: "void", Ref: "INV-001" },
     });
+  });
+});
+
+describe("binding a Story line", () => {
+  const story = "Story: As the accountant, I need to review invoices, so that I stay in control.";
+
+  it("records the story on the scenario without adding a step", () => {
+    const source = specWith("## Scenario: Looking", story, ...DRAFT_INVOICE);
+    const [scenario] = bindSuccess(source).ast.scenarios;
+    expect(scenario?.story).toBe(
+      "As the accountant, I need to review invoices, so that I stay in control.",
+    );
+    expect(scenario?.steps.map((entry) => entry.id)).toEqual([
+      "given-entity",
+      "given-entity",
+      "opens",
+    ]);
+  });
+
+  it("rejects a Story line that follows a step", () => {
+    const source = specWith("## Scenario: Looking", ...DRAFT_INVOICE, story);
+    const result = bindSource(source);
+    expect(result.ok).toBe(false);
+    expect(result.ok ? [] : result.errors).toEqual([
+      {
+        file: "spec.md",
+        line: lineOf(source, "Story:"),
+        message: "Story must be the first line of a scenario",
+      },
+    ]);
   });
 });

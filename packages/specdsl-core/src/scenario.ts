@@ -22,6 +22,11 @@ export interface ScenarioEnvironment {
   report(line: number, message: string): void;
 }
 
+export interface ResolvedScenario {
+  story?: string;
+  steps: ScenarioNode[];
+}
+
 interface StepScope {
   line: number;
   values: Map<string, string>;
@@ -33,6 +38,7 @@ type Candidate =
 
 const MAX_EXPANSION_DEPTH = 8;
 const NARRATION_LINE = /^(narrate|caption)\s*:\s*(.*)$/i;
+const STORY_LINE = /^story\s*:\s*(.*)$/i;
 
 /**
  * Resolves the lines of one scenario against the dialect's steps and composites.
@@ -51,11 +57,17 @@ export class ScenarioResolver {
 
   constructor(private readonly environment: ScenarioEnvironment) {}
 
-  resolve(lines: readonly Line[]): ScenarioNode[] {
-    for (const entry of lines) {
-      this.resolveLine(entry.text, entry.line, 0);
+  resolve(lines: readonly Line[]): ResolvedScenario {
+    const [first, ...rest] = lines;
+    const story = first === undefined ? null : STORY_LINE.exec(first.text);
+    const body = story === null ? lines : rest;
+    for (const entry of body) {
+      STORY_LINE.test(entry.text)
+        ? this.environment.report(entry.line, "Story must be the first line of a scenario")
+        : this.resolveLine(entry.text, entry.line, 0);
     }
-    return this.nodes;
+    const text = story === null ? "" : (story[1] as string).trim();
+    return text === "" ? { steps: this.nodes } : { story: text, steps: this.nodes };
   }
 
   private resolveLine(text: string, line: number, depth: number): void {
@@ -290,6 +302,11 @@ export class ScenarioResolver {
     if (namespace.scope === "scenario") {
       return this.resolveRef(value, scope.line);
     }
+    const sharedEntry = this.sharedControl(descriptor, value, scope);
+    if (sharedEntry !== undefined) {
+      scope.values.set("Surface", sharedEntry.scopeKey);
+      return this.acceptEntry(descriptor, sharedEntry, scope);
+    }
     const scopeKey = scopeKeyOf(dialect.namespaces, descriptor.namespace, (ancestor) =>
       this.scopeValue(ancestor, scope),
     );
@@ -309,15 +326,35 @@ export class ScenarioResolver {
     return this.acceptEntry(descriptor, entry, scope);
   }
 
+  private sharedControl(
+    descriptor: SlotDescriptor,
+    value: string,
+    scope: StepScope,
+  ): Entry | undefined {
+    const { dialect, registry } = this.environment;
+    if (dialect.namespaces[descriptor.namespace]?.scope !== "Surface") {
+      return undefined;
+    }
+    const openSurface = this.scopeValue("Surface", scope);
+    if (openSurface !== undefined && registry.lookup(descriptor.namespace, value, openSurface)) {
+      return undefined;
+    }
+    return registry
+      .sharedSurfaces()
+      .map((surface) => registry.lookup(descriptor.namespace, value, surface.name))
+      .find((entry) => entry !== undefined);
+  }
+
   private acceptEntry(
     descriptor: SlotDescriptor,
     entry: Entry,
     scope: StepScope,
   ): string | undefined {
-    if (descriptor.constraint !== undefined && entry.kind !== descriptor.constraint) {
+    const allowedKinds = descriptor.constraint?.split("|");
+    if (allowedKinds !== undefined && !allowedKinds.includes(entry.kind ?? "")) {
       this.environment.report(
         scope.line,
-        `${descriptor.namespace} "${entry.name}" is a ${entry.kind}, expected ${descriptor.constraint}`,
+        `${descriptor.namespace} "${entry.name}" is a ${entry.kind}, expected ${allowedKinds.join(" or ")}`,
       );
       return undefined;
     }

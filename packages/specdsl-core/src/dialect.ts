@@ -46,6 +46,7 @@ export interface ControlDefinition {
 
 export interface SurfaceDefinition {
   route?: string;
+  shared?: true;
   controls: Readonly<Record<string, ControlDefinition>>;
 }
 
@@ -136,10 +137,11 @@ export function section(options: {
   return { items: [], ...options };
 }
 
-/** Declares a UI surface with a route template and located controls. */
+/** Declares a UI surface with an optional route template and located controls; a shared surface is present on every page. */
 export function surface(options: {
   route?: string;
   controls: Record<string, ControlDefinition>;
+  shared?: true;
 }): SurfaceDefinition {
   return options;
 }
@@ -321,15 +323,13 @@ function validateSlot(
     return;
   }
   const needsKinds = descriptor.constraint !== undefined || descriptor.capture === "kind";
+  const unknownKind = (descriptor.constraint?.split("|") ?? []).find(
+    (kind) => !namespace.kinds?.includes(kind),
+  );
   if (needsKinds && namespace.kinds === undefined) {
     issues.push(`${label}: namespace "${descriptor.namespace}" has no kinds`);
-  } else if (
-    descriptor.constraint !== undefined &&
-    !namespace.kinds?.includes(descriptor.constraint)
-  ) {
-    issues.push(
-      `${label}: "${descriptor.constraint}" is not a kind of namespace "${descriptor.namespace}"`,
-    );
+  } else if (unknownKind !== undefined) {
+    issues.push(`${label}: "${unknownKind}" is not a kind of namespace "${descriptor.namespace}"`);
   }
 }
 

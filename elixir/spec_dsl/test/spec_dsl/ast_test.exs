@@ -26,6 +26,18 @@ defmodule SpecDSL.ASTTest do
            ]
   end
 
+  test "reads a scenario's story, or nil when it has none" do
+    ast =
+      AST.from_map(%{
+        "scenarios" => [
+          %{"name" => "With story", "story" => "As accounts, I need X, so that Y."},
+          %{"name" => "Without story"}
+        ]
+      })
+
+    assert Enum.map(ast.scenarios, & &1.story) == ["As accounts, I need X, so that Y.", nil]
+  end
+
   test "resolves surface and control arguments to structs with atom kinds", %{ast: ast} do
     %Scenario{steps: [_given, opens, enters, sees, _narrate]} = hd(ast.scenarios)
 
@@ -124,6 +136,18 @@ defmodule SpecDSL.ASTTest do
     ast = AST.from_map(%{"policies" => %{"Invoice" => %{"admin" => ["read", "mark paid"]}}})
 
     assert ast.policies == %{"Invoice" => %{"admin" => ["read", "mark paid"]}}
+  end
+
+  test "marks a shared surface as present on every page" do
+    ast =
+      AST.from_map(%{
+        "surfaces" => %{
+          "Sidebar" => %{"shared" => true, "controls" => %{}},
+          "Invoice list" => %{"route" => "/invoices", "controls" => %{}}
+        }
+      })
+
+    assert {ast.surfaces["Sidebar"].shared, ast.surfaces["Invoice list"].shared} == {true, false}
   end
 
   test "reads no policies when the AST has none" do

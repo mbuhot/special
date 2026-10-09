@@ -7,6 +7,7 @@ export interface Entry {
   name: string;
   scopeKey: string;
   kind?: string;
+  shared?: boolean;
   origin: EntryOrigin;
   file?: string;
   line: number;
@@ -30,6 +31,15 @@ export class Registry {
 
   lookup(namespace: string, name: string, scopeKey: string): Entry | undefined {
     return this.inScope(namespace, scopeKey).find((entry) => sameText(entry.name, name));
+  }
+
+  sharedSurfaces(): Entry[] {
+    return (this.entries.get("Surface") ?? []).filter((entry) => entry.shared === true);
+  }
+
+  markShared(surfaceName: string): void {
+    const entry = this.lookup("Surface", surfaceName, "");
+    entry !== undefined && (entry.shared = true);
   }
 
   names(namespace: string): string[] {

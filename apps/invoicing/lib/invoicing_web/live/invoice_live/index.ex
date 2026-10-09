@@ -4,6 +4,7 @@ defmodule InvoicingWeb.InvoiceLive.Index do
   use InvoicingWeb, :live_view
 
   alias Invoicing.Billing
+  alias Invoicing.CRM
   alias Invoicing.Billing.Invoice
   alias InvoicingWeb.AmountFormat
 
@@ -14,7 +15,7 @@ defmodule InvoicingWeb.InvoiceLive.Index do
     invoices =
       Billing.list_invoices!(
         actor: current_user,
-        load: [:total, :customer],
+        load: [:total, :company],
         query: [sort: [number: :asc]]
       )
 
@@ -28,21 +29,21 @@ defmodule InvoicingWeb.InvoiceLive.Index do
 
   @impl true
   def handle_event("new_invoice", _params, socket) do
-    case Billing.list_customers!(
+    case CRM.list_companies!(
            actor: socket.assigns.current_user,
            query: [sort: [inserted_at: :asc], limit: 1]
          ) do
-      [customer | _] ->
+      [company | _] ->
         invoice =
           Billing.create_invoice!(
-            %{number: Billing.next_invoice_number(), customer_id: customer.id},
+            %{number: Billing.next_invoice_number(), company_id: company.id},
             actor: socket.assigns.current_user
           )
 
         {:noreply, push_navigate(socket, to: ~p"/invoices/#{invoice.id}/edit")}
 
       [] ->
-        {:noreply, put_flash(socket, :error, "Create a customer before creating an invoice")}
+        {:noreply, put_flash(socket, :error, "Create a company before creating an invoice")}
     end
   end
 
@@ -68,7 +69,7 @@ defmodule InvoicingWeb.InvoiceLive.Index do
         <thead>
           <tr>
             <th>Number</th>
-            <th>Customer</th>
+            <th>Company</th>
             <th>Status</th>
             <th>Total</th>
           </tr>
@@ -76,7 +77,7 @@ defmodule InvoicingWeb.InvoiceLive.Index do
         <tbody id="invoice-rows" phx-update="stream">
           <tr :for={{row_id, invoice} <- @streams.invoices} id={row_id}>
             <td><.link navigate={~p"/invoices/#{invoice.id}/edit"}>{invoice.number}</.link></td>
-            <td>{invoice.customer.name}</td>
+            <td>{invoice.company.name}</td>
             <td>{invoice.status}</td>
             <td>{AmountFormat.format(invoice.total)}</td>
           </tr>

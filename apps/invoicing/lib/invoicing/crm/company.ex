@@ -1,18 +1,23 @@
-defmodule Invoicing.Billing.Customer do
-  @moduledoc "A party that is invoiced."
+defmodule Invoicing.CRM.Company do
+  @moduledoc "An organisation that is sold to and invoiced."
 
   use Ash.Resource,
-    domain: Invoicing.Billing,
+    domain: Invoicing.CRM,
     data_layer: AshPostgres.DataLayer,
     authorizers: [Ash.Policy.Authorizer]
 
   postgres do
-    table "customers"
+    table "companies"
     repo Invoicing.Repo
   end
 
   actions do
-    defaults [:read, :destroy, create: [:name, :email], update: [:name, :email]]
+    defaults [
+      :read,
+      :destroy,
+      create: [:name, :domain, :industry],
+      update: [:name, :domain, :industry]
+    ]
   end
 
   policies do
@@ -33,7 +38,8 @@ defmodule Invoicing.Billing.Customer do
   attributes do
     uuid_primary_key :id
     attribute :name, :string, allow_nil?: false, public?: true
-    attribute :email, :string, public?: true
+    attribute :domain, :string, public?: true
+    attribute :industry, :string, public?: true
     timestamps()
   end
 

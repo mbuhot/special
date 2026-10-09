@@ -1,5 +1,5 @@
 defmodule Invoicing.Billing.Invoice do
-  @moduledoc "A bill for a customer whose status follows draft, sent, paid or void."
+  @moduledoc "A bill for a company whose status follows draft, sent, paid or void."
 
   use Ash.Resource,
     domain: Invoicing.Billing,
@@ -29,12 +29,12 @@ defmodule Invoicing.Billing.Invoice do
 
     create :create do
       primary? true
-      accept [:number, :customer_id]
+      accept [:number, :company_id]
     end
 
     update :update do
       primary? true
-      accept [:number, :customer_id]
+      accept [:number, :company_id]
     end
 
     update :send do
@@ -75,7 +75,7 @@ defmodule Invoicing.Billing.Invoice do
   end
 
   relationships do
-    belongs_to :customer, Invoicing.Billing.Customer,
+    belongs_to :company, Invoicing.CRM.Company,
       allow_nil?: false,
       attribute_writable?: true,
       public?: true

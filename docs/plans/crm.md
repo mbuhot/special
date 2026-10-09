@@ -4,7 +4,7 @@ Grow apps/invoicing into a HubSpot-style CRM, spec first.
 
 ## Method, per feature, in this order
 
-1. Spec worker: base lines (Model, Surfaces, Actors, Policies) at the right level of the specs tree, scenarios in a feature file, Narrate lines in present tense describing what is on screen. Surfaces and controls go into the dialect (split dialects/*.ts by screen area) with css and lv locators. `pnpm bind` binds clean with zero lint warnings. The spec worker never touches apps/.
+1. Spec worker: base lines (Model, Surfaces, Actors, Policies) at the right level of the specs tree, scenarios in a feature file, Narrate lines in present tense describing what is on screen. Surfaces and controls go into the dialect (split `dialects/*.ts` by screen area) with css and lv locators. `pnpm bind` binds clean with zero lint warnings. The spec worker never touches apps/.
 2. Red gate, once: `cd apps/invoicing && mix test test/spec` fails only on the new scenarios and on conformance for the new model or policy lines. If nothing fails the spec added nothing testable; fix the spec.
 3. Implementation worker: Ash resources, policies, LiveViews and handlers until that gate passes, then `pnpm e2e`, then `DEMO_SCENARIO=<one new scenario> pnpm demo`. It never edits specs/ or dialect patterns; it may add locators to surfaces the spec declared.
 4. Format, commit one logical unit per feature with explicit `git add <files>`, update the memory file (status, gates, queue), dispatch the next feature in the same turn.
@@ -39,6 +39,6 @@ Shared entities live at the root. A project redeclaring one is a bind error.
 - Orchestrate only: plan, dispatch Sonnet workers at high effort, review the diff, run final gates, commit. One file boundary and one gate run per worker; "do the work yourself; do NOT spawn subagents". Never search outside the repo; Ash and Phoenix docs are in apps/invoicing/deps.
 - Test names describe behaviour from the user's perspective. No inline comments. Types over boolean flags. Formatters before every commit.
 - Gates: `pnpm --filter @special/specdsl-core test` only when core changed; `pnpm bind`; `cd apps/invoicing && mix test`; `pnpm e2e`; filtered `pnpm demo` per feature; full `pnpm demo` only for item 10. Redirect runner output to the scratchpad and read the file.
-- Commit per feature with explicit `git add <files>`. Never commit *.ast.json, *.lock.json, demo-output or test-results.
+- Commit per feature with explicit `git add <files>`. Never commit `*.ast.json`, `*.lock.json`, demo-output or test-results.
 - Core changes only when a spec cannot be expressed; separate dispatch with core tests; record new vocabulary in docs/design.md.
 - If asdf shims complain: ASDF_PNPM_VERSION=11.9.0 ASDF_ELIXIR_VERSION=1.20.2.

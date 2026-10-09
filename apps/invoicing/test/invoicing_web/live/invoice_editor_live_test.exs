@@ -3,14 +3,14 @@ defmodule InvoicingWeb.InvoiceEditorLiveTest do
 
   import Phoenix.LiveViewTest
 
-  alias Invoicing.{Accounts, Billing}
+  alias Invoicing.{Accounts, Billing, CRM}
 
   setup %{conn: conn} do
     accountant = Accounts.create_user!(%{email: "accounts@example.com", role: :accountant})
-    customer = Billing.create_customer!(%{name: "Acme"}, authorize?: false)
+    company = CRM.create_company!(%{name: "Acme"}, authorize?: false)
 
     invoice =
-      Billing.create_invoice!(%{number: "INV-001", customer_id: customer.id}, authorize?: false)
+      Billing.create_invoice!(%{number: "INV-001", company_id: company.id}, authorize?: false)
 
     Billing.create_line_item!(
       %{invoice_id: invoice.id, description: "Consulting", quantity: 1, unit_price: "100"},

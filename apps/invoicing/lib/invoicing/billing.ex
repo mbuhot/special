@@ -1,14 +1,9 @@
 defmodule Invoicing.Billing do
-  @moduledoc "Customers, invoices and line items."
+  @moduledoc "Invoices and line items."
 
   use Ash.Domain
 
   resources do
-    resource Invoicing.Billing.Customer do
-      define :create_customer, action: :create
-      define :list_customers, action: :read
-    end
-
     resource Invoicing.Billing.Invoice do
       define :create_invoice, action: :create
       define :update_invoice, action: :update

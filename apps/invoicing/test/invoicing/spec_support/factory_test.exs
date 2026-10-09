@@ -3,21 +3,21 @@ defmodule Invoicing.SpecSupport.FactoryTest do
 
   alias Invoicing.SpecSupport.Factory
 
-  test "creates an invoice for a customer from spec-spelled attributes" do
-    customer = Factory.create("Customer", %{"name" => "Acme"})
+  test "creates an invoice for a company from spec-spelled attributes" do
+    company = Factory.create("Company", %{"name" => "Acme"})
 
     invoice =
       Factory.create("Invoice", %{
         "number" => "INV-001",
         "status" => "draft",
-        "customer" => customer.id
+        "company" => company.id
       })
 
     reloaded = Factory.reload("Invoice", invoice.id)
 
     assert reloaded["status"] == "draft"
     assert reloaded["number"] == "INV-001"
-    assert reloaded["customer"] == customer.id
+    assert reloaded["company"] == company.id
   end
 
   test "creates an invoice in a non-draft status" do
@@ -26,10 +26,10 @@ defmodule Invoicing.SpecSupport.FactoryTest do
     assert Factory.reload("Invoice", invoice.id)["status"] == "sent"
   end
 
-  test "creates a customer for an invoice that names none" do
+  test "creates a company for an invoice that names none" do
     invoice = Factory.create("Invoice", %{"number" => "INV-003"})
 
-    assert Factory.reload("Invoice", invoice.id)["customer"] == invoice.customer_id
+    assert Factory.reload("Invoice", invoice.id)["company"] == invoice.company_id
   end
 
   test "names an invoice after its ref" do
@@ -44,10 +44,10 @@ defmodule Invoicing.SpecSupport.FactoryTest do
     assert Factory.reload("Invoice", invoice.id)["number"] == "INV-010"
   end
 
-  test "names a customer after its ref" do
-    customer = Factory.create("Customer", %{}, "Acme")
+  test "names a company after its ref" do
+    company = Factory.create("Company", %{}, "Acme")
 
-    assert Factory.reload("Customer", customer.id)["name"] == "Acme"
+    assert Factory.reload("Company", company.id)["name"] == "Acme"
   end
 
   test "reloads a line item with its line total" do

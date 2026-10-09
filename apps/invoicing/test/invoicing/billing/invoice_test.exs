@@ -1,15 +1,15 @@
 defmodule Invoicing.Billing.InvoiceTest do
   use Invoicing.DataCase, async: true
 
-  alias Invoicing.{Accounts, Billing}
+  alias Invoicing.{Accounts, Billing, CRM}
 
   setup do
     accountant = Accounts.create_user!(%{email: "accounts@example.com", role: :accountant})
     admin = Accounts.create_user!(%{email: "admin@example.com", role: :admin})
-    customer = Billing.create_customer!(%{name: "Acme"}, actor: accountant)
+    company = CRM.create_company!(%{name: "Acme"}, actor: accountant)
 
     invoice =
-      Billing.create_invoice!(%{number: "INV-001", customer_id: customer.id}, actor: accountant)
+      Billing.create_invoice!(%{number: "INV-001", company_id: company.id}, actor: accountant)
 
     %{invoice: invoice, accountant: accountant, admin: admin}
   end

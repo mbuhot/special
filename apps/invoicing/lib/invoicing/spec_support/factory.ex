@@ -4,10 +4,12 @@ defmodule Invoicing.SpecSupport.Factory do
   alias Invoicing.Accounts
   alias Invoicing.Accounts.User
   alias Invoicing.Billing
-  alias Invoicing.Billing.{Customer, Invoice, LineItem}
+  alias Invoicing.Billing.{Invoice, LineItem}
+  alias Invoicing.CRM
+  alias Invoicing.CRM.Company
 
   @resources %{
-    "Customer" => Customer,
+    "Company" => Company,
     "Invoice" => Invoice,
     "LineItem" => LineItem,
     "User" => User
@@ -15,11 +17,11 @@ defmodule Invoicing.SpecSupport.Factory do
 
   @calculations %{Invoice => [:total], LineItem => [:line_total]}
 
-  @relationship_attributes %{"customer" => "customer_id", "invoice" => "invoice_id"}
+  @relationship_attributes %{"company" => "company_id", "invoice" => "invoice_id"}
 
   @natural_keys %{
     Invoice => "number",
-    Customer => "name",
+    Company => "name",
     LineItem => "description",
     User => "email"
   }
@@ -59,20 +61,19 @@ defmodule Invoicing.SpecSupport.Factory do
     Ash.can?({fetch(entity_name, id), action}, user)
   end
 
-  defp build(attrs, Customer) do
+  defp build(attrs, Company) do
     sequence = System.unique_integer([:positive])
 
     attrs
-    |> Map.put_new("name", "Customer #{sequence}")
-    |> Map.put_new("email", "customer-#{sequence}@example.com")
-    |> Billing.create_customer!(authorize?: false)
+    |> Map.put_new("name", "Company #{sequence}")
+    |> CRM.create_company!(authorize?: false)
   end
 
   defp build(attrs, Invoice) do
     {status, invoice_attrs} = Map.pop(attrs, "status")
 
     invoice_attrs
-    |> Map.put_new_lazy("customer_id", fn -> create("Customer", %{}).id end)
+    |> Map.put_new_lazy("company_id", fn -> create("Company", %{}).id end)
     |> Map.put_new_lazy("number", &Billing.next_invoice_number/0)
     |> Billing.create_invoice!(authorize?: false)
     |> put_status(status)

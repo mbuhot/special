@@ -9,6 +9,7 @@ defmodule InvoicingWeb.SpecSupportController do
   @domain_resources [
     Invoicing.Billing.LineItem,
     Invoicing.Billing.Invoice,
+    Invoicing.CRM.Activity,
     Invoicing.Pipeline.Deal,
     Invoicing.CRM.Contact,
     Invoicing.CRM.Company,

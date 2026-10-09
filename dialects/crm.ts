@@ -76,4 +76,22 @@ export const crmSurfaces = {
       "Edit company": button({ css: "#edit-company", lv: "#edit-company" }),
     },
   }),
+  "Contact page": surface({
+    route: "/contacts/{id}",
+    controls: {
+      "Contact name": region({ css: "#contact-name", lv: "#contact-name" }),
+      Timeline: region({ css: "#timeline", lv: "#timeline" }),
+      "Activity kind": field({
+        css: "#activity-kind",
+        lv: "activity[kind]",
+        form: "#activity-form",
+      }),
+      "Activity body": field({
+        css: "#activity-body",
+        lv: "activity[body]",
+        form: "#activity-form",
+      }),
+      "Log activity": button({ css: "#log-activity", lv: "#log-activity" }),
+    },
+  }),
 };

@@ -69,6 +69,7 @@ defmodule Invoicing.CRM.Contact do
       public?: true
 
     has_many :deals, Invoicing.Pipeline.Deal
+    has_many :activities, Invoicing.CRM.Activity, sort: [occurred_at: :desc]
   end
 
   calculations do

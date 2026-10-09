@@ -37,6 +37,7 @@ defmodule InvoicingWeb.Router do
       live "/contacts", ContactLive.Index
       live "/contacts/new/edit", ContactLive.Edit, :new
       live "/contacts/:id/edit", ContactLive.Edit, :edit
+      live "/contacts/:id", ContactLive.Show
       live "/companies", CompanyLive.Index
       live "/companies/new/edit", CompanyLive.Edit, :new
       live "/companies/:id/edit", CompanyLive.Edit, :edit

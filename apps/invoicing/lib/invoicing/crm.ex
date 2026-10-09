@@ -1,5 +1,5 @@
 defmodule Invoicing.CRM do
-  @moduledoc "Companies and contacts that are sold to and invoiced."
+  @moduledoc "Companies, contacts and the activities logged against them."
 
   use Ash.Domain
 
@@ -16,6 +16,11 @@ defmodule Invoicing.CRM do
       define :get_contact, action: :read, get_by: [:id]
       define :create_contact, action: :create
       define :update_contact, action: :update
+    end
+
+    resource Invoicing.CRM.Activity do
+      define :list_activities, action: :read, args: [:contact_id]
+      define :create_activity, action: :create
     end
   end
 end

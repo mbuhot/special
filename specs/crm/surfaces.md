@@ -7,3 +7,4 @@
 - Company list: field "Search", table "Companies", button "New company"
 - Company editor: field "Name", field "Domain", field "Industry", button "Save", region "Company name"
 - Company page: region "Company name", table "Company contacts", button "Edit company"
+- Contact page: region "Contact name", region "Timeline", field "Activity kind", field "Activity body", button "Log activity"

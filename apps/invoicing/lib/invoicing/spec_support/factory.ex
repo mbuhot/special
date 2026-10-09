@@ -6,11 +6,12 @@ defmodule Invoicing.SpecSupport.Factory do
   alias Invoicing.Billing
   alias Invoicing.Billing.{Invoice, LineItem}
   alias Invoicing.CRM
-  alias Invoicing.CRM.{Company, Contact}
+  alias Invoicing.CRM.{Activity, Company, Contact}
   alias Invoicing.Pipeline
   alias Invoicing.Pipeline.Deal
 
   @resources %{
+    "Activity" => Activity,
     "Company" => Company,
     "Contact" => Contact,
     "Deal" => Deal,
@@ -26,8 +27,10 @@ defmodule Invoicing.SpecSupport.Factory do
     "contact" => "contact_id",
     "invoice" => "invoice_id",
     "owner" => "owner_id",
-    "user" => "owner_id"
+    "user" => "user_id"
   }
+
+  @owner_relationship_attributes %{"user" => "owner_id"}
 
   @natural_keys %{
     Invoice => "number",
@@ -45,7 +48,7 @@ defmodule Invoicing.SpecSupport.Factory do
     resource = resource_for!(entity_name)
 
     attrs
-    |> normalize_keys()
+    |> normalize_keys(resource)
     |> put_natural_key(resource, ref)
     |> build(resource)
   end
@@ -78,6 +81,17 @@ defmodule Invoicing.SpecSupport.Factory do
     attrs
     |> Map.put_new("name", "Company #{sequence}")
     |> CRM.create_company!(authorize?: false)
+  end
+
+  defp build(attrs, Activity) do
+    sequence = System.unique_integer([:positive])
+
+    attrs
+    |> Map.put_new("kind", "note")
+    |> Map.put_new("body", "Activity #{sequence}")
+    |> Map.put_new_lazy("contact_id", fn -> create("Contact", %{}).id end)
+    |> Map.put_new_lazy("user_id", fn -> create("User", %{"role" => "accountant"}).id end)
+    |> CRM.create_activity!(authorize?: false)
   end
 
   defp build(attrs, Contact) do
@@ -154,12 +168,19 @@ defmodule Invoicing.SpecSupport.Factory do
     end
   end
 
-  defp normalize_keys(attrs) do
+  defp normalize_keys(attrs, resource) do
+    relationship_attributes = relationship_attributes_for(resource)
+
     Map.new(attrs, fn {field, value} ->
       snake_case_field = field |> to_string() |> String.replace(" ", "_")
-      {Map.get(@relationship_attributes, snake_case_field, snake_case_field), value}
+      {Map.get(relationship_attributes, snake_case_field, snake_case_field), value}
     end)
   end
+
+  defp relationship_attributes_for(Deal),
+    do: Map.merge(@relationship_attributes, @owner_relationship_attributes)
+
+  defp relationship_attributes_for(_resource), do: @relationship_attributes
 
   defp to_field_map(record, resource) do
     attribute_fields = Ash.Resource.Info.public_attributes(resource)

@@ -87,7 +87,7 @@ defmodule InvoicingWeb.ContactLive.Index do
         <tbody>
           <tr :for={contact <- @contacts} id={"contact-#{contact.id}"}>
             <td>
-              <.link navigate={~p"/contacts/#{contact.id}/edit"}>{contact.full_name}</.link>
+              <.link navigate={~p"/contacts/#{contact.id}"}>{contact.full_name}</.link>
             </td>
             <td>{contact.email}</td>
             <td>{contact.company.name}</td>

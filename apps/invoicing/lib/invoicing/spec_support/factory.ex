@@ -129,7 +129,7 @@ defmodule Invoicing.SpecSupport.Factory do
     deal_attrs
     |> Map.put_new("name", "Deal #{System.unique_integer([:positive])}")
     |> Map.put_new_lazy("company_id", fn -> create("Company", %{}).id end)
-    |> Map.put_new_lazy("owner_id", fn -> create("User", %{"role" => "accountant"}).id end)
+    |> Map.put_new_lazy("owner_id", fn -> create("User", %{"role" => "sales"}).id end)
     |> Pipeline.create_deal!(authorize?: false)
     |> put_stage(stage)
   end
@@ -147,7 +147,7 @@ defmodule Invoicing.SpecSupport.Factory do
     |> Map.put_new("title", "Task #{System.unique_integer([:positive])}")
     |> Map.put_new("due_date", "2026-02-01")
     |> Map.put_new_lazy("deal_id", fn -> create("Deal", %{}).id end)
-    |> Map.put_new_lazy("assignee_id", fn -> create("User", %{"role" => "accountant"}).id end)
+    |> Map.put_new_lazy("assignee_id", fn -> create("User", %{"role" => "sales"}).id end)
     |> Pipeline.create_task!(authorize?: false)
     |> put_status(status)
   end

@@ -38,7 +38,7 @@ specs/
 
 ## Scenarios
 
-Each scenario produces `demo-output/<slug>/demo.mp4`. The slug is the lowercase scenario name with runs of non-alphanumerics collapsed to hyphens. A scenario with two actors produces `demo-<actor-slug>.mp4` per actor.
+`pnpm demo:reel` joins every video in spec order into `demo-output/reel.mp4`, one chapter per scenario, and writes `demo-output/reel.m3u8`. Each scenario produces `demo-output/<slug>/demo.mp4`. The slug is the lowercase scenario name with runs of non-alphanumerics collapsed to hyphens. A scenario with two actors produces `demo-<actor-slug>.mp4` per actor.
 
 ### crm
 
@@ -111,6 +111,7 @@ Each scenario produces `demo-output/<slug>/demo.mp4`. The slug is the lowercase 
 | Scenarios in ExUnit    | `cd apps/invoicing && mix test`            |
 | Scenarios in a browser | `pnpm e2e`                                 |
 | Demo videos            | `pnpm demo`                                |
+| One reel with chapters | `pnpm demo:reel`                           |
 
 ## Prerequisites
 

@@ -6,7 +6,8 @@
   "scripts": {
     "build": "tsc -p tsconfig.json --noEmit",
     "test": "playwright test --project=chromium",
-    "demo": "node scripts/demo.mjs"
+    "demo": "node scripts/demo.mjs",
+    "demo:reel": "node scripts/reel.mjs"
   },
   "dependencies": {
     "@special/specdsl-core": "workspace:*"

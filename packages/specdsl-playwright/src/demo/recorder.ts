@@ -47,6 +47,7 @@ export interface ActorRecording {
   recordingStartedAt: number;
   trimStartMilliseconds: number;
   placements: ClipPlacement[];
+  endSeconds: number;
 }
 
 /** Performs steps with highlight, hold, screenshot and title cards while logging a timeline. */
@@ -82,6 +83,7 @@ export class DemoRecorder implements StepHooks<WebAppServices, WebAppContextStat
       await this.performWithHighlight(invocation, page, perform, presentation, clip, narration);
     }
 
+    this.markPresented();
     await this.captureScreenshot(page, stepNumber);
     this.logStep(invocation.id, invocation.line, narration, clip, startSeconds);
   }
@@ -93,6 +95,7 @@ export class DemoRecorder implements StepHooks<WebAppServices, WebAppContextStat
     const startSeconds = this.elapsedSeconds();
     this.logStep(node.id, node.line, node.text, clip, startSeconds);
     await showCard(recording.page, node.text, Math.max(clip?.seconds ?? 0, CAPTION_HOLD_SECONDS));
+    this.markPresented();
   }
 
   private async performWithHighlight(
@@ -132,6 +135,7 @@ export class DemoRecorder implements StepHooks<WebAppServices, WebAppContextStat
       recordingStartedAt,
       trimStartMilliseconds: Date.now() - recordingStartedAt,
       placements: [],
+      endSeconds: 0,
     });
     await this.showSignInCard(invocation, actorName, email);
   }
@@ -147,6 +151,12 @@ export class DemoRecorder implements StepHooks<WebAppServices, WebAppContextStat
     const clip = this.configuration.clipsByText.get(narration);
     this.logStep(SIGN_IN_STEP_ID, invocation.line, narration, clip, this.elapsedSeconds());
     await showCard(recording.page, narration, holdSeconds(clip));
+    this.markPresented();
+  }
+
+  private markPresented(): void {
+    const recording = this.currentRecording;
+    if (recording !== undefined) recording.endSeconds = this.elapsedSeconds();
   }
 
   private elapsedSeconds(): number {

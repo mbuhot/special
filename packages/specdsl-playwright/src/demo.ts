@@ -59,6 +59,7 @@ async function produceDemo(
       rawVideo: await recording.video.path(),
       trimStartSeconds: recording.trimStartMilliseconds / 1000,
       placements: recording.placements,
+      endSeconds: recording.endSeconds,
       outputPath: join(outputDirectory, videoFileName(recording, recordings.length)),
     });
   }

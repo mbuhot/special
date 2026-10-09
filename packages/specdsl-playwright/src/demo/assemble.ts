@@ -16,6 +16,7 @@ export interface AssemblyRequest {
   trimStartSeconds: number;
   placements: readonly ClipPlacement[];
   outputPath: string;
+  endSeconds?: number;
 }
 
 /** Encodes the recorded video to h264 and mixes each narration clip in at its start time. */
@@ -33,9 +34,9 @@ export async function assemble(request: AssemblyRequest): Promise<void> {
     `anullsrc=r=${AUDIO_SAMPLE_RATE}:cl=stereo`,
     ...clipInputs,
     "-filter_complex",
-    audioFilter(request.placements),
+    filterGraph(request),
     "-map",
-    "0:v",
+    "[video]",
     "-map",
     "[mixed]",
     "-c:v",
@@ -45,8 +46,21 @@ export async function assemble(request: AssemblyRequest): Promise<void> {
     "-c:a",
     "aac",
     "-shortest",
+    ...durationLimit(request.endSeconds),
     request.outputPath,
   ]);
+}
+
+function filterGraph(request: AssemblyRequest): string {
+  const videoFilter =
+    request.endSeconds === undefined
+      ? "null"
+      : `tpad=stop_mode=clone:stop_duration=${request.endSeconds.toFixed(3)}`;
+  return `[0:v]${videoFilter}[video];${audioFilter(request.placements)}`;
+}
+
+function durationLimit(endSeconds: number | undefined): string[] {
+  return endSeconds === undefined ? [] : ["-t", endSeconds.toFixed(3)];
 }
 
 function audioFilter(placements: readonly ClipPlacement[]): string {

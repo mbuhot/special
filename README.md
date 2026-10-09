@@ -3,12 +3,25 @@
 One Markdown spec, three uses: acceptance criteria in a Linear ticket (an agent copies it into the repo), executable tests in two runtimes, and a narrated demo video.
 
 ```
-specs/**/*.md ──► pnpm bind ──► specs/invoicing/<feature>.ast.json
+specs/**/*.md ──► pnpm bind ──► specs/<project>/<feature>.ast.json
                                               │
                         ┌─────────────────────┼─────────────────────┐
                         ▼                     ▼                     ▼
                ExUnit + LiveViewTest   Playwright (browser)   Playwright demo mode
                apps/invoicing/test     pnpm e2e               pnpm demo → demo-output/*.mp4
+```
+
+## The sample app
+
+A CRM: companies, contacts, activities, a deals pipeline, tasks, invoicing and a dashboard. Four roles use it: sales rep, sales manager, accounts, admin.
+
+```
+specs/
+├── company.md  contact.md  user.md  actors.md    shared entities and roles
+├── crm/         uses invoicing                   companies, contacts, activities
+├── pipeline/                                     deals, tasks
+├── invoicing/   uses crm                         invoices
+└── dashboard/   uses pipeline, invoicing         home page counts
 ```
 
 ## Layout
@@ -20,8 +33,72 @@ specs/**/*.md ──► pnpm bind ──► specs/invoicing/<feature>.ast.json
 | `packages/specdsl-core`       | Parse, bind, lint, lock. CLI `specdsl`                                                           |
 | `packages/specdsl-playwright` | Browser runtime: test mode and demo mode                                                         |
 | `elixir/spec_dsl`             | Elixir runtime: AST loader, `SpecDSL.Case`, `SpecDSL.Handlers`                                   |
-| `apps/invoicing`              | Sample Phoenix + Ash app, the system under test                                                  |
+| `apps/invoicing`              | Sample Phoenix + Ash CRM, the system under test                                                  |
 | `docs/design.md`              | Design                                                                                           |
+
+## Scenarios
+
+Each scenario produces `demo-output/<slug>/demo.mp4`. The slug is the lowercase scenario name with runs of non-alphanumerics collapsed to hyphens. A scenario with two actors produces `demo-<actor-slug>.mp4` per actor.
+
+### crm
+
+| Scenario                                     | The video shows                                                                           |
+| -------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| Timeline shows a contact's activities        | A contact page with a timeline, newest activity first.                                    |
+| Logging a note on a contact                  | A note logged on a contact appears in the timeline with today's date.                     |
+| Activity timeline advances with the clock    | After two days pass, a logged meeting appears in the timeline with the later date.        |
+| Company list shows every company             | The company table lists Acme and Globex.                                                  |
+| Searching companies by name                  | Searching narrows the company table to Globex.                                            |
+| Creating a company                           | A new company is saved and its page shows the name Initech.                               |
+| Editing a company                            | The company name changes to Acme-Corp.                                                    |
+| Company page lists its contacts and invoices | The company page shows the name, its contact, its invoice and an edit button.             |
+| Contact list shows every contact             | The contact table lists Ada Lovelace and Grace Hopper.                                    |
+| Searching contacts by name                   | Searching narrows the contact table to Grace Hopper.                                      |
+| Filtering contacts by company                | Filtering by company narrows the contact table to the contacts of Acme.                   |
+| Creating a contact                           | A new contact is saved and shows the name Ada Lovelace.                                   |
+| Editing a contact                            | The contact name changes to Ada-Byron Lovelace.                                           |
+| Who may edit contacts                        | A sales rep may edit a contact. Accounts may only read it. Both roles may edit a company. |
+
+### pipeline
+
+| Scenario                                        | The video shows                                                          |
+| ----------------------------------------------- | ------------------------------------------------------------------------ |
+| Who may move a deal through the pipeline        | The sales rep's board has no Win button. Only the sales manager may win. |
+| Who may complete a task                         | A sales rep may complete a task. Accounts may not.                       |
+| Pipeline board shows a deal in its stage column | The board lists Big deal in the lead column.                             |
+| Qualifying a lead                               | Big deal moves from the lead column to the qualified column.             |
+| Proposing a qualified deal                      | Big deal moves from the qualified column to the proposal column.         |
+| Winning a proposal                              | Big deal moves from the proposal column to the won column.               |
+| Losing a lead                                   | Big deal moves from the lead column to the lost column.                  |
+| Losing a qualified deal                         | Big deal moves from the qualified column to the lost column.             |
+| Losing a proposal                               | Big deal moves from the proposal column to the lost column.              |
+| Creating a deal                                 | A new deal is saved and shows the name Big-deal in stage lead.           |
+| Adding a task to a deal                         | The deal page lists the new task with its due date in the task table.    |
+| Completing a task                               | The task status changes to done.                                         |
+| A task becomes overdue as time advances         | Two days later the task appears in the overdue tasks region.             |
+
+### invoicing
+
+| Scenario                                                     | The video shows                                                                       |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------------- |
+| Invoice list shows every invoice                             | The invoice table lists INV-001 and INV-002.                                          |
+| Creating an invoice from the list                            | A new draft invoice opens in the editor.                                              |
+| Line total updates as quantity changes                       | The line total updates as the quantity and the unit price change.                     |
+| Who may send and settle invoices                             | The sales rep's editor has no Send button. Accounts may send. Only an admin may void. |
+| Sending a draft invoice marks it sent                        | The invoice status changes to sent.                                                   |
+| A manager sees an invoice once it is sent                    | Accounts sends the invoice, then the admin opens it and sees status sent. Two videos. |
+| Marking a sent invoice paid                                  | The invoice status changes to paid.                                                   |
+| Voiding a draft invoice                                      | The invoice status changes to void.                                                   |
+| Only an admin can void or mark an invoice paid               | The accountant's editor shows Send and no Void or Mark paid.                          |
+| Marking an invoice paid logs a note on the company's contact | The invoice becomes paid. The contact's timeline shows the note Invoice INV-001 paid. |
+
+### dashboard
+
+| Scenario                              | The video shows                                                                  |
+| ------------------------------------- | -------------------------------------------------------------------------------- |
+| Dashboard counts open deals per stage | The dashboard lists two deals in lead and one in proposal. Won deals are absent. |
+| Dashboard counts overdue tasks        | The dashboard shows one overdue task.                                            |
+| Dashboard counts unpaid invoices      | The dashboard shows two unpaid invoices. Paid invoices are absent.               |
 
 ## Commands
 
@@ -31,7 +108,7 @@ specs/**/*.md ──► pnpm bind ──► specs/invoicing/<feature>.ast.json
 | Bind and lint specs    | `pnpm bind`                                |
 | Regenerate the lock    | `pnpm lock`                                |
 | Core tests             | `pnpm --filter @special/specdsl-core test` |
-| Scenarios in ExUnit    | `cd apps/invoicing && mix test test/spec`  |
+| Scenarios in ExUnit    | `cd apps/invoicing && mix test`            |
 | Scenarios in a browser | `pnpm e2e`                                 |
 | Demo videos            | `pnpm demo`                                |
 

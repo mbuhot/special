@@ -2,11 +2,11 @@
 
 A Markdown spec language with one closed vocabulary and three uses:
 
-| Use                              | Where                                                |
-| -------------------------------- | ---------------------------------------------------- |
-| Planning and acceptance criteria | Spec in a Linear ticket                              |
-| Executable tests                 | Playwright (browser) and ExUnit (in-process Phoenix) |
-| Narrated demo video              | Playwright demo mode, pocket-tts, ffmpeg             |
+| Use                              | Where                                                     |
+| -------------------------------- | --------------------------------------------------------- |
+| Planning and acceptance criteria | Spec in a Linear ticket, copied into the repo by an agent |
+| Executable tests                 | Playwright (browser) and ExUnit (in-process Phoenix)      |
+| Narrated demo video              | Playwright demo mode, pocket-tts, ffmpeg                  |
 
 ## Layers
 
@@ -28,7 +28,6 @@ The AST JSON file is the contract between the two runtimes.
 ```
 packages/specdsl-core/        parse, pattern compiler, dialect builder, bind, lint, AST emit, CLI
 packages/specdsl-playwright/  TS runtime: test mode, demo mode
-packages/specdsl-linear/      ticket sync: lint on save, attach video on completion
 dialects/web-app.ts           base UI vocabulary
 dialects/invoicing.ts         project vocabulary, extends web-app
 elixir/spec_dsl/              Hex package: AST loader, ExUnit case generator, handler macros
@@ -262,4 +261,3 @@ Narration defaults to the step's `narrate` template. `Narrate:` lines override. 
 2. specdsl-playwright test mode, test-support Plug, web-app handlers. Gate: invoicing scenario passes against apps/invoicing.
 3. elixir/spec_dsl. Gate: same scenario passes in ExUnit.
 4. Demo mode.
-5. Linear sync.

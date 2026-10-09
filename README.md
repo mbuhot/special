@@ -1,6 +1,6 @@
 # special
 
-One Markdown spec, three uses: acceptance criteria in a Linear ticket, executable tests in two runtimes, and a narrated demo video.
+One Markdown spec, three uses: acceptance criteria in a Linear ticket (an agent copies it into the repo), executable tests in two runtimes, and a narrated demo video.
 
 ```
 specs/**/*.md ──► pnpm bind ──► specs/invoicing/<feature>.ast.json
@@ -19,7 +19,6 @@ specs/**/*.md ──► pnpm bind ──► specs/invoicing/<feature>.ast.json
 | `specs/`                      | Specs in Markdown: shared base files at the root, one directory per project, bound ASTs          |
 | `packages/specdsl-core`       | Parse, bind, lint, lock. CLI `specdsl`                                                           |
 | `packages/specdsl-playwright` | Browser runtime: test mode and demo mode                                                         |
-| `packages/specdsl-linear`     | Pull specs from Linear issues, lint, attach videos                                               |
 | `elixir/spec_dsl`             | Elixir runtime: AST loader, `SpecDSL.Case`, `SpecDSL.Handlers`                                   |
 | `apps/invoicing`              | Sample Phoenix + Ash app, the system under test                                                  |
 | `docs/design.md`              | Design                                                                                           |

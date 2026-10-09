@@ -6,16 +6,17 @@ defmodule Invoicing.SpecSupport.Factory do
   alias Invoicing.Billing
   alias Invoicing.Billing.{Invoice, LineItem}
   alias Invoicing.CRM
-  alias Invoicing.CRM.Company
+  alias Invoicing.CRM.{Company, Contact}
 
   @resources %{
     "Company" => Company,
+    "Contact" => Contact,
     "Invoice" => Invoice,
     "LineItem" => LineItem,
     "User" => User
   }
 
-  @calculations %{Invoice => [:total], LineItem => [:line_total]}
+  @calculations %{Contact => [:full_name], Invoice => [:total], LineItem => [:line_total]}
 
   @relationship_attributes %{"company" => "company_id", "invoice" => "invoice_id"}
 
@@ -69,6 +70,16 @@ defmodule Invoicing.SpecSupport.Factory do
     |> CRM.create_company!(authorize?: false)
   end
 
+  defp build(attrs, Contact) do
+    sequence = System.unique_integer([:positive])
+
+    attrs
+    |> Map.put_new("first_name", "First#{sequence}")
+    |> Map.put_new("last_name", "Last#{sequence}")
+    |> Map.put_new_lazy("company_id", fn -> create("Company", %{}).id end)
+    |> CRM.create_contact!(authorize?: false)
+  end
+
   defp build(attrs, Invoice) do
     {status, invoice_attrs} = Map.pop(attrs, "status")
 
@@ -109,8 +120,12 @@ defmodule Invoicing.SpecSupport.Factory do
 
   defp put_natural_key(attrs, _resource, nil), do: attrs
 
-  defp put_natural_key(attrs, resource, ref),
-    do: Map.put_new(attrs, Map.fetch!(@natural_keys, resource), ref)
+  defp put_natural_key(attrs, resource, ref) do
+    case Map.fetch(@natural_keys, resource) do
+      {:ok, natural_key} -> Map.put_new(attrs, natural_key, ref)
+      :error -> attrs
+    end
+  end
 
   defp normalize_keys(attrs) do
     Map.new(attrs, fn {field, value} ->

@@ -28,12 +28,15 @@ defmodule InvoicingWeb.Router do
     post "/session", SessionController, :create
   end
 
-  scope "/invoices", InvoicingWeb do
+  scope "/", InvoicingWeb do
     pipe_through [:browser, :authenticated]
 
     live_session :authenticated, on_mount: {InvoicingWeb.UserAuth, :require_user} do
-      live "/", InvoiceLive.Index
-      live "/:id/edit", InvoiceLive.Edit
+      live "/invoices", InvoiceLive.Index
+      live "/invoices/:id/edit", InvoiceLive.Edit
+      live "/contacts", ContactLive.Index
+      live "/contacts/new/edit", ContactLive.Edit, :new
+      live "/contacts/:id/edit", ContactLive.Edit, :edit
     end
   end
 

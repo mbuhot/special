@@ -36,6 +36,7 @@ defmodule InvoicingWeb.Layouts do
     <header class="navbar px-4 sm:px-6 lg:px-8">
       <div class="flex-1">
         <.link navigate={~p"/invoices"} class="text-lg font-semibold">Invoicing</.link>
+        <.link navigate={~p"/contacts"} class="ml-4">Contacts</.link>
       </div>
       <div class="flex-none flex items-center gap-4">
         <span :if={@current_user} id="current-user" class="text-sm">{@current_user.email}</span>

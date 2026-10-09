@@ -3,17 +3,22 @@ defmodule Invoicing.PolicyConformanceTest do
 
   alias Invoicing.SpecSupport.Factory
 
-  @ast "../../specs/**/*.ast.json"
-       |> Path.expand()
-       |> Path.wildcard()
-       |> Enum.sort()
-       |> hd()
-       |> SpecDSL.AST.load!()
+  @asts "../../specs/**/*.ast.json"
+        |> Path.expand()
+        |> Path.wildcard()
+        |> Enum.sort()
+        |> Enum.map(&SpecDSL.AST.load!/1)
 
-  @policies @ast.policies
+  @policies Enum.reduce(@asts, %{}, fn ast, merged ->
+              Map.merge(merged, ast.policies, fn _entity, left, right ->
+                Map.merge(left, right, fn _role, a, b -> Enum.uniq(a ++ b) end)
+              end)
+            end)
+
+  @actors Enum.reduce(@asts, %{}, &Map.merge(&2, &1.actors))
 
   @roles (Enum.flat_map(@policies, fn {_entity_name, role_actions} -> Map.keys(role_actions) end) ++
-            Enum.flat_map(@ast.actors, fn {_actor_name, actor} -> List.wrap(actor[:role]) end))
+            Enum.flat_map(@actors, fn {_actor_name, actor} -> List.wrap(actor[:role]) end))
          |> Enum.uniq()
          |> Enum.sort()
 

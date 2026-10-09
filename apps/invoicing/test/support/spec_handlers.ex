@@ -60,7 +60,7 @@ defmodule Invoicing.SpecHandlers do
   end
 
   step "selects", %{actor: actor, value: value, control: control}, ctx do
-    submit_field_change(ctx, actor, control, value)
+    submit_field_change(ctx, actor, control, resolve_value(ctx, value))
   end
 
   step "clicks", %{actor: actor, control: control}, ctx do

@@ -45,5 +45,6 @@ defmodule Invoicing.CRM.Company do
 
   relationships do
     has_many :invoices, Invoicing.Billing.Invoice
+    has_many :contacts, Invoicing.CRM.Contact
   end
 end

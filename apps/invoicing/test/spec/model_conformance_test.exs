@@ -1,15 +1,44 @@
+defmodule Invoicing.SpecUnion do
+  @moduledoc "Union of the model entities declared across every compiled spec AST."
+
+  alias SpecDSL.Entity
+
+  @doc "Entities by name with fields, relations and machines merged across all ASTs."
+  def model do
+    "../../specs/**/*.ast.json"
+    |> Path.expand()
+    |> Path.wildcard()
+    |> Enum.sort()
+    |> Enum.map(&(&1 |> SpecDSL.AST.load!() |> Map.fetch!(:model)))
+    |> Enum.reduce(
+      %{},
+      &Map.merge(&2, &1, fn _name, left, right -> merge_entity(left, right) end)
+    )
+  end
+
+  defp merge_entity(left, right) do
+    %Entity{
+      fields: Enum.uniq(left.fields ++ right.fields),
+      relations: Enum.uniq(left.relations ++ right.relations),
+      machines:
+        Map.merge(left.machines, right.machines, fn _field, a, b -> merge_machine(a, b) end)
+    }
+  end
+
+  defp merge_machine(left, right) do
+    %{
+      states: Enum.uniq(left.states ++ right.states),
+      transitions: Enum.uniq(left.transitions ++ right.transitions)
+    }
+  end
+end
+
 defmodule Invoicing.ModelConformanceTest do
   use ExUnit.Case, async: true
 
   alias Invoicing.SpecSupport.Factory
 
-  @model "../../specs/**/*.ast.json"
-         |> Path.expand()
-         |> Path.wildcard()
-         |> Enum.sort()
-         |> hd()
-         |> SpecDSL.AST.load!()
-         |> Map.fetch!(:model)
+  @model Invoicing.SpecUnion.model()
 
   for {entity_name, entity} <- @model do
     test "#{entity_name}: every entity maps to a resource" do

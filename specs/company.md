@@ -2,7 +2,7 @@
 
 ## Model
 
-- Company: name, domain, industry. Has many Invoice.
+- Company: name, domain, industry. Has many Contact.
 
 ## Policies
 

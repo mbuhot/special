@@ -3,6 +3,10 @@ defmodule Invoicing.Pipeline do
 
   use Ash.Domain
 
+  require Ash.Query
+
+  @open_stages [:lead, :qualified, :proposal]
+
   resources do
     resource Invoicing.Pipeline.Deal do
       define :create_deal, action: :create
@@ -22,5 +26,20 @@ defmodule Invoicing.Pipeline do
       define :complete_task, action: :complete
       define :get_task, action: :read, get_by: [:id]
     end
+  end
+
+  @doc "Returns {stage, count} for each open stage in pipeline order."
+  def count_open_deals_by_stage(actor) do
+    Enum.map(@open_stages, fn stage ->
+      {stage,
+       Invoicing.Pipeline.Deal |> Ash.Query.filter(stage == ^stage) |> Ash.count!(actor: actor)}
+    end)
+  end
+
+  @doc "Returns the number of open tasks due before the given date."
+  def count_overdue_tasks(today, actor) do
+    Invoicing.Pipeline.Task
+    |> Ash.Query.filter(status == :open and due_date < ^today)
+    |> Ash.count!(actor: actor)
   end
 end

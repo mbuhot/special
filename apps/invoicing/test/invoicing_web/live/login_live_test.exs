@@ -24,7 +24,7 @@ defmodule InvoicingWeb.LoginLiveTest do
     render_submit(login_form)
     logged_in_conn = submit_form(login_form, conn)
 
-    assert redirected_to(logged_in_conn) == "/invoices"
+    assert redirected_to(logged_in_conn) == "/dashboard"
 
     {:ok, invoices_view, _html} = live(recycle(logged_in_conn), ~p"/invoices")
 

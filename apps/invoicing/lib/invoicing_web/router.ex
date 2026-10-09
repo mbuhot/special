@@ -32,6 +32,7 @@ defmodule InvoicingWeb.Router do
     pipe_through [:browser, :authenticated]
 
     live_session :authenticated, on_mount: {InvoicingWeb.UserAuth, :require_user} do
+      live "/dashboard", DashboardLive
       live "/invoices", InvoiceLive.Index
       live "/invoices/:id/edit", InvoiceLive.Edit
       live "/contacts", ContactLive.Index

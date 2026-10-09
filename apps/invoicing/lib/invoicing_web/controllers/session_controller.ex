@@ -11,7 +11,7 @@ defmodule InvoicingWeb.SessionController do
         conn
         |> configure_session(renew: true)
         |> put_session(:user_id, user_id)
-        |> redirect(to: ~p"/invoices")
+        |> redirect(to: ~p"/dashboard")
 
       _no_user ->
         conn

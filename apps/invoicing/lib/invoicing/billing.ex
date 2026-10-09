@@ -3,6 +3,8 @@ defmodule Invoicing.Billing do
 
   use Ash.Domain
 
+  require Ash.Query
+
   resources do
     resource Invoicing.Billing.Invoice do
       define :create_invoice, action: :create
@@ -19,6 +21,13 @@ defmodule Invoicing.Billing do
       define :update_line_item, action: :update
       define :get_line_item, action: :read, get_by: [:id]
     end
+  end
+
+  @doc "Returns the number of invoices in status draft or sent."
+  def count_unpaid_invoices(actor) do
+    Invoicing.Billing.Invoice
+    |> Ash.Query.filter(status in [:draft, :sent])
+    |> Ash.count!(actor: actor)
   end
 
   @doc "Returns the next unused invoice number of the form INV-<n>."

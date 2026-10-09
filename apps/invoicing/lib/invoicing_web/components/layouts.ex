@@ -36,7 +36,8 @@ defmodule InvoicingWeb.Layouts do
     ~H"""
     <header class="navbar px-4 sm:px-6 lg:px-8">
       <div class="flex-1">
-        <.link navigate={~p"/invoices"} class="text-lg font-semibold">Invoicing</.link>
+        <.link navigate={~p"/dashboard"} class="text-lg font-semibold">Dashboard</.link>
+        <.link navigate={~p"/invoices"} class="ml-4">Invoices</.link>
         <.link navigate={~p"/contacts"} class="ml-4">Contacts</.link>
         <.link navigate={~p"/companies"} class="ml-4">Companies</.link>
         <.link navigate={~p"/pipeline"} class="ml-4">Pipeline</.link>

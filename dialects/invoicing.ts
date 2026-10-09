@@ -7,6 +7,7 @@ import {
   table,
 } from "../packages/specdsl-core/src/index.ts";
 import { crmSurfaces } from "./crm.ts";
+import { dashboardSurfaces } from "./dashboard.ts";
 import { pipelineSurfaces } from "./pipeline.ts";
 import webApp from "./web-app.ts";
 
@@ -18,6 +19,7 @@ export default dialect({
     ...webApp.surfaces,
     ...crmSurfaces,
     ...pipelineSurfaces,
+    ...dashboardSurfaces,
     Login: surface({
       route: "/login",
       controls: {

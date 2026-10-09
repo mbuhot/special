@@ -49,3 +49,18 @@ Narrate: The meeting text Kickoff is typed into the activity body.
 And Sales rep clicks "Log activity"
 Then Sales rep sees "2026-01-17" in "Timeline"
 Narrate: The meeting appears in the timeline. It is dated two days after the contact page was opened.
+
+## Scenario: Timeline shows who logged each activity and when
+
+Story: As the sales rep, I need to see who logged each activity and on what date, so that I can judge how recent and how reliable it is.
+Given a Company "Acme"
+Given a Contact "Ada Lovelace" with first name Ada, last name Lovelace, company Acme
+Given an Activity "Intro call" with kind call, body Intro-call, occurred at 2026-01-10T10:00:00Z, contact Ada Lovelace
+When Sales rep opens Contact page for Ada Lovelace
+Narrate: This is the contact page for Ada Lovelace. The timeline lists one activity.
+Then Sales rep sees "Call" in "Timeline"
+Narrate: The activity kind reads Call.
+And Sales rep sees "10 Jan 2026" in "Timeline"
+Narrate: The date reads the tenth of January 2026.
+And Sales rep sees "Sales rep" in "Timeline"
+Narrate: The author reads Sales rep.

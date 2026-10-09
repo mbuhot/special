@@ -6,10 +6,10 @@ Story: As the sales rep, I need to add a task to Big deal, so that the next step
 Given a Company "Acme"
 Given a Deal "Big deal" with stage lead, company Acme
 When Sales rep opens Deal page for Big deal
-Narrate: The deal page for Big deal shows the deal name, the stage, and a task table with a form for adding tasks.
+Narrate: The deal page for Big deal shows the deal name, its properties, the stage and a task table with a form for adding tasks.
 Then Sales rep sees "Big deal" in "Deal name"
-And Sales rep sees "lead" in "Stage"
-Narrate: Big deal is in the lead stage.
+And Sales rep sees "Lead" in "Stage"
+Narrate: Big deal is in the Lead stage.
 When Sales rep enters Send-proposal into "Task title"
 Narrate: The task title is Send-proposal.
 And Sales rep enters 2026-01-20 into "Task due date"

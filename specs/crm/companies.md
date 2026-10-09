@@ -71,3 +71,17 @@ Narrate: The invoices region lists the invoice INV-001.
 When Sales rep clicks "Edit company"
 Then Sales rep is on Company editor
 Narrate: The Edit company button opens the company editor for Acme.
+
+## Scenario: Company page shows the company's details
+
+Story: As the sales rep, I need to see Acme's domain, industry and contacts on its page, so that I understand the account at a glance.
+Given a Company "Acme" with name Acme, domain acme.example, industry Software
+Given a Contact "Ada Lovelace" with first name Ada, last name Lovelace, company Acme
+When Sales rep opens Company page for Acme
+Narrate: This is the company page for Acme. A properties panel sits below the company name.
+Then Sales rep sees "acme.example" in "Properties"
+Narrate: The properties panel shows the domain.
+And Sales rep sees "Software" in "Properties"
+Narrate: It shows the industry.
+And Sales rep sees "Ada Lovelace" in "Company contacts"
+Narrate: The contacts table lists Ada Lovelace.

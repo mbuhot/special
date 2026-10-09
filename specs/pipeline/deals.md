@@ -117,5 +117,104 @@ Narrate: The contact is Ada Lovelace.
 And Sales rep clicks "Save"
 Then Sales rep sees "Big-deal" in "Deal name"
 Narrate: The saved deal page shows the name Big-deal.
-And Sales rep sees "lead" in "Stage"
-Narrate: A new deal starts in the lead stage.
+And Sales rep sees "Lead" in "Stage"
+Narrate: A new deal starts in the Lead stage.
+
+## Scenario: Contact page lists the contact's deals
+
+Story: As the sales rep, I need to see Ada Lovelace's deals on her page, so that I know what is open with her.
+Given a Company "Acme"
+Given a Contact "Ada Lovelace" with first name Ada, last name Lovelace, company Acme
+Given a Deal "Big deal" with stage proposal, amount 12000, company Acme, contact Ada Lovelace
+When Sales rep opens Contact page for Ada Lovelace
+Narrate: This is the contact page for Ada Lovelace. A deals table sits below her properties.
+Then Sales rep sees "Big deal" in "Contact deals"
+Narrate: The deals table lists Big deal.
+And Sales rep sees "Proposal" in "Contact deals"
+Narrate: The row shows the stage Proposal.
+
+## Scenario: Deal page shows the deal's details
+
+Story: As the sales manager, I need to see the amount, close date, company and contact of Big deal on its page, so that I have the whole deal in one place.
+Given a Company "Acme"
+Given a Contact "Ada Lovelace" with first name Ada, last name Lovelace, company Acme
+Given a Deal "Big deal" with stage qualified, amount 12000, close date 2026-03-31, company Acme, contact Ada Lovelace
+When Sales manager opens Deal page for Big deal
+Narrate: This is the deal page for Big deal. A properties panel sits below the deal name.
+Then Sales manager sees "12,000.00" in "Properties"
+Narrate: The properties panel shows the amount, twelve thousand.
+And Sales manager sees "31 Mar 2026" in "Properties"
+Narrate: It shows the close date, the thirty-first of March 2026.
+And Sales manager sees "Acme" in "Company link"
+Narrate: The company link reads Acme.
+And Sales manager sees "Ada Lovelace" in "Contact link"
+Narrate: The contact link reads Ada Lovelace.
+And Sales manager sees "Qualified" in "Stage"
+Narrate: The stage reads Qualified.
+
+## Scenario: Moving a deal forward from its page
+
+Story: As the sales manager, I need to move Big deal to proposal from its page, so that I can advance it without leaving the deal.
+Given a Company "Acme"
+Given a Contact "Ada Lovelace" with first name Ada, last name Lovelace, company Acme
+Given a Deal "Big deal" with stage qualified, amount 12000, close date 2026-03-31, company Acme, contact Ada Lovelace
+When Sales manager opens Deal page for Big deal
+Narrate: The deal page for Big deal shows the stage Qualified. A Propose button sits beside it.
+And Sales manager clicks "Propose"
+Then Sales manager sees "Proposal" in "Stage"
+Narrate: The stage changes to Proposal.
+And Big deal has stage proposal
+
+## Scenario: Winning a deal from its page
+
+Story: As the sales manager, I need to mark Big deal won from its page, so that the sale is recorded where I am working.
+Given a Company "Acme"
+Given a Contact "Ada Lovelace" with first name Ada, last name Lovelace, company Acme
+Given a Deal "Big deal" with stage proposal, amount 12000, close date 2026-03-31, company Acme, contact Ada Lovelace
+When Sales manager opens Deal page for Big deal
+Narrate: The deal page for Big deal shows the stage Proposal. A Win button and a Lose button sit beside it.
+And Sales manager clicks "Win"
+Then Sales manager sees "Won" in "Stage"
+Narrate: The stage changes to Won.
+And Sales manager does not see "Win"
+Narrate: The stage buttons disappear. A won deal has no further moves.
+And Big deal has stage won
+
+## Scenario: Company page lists the company's deals
+
+Story: As the sales rep, I need to see Acme's deals and contacts on its page, so that I know what is in flight with the account.
+Given a Company "Acme" with name Acme, domain acme.example, industry Software
+Given a Contact "Ada Lovelace" with first name Ada, last name Lovelace, company Acme
+Given a Deal "Big deal" with stage lead, amount 12000, company Acme
+When Sales rep opens Company page for Acme
+Narrate: This is the company page for Acme. A deals table sits below the properties panel.
+Then Sales rep sees "Big deal" in "Company deals"
+Narrate: The deals table lists Big deal.
+And Sales rep sees "Ada Lovelace" in "Company contacts"
+Narrate: The contacts table lists Ada Lovelace.
+
+## Scenario: Qualifying a deal from its page
+
+Story: As the sales rep, I need to qualify Big deal from its page, so that I can advance it without leaving the deal.
+Given a Company "Acme"
+Given a Contact "Ada Lovelace" with first name Ada, last name Lovelace, company Acme
+Given a Deal "Big deal" with stage lead, amount 12000, close date 2026-03-31, company Acme, contact Ada Lovelace
+When Sales rep opens Deal page for Big deal
+Narrate: The deal page for Big deal shows the stage Lead. A Qualify button sits beside it.
+And Sales rep clicks "Qualify"
+Then Sales rep sees "Qualified" in "Stage"
+Narrate: The stage changes to Qualified.
+And Big deal has stage qualified
+
+## Scenario: Losing a deal from its page
+
+Story: As the sales manager, I need to mark Big deal lost from its page, so that the pipeline holds only deals still worth chasing.
+Given a Company "Acme"
+Given a Contact "Ada Lovelace" with first name Ada, last name Lovelace, company Acme
+Given a Deal "Big deal" with stage qualified, amount 12000, close date 2026-03-31, company Acme, contact Ada Lovelace
+When Sales manager opens Deal page for Big deal
+Narrate: The deal page for Big deal shows the stage Qualified. A Lose button sits beside it.
+And Sales manager clicks "Lose"
+Then Sales manager sees "Lost" in "Stage"
+Narrate: The stage changes to Lost.
+And Big deal has stage lost

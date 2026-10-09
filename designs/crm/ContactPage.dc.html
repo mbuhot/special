@@ -1,0 +1,706 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Contact page</title>
+    <script src="./support.js"></script>
+  </head>
+  <body>
+    <x-dc>
+      <helmet>
+        <style>
+          body {
+            margin: 0;
+            font-family:
+              system-ui,
+              -apple-system,
+              "Segoe UI",
+              sans-serif;
+            color: #0f172a;
+          }
+          a {
+            color: #1d4ed8;
+          }
+          a:hover {
+            color: #1e40af;
+          }
+        </style>
+      </helmet>
+      <div
+        style="
+          width: 1280px;
+          height: 800px;
+          display: flex;
+          background: #ffffff;
+          color: #0f172a;
+          font-family:
+            system-ui,
+            -apple-system,
+            &quot;Segoe UI&quot;,
+            sans-serif;
+          overflow: hidden;
+        "
+      >
+        <nav
+          data-surface="Sidebar"
+          style="
+            width: 240px;
+            height: 800px;
+            box-sizing: border-box;
+            flex: none;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            padding: 20px 16px;
+            background: #ffffff;
+            border-right: 1px solid #e2e8f0;
+          "
+        >
+          <div style="padding: 4px 12px; font-size: 18px; font-weight: 700; color: #0f172a">
+            Ledger CRM
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 4px">
+            <a
+              href="#"
+              data-control="Dashboard"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 10px 12px;
+                border-radius: 8px;
+                color: #334155;
+                font-size: 14px;
+                font-weight: 500;
+                text-decoration: none;
+              "
+            >
+              <svg
+                aria-hidden="true"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                style="flex: none"
+              >
+                <rect x="3" y="3" width="7" height="9" rx="1" />
+                <rect x="14" y="3" width="7" height="5" rx="1" />
+                <rect x="14" y="12" width="7" height="9" rx="1" />
+                <rect x="3" y="16" width="7" height="5" rx="1" />
+              </svg>
+              <span>Dashboard</span>
+            </a>
+            <a
+              href="#"
+              data-control="Contacts"
+              aria-current="page"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 10px 12px;
+                border-radius: 8px;
+                background: #eff6ff;
+                color: #1d4ed8;
+                font-size: 14px;
+                font-weight: 600;
+                text-decoration: none;
+              "
+            >
+              <svg
+                aria-hidden="true"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                style="flex: none"
+              >
+                <circle cx="12" cy="8" r="4" />
+                <path d="M4 21c0-4 3.6-7 8-7s8 3 8 7" />
+              </svg>
+              <span>Contacts</span>
+            </a>
+            <a
+              href="#"
+              data-control="Companies"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 10px 12px;
+                border-radius: 8px;
+                color: #334155;
+                font-size: 14px;
+                font-weight: 500;
+                text-decoration: none;
+              "
+            >
+              <svg
+                aria-hidden="true"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                style="flex: none"
+              >
+                <path d="M4 21V5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v16" />
+                <path d="M14 10h5a1 1 0 0 1 1 1v10" />
+                <path d="M8 8h2M8 12h2M8 16h2M2 21h20" />
+              </svg>
+              <span>Companies</span>
+            </a>
+            <a
+              href="#"
+              data-control="Pipeline"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 10px 12px;
+                border-radius: 8px;
+                color: #334155;
+                font-size: 14px;
+                font-weight: 500;
+                text-decoration: none;
+              "
+            >
+              <svg
+                aria-hidden="true"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                style="flex: none"
+              >
+                <path d="M3 4h18l-7 8v7l-4 2v-9z" />
+              </svg>
+              <span>Pipeline</span>
+            </a>
+            <a
+              href="#"
+              data-control="Invoices"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 10px 12px;
+                border-radius: 8px;
+                color: #334155;
+                font-size: 14px;
+                font-weight: 500;
+                text-decoration: none;
+              "
+            >
+              <svg
+                aria-hidden="true"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                style="flex: none"
+              >
+                <path d="M6 3h9l4 4v14H6z" />
+                <path d="M14 3v5h5" />
+                <path d="M9 13h7M9 17h7" />
+              </svg>
+              <span>Invoices</span>
+            </a>
+          </div>
+          <div style="flex: 1"></div>
+          <div
+            data-control="Signed in as"
+            style="
+              display: flex;
+              flex-direction: column;
+              gap: 2px;
+              padding: 12px;
+              border-top: 1px solid #e2e8f0;
+            "
+          >
+            <div style="font-size: 12px; color: #64748b">Signed in as</div>
+            <div style="font-size: 14px; font-weight: 600; color: #0f172a">Sales rep</div>
+            <div style="font-size: 12px; color: #64748b">sales-rep@example.com</div>
+          </div>
+        </nav>
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column">
+          <header
+            style="
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              gap: 16px;
+              height: 72px;
+              box-sizing: border-box;
+              flex: none;
+              padding: 0 32px;
+              border-bottom: 1px solid #e2e8f0;
+            "
+          >
+            <h1
+              data-control="Contact name"
+              style="margin: 0; font-size: 24px; font-weight: 600; color: #0f172a"
+            >
+              Ada Lovelace
+            </h1>
+            <button
+              type="button"
+              data-control="Edit contact"
+              style="
+                padding: 8px 16px;
+                border: 0;
+                border-radius: 8px;
+                background: #1d4ed8;
+                color: #ffffff;
+                font-size: 14px;
+                font-weight: 600;
+                font-family: inherit;
+                cursor: pointer;
+              "
+            >
+              Edit contact
+            </button>
+          </header>
+          <main
+            data-surface="Contact page"
+            style="
+              flex: 1;
+              display: grid;
+              grid-template-columns: 320px minmax(0, 1fr);
+              gap: 24px;
+              align-items: start;
+              padding: 32px;
+              background: #ffffff;
+            "
+          >
+            <section
+              data-control="Properties"
+              style="
+                display: flex;
+                flex-direction: column;
+                box-sizing: border-box;
+                padding: 20px;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                background: #ffffff;
+              "
+            >
+              <h2 style="margin: 0 0 12px; font-size: 16px; font-weight: 600; color: #0f172a">
+                Properties
+              </h2>
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: space-between;
+                  gap: 16px;
+                  padding: 12px 0;
+                  border-top: 1px solid #e2e8f0;
+                "
+              >
+                <span style="font-size: 13px; color: #64748b">Email</span>
+                <span style="font-size: 14px; color: #0f172a">ada@acme.example</span>
+              </div>
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: space-between;
+                  gap: 16px;
+                  padding: 12px 0;
+                  border-top: 1px solid #e2e8f0;
+                "
+              >
+                <span style="font-size: 13px; color: #64748b">Phone</span>
+                <span style="font-size: 14px; color: #0f172a">555-0100</span>
+              </div>
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: space-between;
+                  gap: 16px;
+                  padding: 12px 0;
+                  border-top: 1px solid #e2e8f0;
+                "
+              >
+                <span style="font-size: 13px; color: #64748b">Company</span>
+                <a
+                  href="#"
+                  data-control="Company link"
+                  style="font-size: 14px; text-decoration: none"
+                  >Acme</a
+                >
+              </div>
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: space-between;
+                  gap: 16px;
+                  padding: 12px 0;
+                  border-top: 1px solid #e2e8f0;
+                "
+              >
+                <span style="font-size: 13px; color: #64748b">Created</span>
+                <span style="font-size: 14px; color: #0f172a">10 Jan 2026</span>
+              </div>
+            </section>
+            <div style="display: flex; flex-direction: column; gap: 20px; min-width: 0">
+              <section
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  box-sizing: border-box;
+                  padding: 20px;
+                  border: 1px solid #e2e8f0;
+                  border-radius: 8px;
+                  background: #ffffff;
+                "
+              >
+                <h2 style="margin: 0 0 12px; font-size: 16px; font-weight: 600; color: #0f172a">
+                  Deals
+                </h2>
+                <table
+                  data-control="Contact deals"
+                  style="width: 100%; border-collapse: collapse; font-size: 14px"
+                >
+                  <thead>
+                    <tr>
+                      <th
+                        style="
+                          text-align: left;
+                          padding: 8px 12px 8px 0;
+                          font-size: 12px;
+                          font-weight: 600;
+                          text-transform: uppercase;
+                          letter-spacing: 0.04em;
+                          color: #64748b;
+                        "
+                      >
+                        Name
+                      </th>
+                      <th
+                        style="
+                          text-align: left;
+                          padding: 8px 12px 8px 0;
+                          font-size: 12px;
+                          font-weight: 600;
+                          text-transform: uppercase;
+                          letter-spacing: 0.04em;
+                          color: #64748b;
+                        "
+                      >
+                        Stage
+                      </th>
+                      <th
+                        style="
+                          text-align: right;
+                          padding: 8px 12px 8px 0;
+                          font-size: 12px;
+                          font-weight: 600;
+                          text-transform: uppercase;
+                          letter-spacing: 0.04em;
+                          color: #64748b;
+                        "
+                      >
+                        Amount
+                      </th>
+                      <th
+                        style="
+                          text-align: left;
+                          padding: 8px 0 8px 12px;
+                          font-size: 12px;
+                          font-weight: 600;
+                          text-transform: uppercase;
+                          letter-spacing: 0.04em;
+                          color: #64748b;
+                        "
+                      >
+                        Close date
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td style="padding: 12px 12px 12px 0; border-top: 1px solid #e2e8f0">
+                        <a href="#" style="text-decoration: none; font-weight: 600">Big deal</a>
+                      </td>
+                      <td style="padding: 12px 12px 12px 0; border-top: 1px solid #e2e8f0">
+                        <span
+                          style="
+                            padding: 2px 10px;
+                            border-radius: 9999px;
+                            background: #eff6ff;
+                            color: #1d4ed8;
+                            font-size: 12px;
+                            font-weight: 600;
+                          "
+                          >Qualified</span
+                        >
+                      </td>
+                      <td
+                        style="
+                          padding: 12px 12px 12px 0;
+                          border-top: 1px solid #e2e8f0;
+                          text-align: right;
+                        "
+                      >
+                        12,000.00
+                      </td>
+                      <td
+                        style="
+                          padding: 12px 0 12px 12px;
+                          border-top: 1px solid #e2e8f0;
+                          color: #334155;
+                        "
+                      >
+                        31 Mar 2026
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 12px 12px 12px 0; border-top: 1px solid #e2e8f0">
+                        <a href="#" style="text-decoration: none; font-weight: 600">Renewal</a>
+                      </td>
+                      <td style="padding: 12px 12px 12px 0; border-top: 1px solid #e2e8f0">
+                        <span
+                          style="
+                            padding: 2px 10px;
+                            border-radius: 9999px;
+                            background: #fef3c7;
+                            color: #b45309;
+                            font-size: 12px;
+                            font-weight: 600;
+                          "
+                          >Proposal</span
+                        >
+                      </td>
+                      <td
+                        style="
+                          padding: 12px 12px 12px 0;
+                          border-top: 1px solid #e2e8f0;
+                          text-align: right;
+                        "
+                      >
+                        8,500.00
+                      </td>
+                      <td
+                        style="
+                          padding: 12px 0 12px 12px;
+                          border-top: 1px solid #e2e8f0;
+                          color: #334155;
+                        "
+                      >
+                        30 Jun 2026
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </section>
+              <section
+                data-control="Timeline"
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  box-sizing: border-box;
+                  padding: 20px;
+                  border: 1px solid #e2e8f0;
+                  border-radius: 8px;
+                  background: #ffffff;
+                "
+              >
+                <h2 style="margin: 0 0 12px; font-size: 16px; font-weight: 600; color: #0f172a">
+                  Timeline
+                </h2>
+                <div style="display: flex; align-items: flex-end; gap: 12px; padding-bottom: 16px">
+                  <div style="display: flex; flex-direction: column; gap: 4px">
+                    <label for="activity-kind" style="font-size: 12px; color: #64748b">Kind</label>
+                    <select
+                      id="activity-kind"
+                      data-control="Activity kind"
+                      style="
+                        width: 104px;
+                        padding: 8px 12px;
+                        border: 1px solid #cbd5e1;
+                        border-radius: 8px;
+                        background: #ffffff;
+                        color: #0f172a;
+                        font-size: 14px;
+                        font-family: inherit;
+                        box-sizing: border-box;
+                      "
+                    >
+                      <option>Note</option>
+                      <option>Call</option>
+                      <option>Email</option>
+                      <option>Meeting</option>
+                    </select>
+                  </div>
+                  <div
+                    style="display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0"
+                  >
+                    <label for="activity-body" style="font-size: 12px; color: #64748b"
+                      >Activity</label
+                    >
+                    <input
+                      id="activity-body"
+                      type="text"
+                      data-control="Activity body"
+                      placeholder="What happened?"
+                      style="
+                        width: 100%;
+                        padding: 8px 12px;
+                        border: 1px solid #cbd5e1;
+                        border-radius: 8px;
+                        background: #ffffff;
+                        color: #0f172a;
+                        font-size: 14px;
+                        font-family: inherit;
+                        box-sizing: border-box;
+                      "
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    data-control="Log activity"
+                    style="
+                      padding: 8px 16px;
+                      border: 0;
+                      border-radius: 8px;
+                      background: #1d4ed8;
+                      color: #ffffff;
+                      font-size: 14px;
+                      font-weight: 600;
+                      font-family: inherit;
+                      cursor: pointer;
+                    "
+                  >
+                    Log activity
+                  </button>
+                </div>
+                <div
+                  style="
+                    display: grid;
+                    grid-template-columns: 72px 1fr;
+                    align-items: start;
+                    gap: 16px;
+                    padding: 12px 0;
+                    border-top: 1px solid #e2e8f0;
+                    font-size: 14px;
+                  "
+                >
+                  <span
+                    style="
+                      justify-self: start;
+                      padding: 2px 10px;
+                      border-radius: 9999px;
+                      background: #eff6ff;
+                      color: #1d4ed8;
+                      font-size: 12px;
+                      font-weight: 600;
+                    "
+                    >Call</span
+                  >
+                  <div style="display: flex; flex-direction: column; gap: 2px">
+                    <span style="color: #0f172a">Discussed renewal terms and next steps</span>
+                    <div style="display: flex; gap: 12px; font-size: 13px; color: #64748b">
+                      <span>by Sales rep</span><span>10 Jan 2026 10:00</span>
+                    </div>
+                  </div>
+                </div>
+                <div
+                  style="
+                    display: grid;
+                    grid-template-columns: 72px 1fr;
+                    align-items: start;
+                    gap: 16px;
+                    padding: 12px 0;
+                    border-top: 1px solid #e2e8f0;
+                    font-size: 14px;
+                  "
+                >
+                  <span
+                    style="
+                      justify-self: start;
+                      padding: 2px 10px;
+                      border-radius: 9999px;
+                      background: #eff6ff;
+                      color: #1d4ed8;
+                      font-size: 12px;
+                      font-weight: 600;
+                    "
+                    >Email</span
+                  >
+                  <div style="display: flex; flex-direction: column; gap: 2px">
+                    <span style="color: #0f172a"
+                      >Sent revised proposal for the onboarding package</span
+                    >
+                    <div style="display: flex; gap: 12px; font-size: 13px; color: #64748b">
+                      <span>by Sales rep</span><span>10 Jan 2026 10:00</span>
+                    </div>
+                  </div>
+                </div>
+                <div
+                  style="
+                    display: grid;
+                    grid-template-columns: 72px 1fr;
+                    align-items: start;
+                    gap: 16px;
+                    padding: 12px 0 0;
+                    border-top: 1px solid #e2e8f0;
+                    font-size: 14px;
+                  "
+                >
+                  <span
+                    style="
+                      justify-self: start;
+                      padding: 2px 10px;
+                      border-radius: 9999px;
+                      background: #eff6ff;
+                      color: #1d4ed8;
+                      font-size: 12px;
+                      font-weight: 600;
+                    "
+                    >Note</span
+                  >
+                  <div style="display: flex; flex-direction: column; gap: 2px">
+                    <span style="color: #0f172a">Prefers invoices sent to accounts payable</span>
+                    <div style="display: flex; gap: 12px; font-size: 13px; color: #64748b">
+                      <span>by Sales rep</span><span>10 Jan 2026 10:00</span>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            </div>
+          </main>
+        </div>
+      </div>
+    </x-dc>
+    <script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
+      class Component extends DCLogic {
+      renderVals() {
+      return {};
+      }
+      }
+    </script>
+  </body>
+</html>

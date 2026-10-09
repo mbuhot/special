@@ -1,4 +1,4 @@
-import { button, field, region, surface, table } from "../packages/specdsl-core/src/index.ts";
+import { button, field, link, region, surface, table } from "../packages/specdsl-core/src/index.ts";
 
 export const crmSurfaces = {
   "Contact list": surface({
@@ -72,7 +72,9 @@ export const crmSurfaces = {
     route: "/companies/{id}",
     controls: {
       "Company name": region({ css: "#company-name", lv: "#company-name" }),
+      Properties: region({ css: "#company-properties", lv: "#company-properties" }),
       "Company contacts": table({ css: "#company-contacts", lv: "#company-contacts" }),
+      "Company deals": table({ css: "#company-deals", lv: "#company-deals" }),
       "Company invoices": table({ css: "#company-invoices", lv: "#company-invoices" }),
       "Edit company": button({ css: "#edit-company", lv: "#edit-company" }),
     },
@@ -81,6 +83,9 @@ export const crmSurfaces = {
     route: "/contacts/{id}",
     controls: {
       "Contact name": region({ css: "#contact-name", lv: "#contact-name" }),
+      Properties: region({ css: "#contact-properties", lv: "#contact-properties" }),
+      "Company link": link({ css: "#contact-company-link", lv: "#contact-company-link" }),
+      "Contact deals": table({ css: "#contact-deals", lv: "#contact-deals" }),
       Timeline: region({ css: "#timeline", lv: "#timeline" }),
       "Activity kind": field({
         css: "#activity-kind",
@@ -93,6 +98,7 @@ export const crmSurfaces = {
         form: "#activity-form",
       }),
       "Log activity": button({ css: "#log-activity", lv: "#log-activity" }),
+      "Edit contact": button({ css: "#edit-contact", lv: "#edit-contact" }),
     },
   }),
 };

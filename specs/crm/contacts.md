@@ -77,3 +77,24 @@ Narrate: The first name changes to Ada-Byron.
 And Sales rep clicks "Save"
 Then Sales rep sees "Ada-Byron Lovelace" in "Contact name"
 Narrate: The contact page shows the new name Ada-Byron Lovelace.
+
+## Scenario: Contact page shows the contact's details
+
+Story: As the sales rep, I need to see Ada Lovelace's email, phone and company on her page, so that I can reach her without opening another screen.
+Given a Company "Acme"
+Given a Contact "Ada Lovelace" with first name Ada, last name Lovelace, email ada@acme.example, phone 555-0100, company Acme
+When Sales rep opens Contact page for Ada Lovelace
+Narrate: This is the contact page for Ada Lovelace. A properties panel sits below her name.
+Then Sales rep sees "ada@acme.example" in "Properties"
+Narrate: The properties panel shows the email address.
+And Sales rep sees "555-0100" in "Properties"
+Narrate: It also shows the phone number.
+And Sales rep sees "Acme" in "Company link"
+Narrate: The company link reads Acme.
+When Sales rep clicks "Company link"
+Then Sales rep is on Company page
+Narrate: The company link opens the company page for Acme.
+When Sales rep opens Contact page for Ada Lovelace
+And Sales rep clicks "Edit contact"
+Then Sales rep is on Contact editor
+Narrate: The Edit contact button opens the contact editor for Ada Lovelace.

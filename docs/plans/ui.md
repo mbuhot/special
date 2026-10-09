@@ -61,3 +61,18 @@ Interleaved with UI iterations. The specs must capture the critical behaviour an
 | #   | Item         | Shape                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | --- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | A1  | ash_boundary | Add the `ash_boundary` dep to apps/invoicing; every domain exposes code interfaces only; `Ash.Query` / `Ash.Changeset` / `Ash.read` etc. are forbidden in `InvoicingWeb` (today: 2 call sites in deal*live/board.ex and company_live/show.ex, plus 13 `Ash.can?` calls to replace with generated `can*<action>?` interface functions). Compile fails on a leak. Pairs with D12 (`## Domains`), which the conformance test can then hold against the boundary config |
+
+### Iteration 1 review
+
+docs/reviews/2026-10-10-iteration-1.md: FAIL. Blocking: invoice editor, contact/deal/company record pages, login; invoice line editing, new-invoice company, racy numbering, email-only auth.
+
+| 2 | Record pages for contact, company and deal: properties panel with every model field, associations as links, stage and status controls, timeline with author and formatted dates; DSL gains typed fields, enums and named relations (D4) | Reviewer's top recommendation; closes UX 2, 3, 4, 6 and spec 2, 3, 7 | in progress |
+| 3 | Invoice editor: customer selection, dates, per-line totals, read-only outside draft, persisted-or-error edits, safe numbering; DSL gains invariants (D9) | Blocking UX 1 and code 1, 2, 3 | queued |
+| 4 | Authentication: password login, logout, no stock landing page | Blocking UX 5 and code 4 | queued |
+
+### Iteration 2, record pages
+
+- Helped: the `referenced` lint refused a declared "Qualify" button on the Deal page with no scenario clicking it, so the spec worker wrote the Qualify and Lose scenarios before any code existed. Declared controls cannot be dead.
+- Hindered: a Company-page scenario that mentions a Deal cannot live in specs/crm (the project does not see Deal); it moved to the pipeline project. Project boundaries in the specs tree shape where a cross-cutting scenario lives.
+- Caught: the ash_boundary worker's first attempt added a `for_company` read action; the policy conformance test rejected it as unspecified, so the query became a plain domain function over the primary read.
+- Caught: making every module async exposed sandbox deadlocks on natural keys; the fix is key ordering (users first) in the spec runtime, which the spec's `Given` order already follows for everything else.

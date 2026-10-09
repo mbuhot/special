@@ -1,4 +1,4 @@
-import { button, field, region, surface, table } from "../packages/specdsl-core/src/index.ts";
+import { button, field, link, region, surface, table } from "../packages/specdsl-core/src/index.ts";
 
 const transitionButton = (transition: string) =>
   button({
@@ -43,7 +43,14 @@ export const pipelineSurfaces = {
     route: "/deals/{id}",
     controls: {
       "Deal name": region({ css: "#deal-name", lv: "#deal-name" }),
+      Properties: region({ css: "#deal-properties", lv: "#deal-properties" }),
       Stage: region({ css: "#deal-stage", lv: "#deal-stage" }),
+      Qualify: button({ css: "#deal-qualify", lv: "#deal-qualify" }),
+      Propose: button({ css: "#deal-propose", lv: "#deal-propose" }),
+      Win: button({ css: "#deal-win", lv: "#deal-win" }),
+      Lose: button({ css: "#deal-lose", lv: "#deal-lose" }),
+      "Company link": link({ css: "#deal-company-link", lv: "#deal-company-link" }),
+      "Contact link": link({ css: "#deal-contact-link", lv: "#deal-contact-link" }),
       Tasks: table({ css: "#tasks", lv: "#tasks" }),
       "Overdue tasks": region({ css: "#overdue-tasks", lv: "#overdue-tasks" }),
       "Task title": field({ css: "#task-title", lv: "task[title]", form: "#task-form" }),

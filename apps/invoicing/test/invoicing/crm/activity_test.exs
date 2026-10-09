@@ -4,12 +4,13 @@ defmodule Invoicing.CRM.ActivityTest do
   alias Invoicing.{Accounts, Clock, CRM}
 
   setup do
+    admin = Accounts.create_user!(%{email: "admin@example.com", role: :admin}, authorize?: false)
+
     sales_rep =
       Accounts.create_user!(%{email: "sales@example.com", role: :sales},
         authorize?: false
       )
 
-    admin = Accounts.create_user!(%{email: "admin@example.com", role: :admin}, authorize?: false)
     company = CRM.create_company!(%{name: "Acme"}, authorize?: false)
 
     ada =

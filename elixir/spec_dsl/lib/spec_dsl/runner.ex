@@ -10,7 +10,7 @@ defmodule SpecDSL.Runner do
   def run_scenario(%AST{} = ast, %Scenario{} = scenario, handlers, opts \\ []) do
     modes = Keyword.get(opts, :modes, [:test])
     steps = Enum.filter(scenario.steps, &runnable?(&1, modes))
-    ctx = ast |> Ctx.new(handlers) |> setup_scoped_contexts()
+    ctx = ast |> Ctx.new(handlers, scenario) |> setup_scoped_contexts()
 
     case execute_steps(ctx, scenario, steps) do
       {:ok, final_ctx} ->

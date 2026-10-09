@@ -1,11 +1,12 @@
 defmodule SpecDSL.Ctx do
   @moduledoc "Scenario execution state: context instances, actor sessions, refs and per-actor views and paths."
 
-  alias SpecDSL.{AST, Lock}
+  alias SpecDSL.{AST, Lock, Scenario}
 
   @type setup_entry :: {:context, atom()} | {:actor, String.t()}
   @type t :: %__MODULE__{
           ast: AST.t(),
+          scenario: Scenario.t() | nil,
           handlers: module(),
           lock: Lock.t(),
           contexts: %{atom() => term()},
@@ -18,6 +19,7 @@ defmodule SpecDSL.Ctx do
 
   defstruct [
     :ast,
+    :scenario,
     :handlers,
     :lock,
     contexts: %{},
@@ -28,10 +30,10 @@ defmodule SpecDSL.Ctx do
     setup_order: []
   ]
 
-  @doc "Creates an empty execution state for an AST and a handlers module."
-  @spec new(AST.t(), module()) :: t()
-  def new(%AST{} = ast, handlers) do
-    %__MODULE__{ast: ast, handlers: handlers, lock: handlers.__spec_lock__()}
+  @doc "Creates an empty execution state for an AST, a handlers module and the scenario about to run."
+  @spec new(AST.t(), module(), Scenario.t() | nil) :: t()
+  def new(%AST{} = ast, handlers, scenario \\ nil) do
+    %__MODULE__{ast: ast, handlers: handlers, lock: handlers.__spec_lock__(), scenario: scenario}
   end
 
   @doc "Returns the instance of a context that has been set up."

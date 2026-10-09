@@ -51,8 +51,8 @@ defmodule InvoicingWeb.CompanyLiveTest do
   end
 
   test "company page lists its invoices", %{conn: conn, acme: acme, globex: globex} do
-    Billing.create_invoice!(%{number: "INV-002", company_id: acme.id}, authorize?: false)
     Billing.create_invoice!(%{number: "INV-001", company_id: acme.id}, authorize?: false)
+    Billing.create_invoice!(%{number: "INV-002", company_id: acme.id}, authorize?: false)
     Billing.create_invoice!(%{number: "INV-003", company_id: globex.id}, authorize?: false)
 
     {:ok, view, _html} = live(conn, ~p"/companies/#{acme.id}")

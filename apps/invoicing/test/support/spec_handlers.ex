@@ -10,7 +10,7 @@ defmodule Invoicing.SpecHandlers do
   alias Ecto.Adapters.SQL.Sandbox
   alias Invoicing.{Accounts, Clock}
   alias Invoicing.SpecSupport.Factory
-  alias SpecDSL.Ctx
+  alias SpecDSL.{Ctx, Scenario}
 
   @endpoint InvoicingWeb.Endpoint
 
@@ -27,8 +27,11 @@ defmodule Invoicing.SpecHandlers do
   )
 
   context(:data,
-    setup: fn _config, _ctx -> Sandbox.start_owner!(Invoicing.Repo, shared: false) end,
-    teardown: fn owner, _ctx -> Sandbox.stop_owner(owner) end
+    setup: fn _config, ctx ->
+      owner = Sandbox.start_owner!(Invoicing.Repo, shared: false)
+      %{owner: owner, users: create_scenario_users(ctx)}
+    end,
+    teardown: fn %{owner: owner}, _ctx -> Sandbox.stop_owner(owner) end
   )
 
   context(:clock,
@@ -41,7 +44,7 @@ defmodule Invoicing.SpecHandlers do
   )
 
   context(:actor,
-    setup: fn declaration, _ctx -> sign_in_actor(declaration) end
+    setup: fn declaration, ctx -> sign_in_actor(declaration, ctx) end
   )
 
   step "opens", %{actor: actor, surface: surface} = args, ctx do
@@ -163,15 +166,25 @@ defmodule Invoicing.SpecHandlers do
 
   defp frozen_instant(_config), do: DateTime.utc_now()
 
-  defp sign_in_actor(declaration) do
-    user =
-      Factory.create("User", %{
-        email: String.downcase(declaration.name) <> "@example.com",
-        role: Map.fetch!(@roles, declaration.role)
-      })
+  defp create_scenario_users(%Ctx{scenario: nil}), do: %{}
 
+  defp create_scenario_users(%Ctx{scenario: scenario, ast: ast}) do
+    scenario
+    |> Scenario.actors()
+    |> Enum.map(fn actor_name -> {actor_email(actor_name), actor_name} end)
+    |> Enum.sort()
+    |> Map.new(fn {email, actor_name} ->
+      role = ast.actors |> Map.fetch!(actor_name) |> Map.fetch!(:role)
+      {actor_name, Factory.create("User", %{email: email, role: Map.fetch!(@roles, role)})}
+    end)
+  end
+
+  defp sign_in_actor(declaration, ctx) do
+    user = Map.fetch!(Ctx.context(ctx, :data).users, declaration.name)
     %{user: user, conn: Accounts.log_in_conn(build_conn(), user)}
   end
+
+  defp actor_email(actor_name), do: String.downcase(actor_name) <> "@example.com"
 
   defp may?(ctx, actor, action, ref_name) do
     %{entity: entity, id: id} = Ctx.ref(ctx, ref_name)

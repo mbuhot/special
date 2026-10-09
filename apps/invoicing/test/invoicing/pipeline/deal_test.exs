@@ -4,15 +4,19 @@ defmodule Invoicing.Pipeline.DealTest do
   alias Invoicing.{Accounts, CRM, Pipeline}
 
   setup do
+    admin = Accounts.create_user!(%{email: "admin@example.com", role: :admin}, authorize?: false)
+
     manager =
       Accounts.create_user!(%{email: "manager@example.com", role: :manager},
         authorize?: false
       )
 
-    admin = Accounts.create_user!(%{email: "admin@example.com", role: :admin}, authorize?: false)
+    new_owner =
+      Accounts.create_user!(%{email: "new-owner@example.com", role: :sales}, authorize?: false)
+
     company = CRM.create_company!(%{name: "Acme"}, actor: manager)
 
-    %{manager: manager, admin: admin, company: company}
+    %{manager: manager, admin: admin, new_owner: new_owner, company: company}
   end
 
   defp create_deal(manager, company, stage \\ :lead) do
@@ -66,14 +70,12 @@ defmodule Invoicing.Pipeline.DealTest do
 
   test "a sales manager can reassign a deal to another user", %{
     manager: manager,
+    new_owner: new_owner,
     company: company
   } do
-    sales_rep =
-      Accounts.create_user!(%{email: "new-owner@example.com", role: :sales}, authorize?: false)
-
     deal = create_deal(manager, company)
 
-    assert Pipeline.reassign_deal!(deal, sales_rep.id, actor: manager).owner_id == sales_rep.id
+    assert Pipeline.reassign_deal!(deal, new_owner.id, actor: manager).owner_id == new_owner.id
   end
 
   test "a sales manager cannot delete a deal", %{manager: manager, company: company} do

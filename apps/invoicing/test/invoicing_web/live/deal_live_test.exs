@@ -11,6 +11,9 @@ defmodule InvoicingWeb.DealLiveTest do
         authorize?: false
       )
 
+    sales_rep =
+      Accounts.create_user!(%{email: "sales@example.com", role: :sales}, authorize?: false)
+
     acme = CRM.create_company!(%{name: "Acme"}, authorize?: false)
 
     ada =
@@ -25,7 +28,13 @@ defmodule InvoicingWeb.DealLiveTest do
         authorize?: false
       )
 
-    %{conn: Accounts.log_in_conn(conn, manager), acme: acme, ada: ada, deal: deal}
+    %{
+      conn: Accounts.log_in_conn(conn, manager),
+      sales_rep: sales_rep,
+      acme: acme,
+      ada: ada,
+      deal: deal
+    }
   end
 
   defp column(view, stage), do: view |> element("#column-#{stage}") |> render()
@@ -38,11 +47,12 @@ defmodule InvoicingWeb.DealLiveTest do
     refute has_element?(view, "#column-lead button[data-transition='win']")
   end
 
-  test "a sales rep does not see Win or Lose on the board", %{conn: conn, deal: deal} do
+  test "a sales rep does not see Win or Lose on the board", %{
+    conn: conn,
+    deal: deal,
+    sales_rep: sales_rep
+  } do
     deal |> Pipeline.qualify_deal!(authorize?: false) |> Pipeline.propose_deal!(authorize?: false)
-
-    sales_rep =
-      Accounts.create_user!(%{email: "sales@example.com", role: :sales}, authorize?: false)
 
     {:ok, view, _html} = live(Accounts.log_in_conn(conn, sales_rep), ~p"/pipeline")
 

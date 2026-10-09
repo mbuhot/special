@@ -44,7 +44,7 @@ defmodule InvoicingWeb.DashboardLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/dashboard")
 
-    assert view |> element("#overdue-tasks-count") |> render() =~ ">1<"
+    assert view |> element("#overdue-tasks-count") |> render() =~ ~r/>\s*1\s*</
   end
 
   defp create_activity(contact, kind, body, occurred_at, sales_rep) do

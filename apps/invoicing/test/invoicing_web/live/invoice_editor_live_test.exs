@@ -6,18 +6,23 @@ defmodule InvoicingWeb.InvoiceEditorLiveTest do
   alias Invoicing.{Accounts, Billing}
 
   setup %{conn: conn} do
-    user = Accounts.create_user!(%{email: "accounts@example.com", role: :accountant})
-    customer = Billing.create_customer!(%{name: "Acme"})
-    invoice = Billing.create_invoice!(%{number: "INV-001", customer_id: customer.id})
+    accountant = Accounts.create_user!(%{email: "accounts@example.com", role: :accountant})
+    customer = Billing.create_customer!(%{name: "Acme"}, authorize?: false)
 
-    Billing.create_line_item!(%{
-      invoice_id: invoice.id,
-      description: "Consulting",
-      quantity: 1,
-      unit_price: "100"
-    })
+    invoice =
+      Billing.create_invoice!(%{number: "INV-001", customer_id: customer.id}, authorize?: false)
 
-    %{conn: Accounts.log_in_conn(conn, user), invoice: invoice}
+    Billing.create_line_item!(
+      %{invoice_id: invoice.id, description: "Consulting", quantity: 1, unit_price: "100"},
+      authorize?: false
+    )
+
+    %{conn: Accounts.log_in_conn(conn, accountant), invoice: invoice}
+  end
+
+  defp sign_in_as_admin(conn) do
+    admin = Accounts.create_user!(%{email: "admin@example.com", role: :admin})
+    Accounts.log_in_conn(conn, admin)
   end
 
   test "changing the quantity recalculates the invoice total", %{conn: conn, invoice: invoice} do
@@ -52,8 +57,9 @@ defmodule InvoicingWeb.InvoiceEditorLiveTest do
     assert view |> element("#invoice-status") |> render() =~ "sent"
   end
 
-  test "marks a sent invoice paid", %{conn: conn, invoice: invoice} do
-    Billing.send_invoice!(invoice)
+  test "an admin marks a sent invoice paid", %{conn: conn, invoice: invoice} do
+    Billing.send_invoice!(invoice, authorize?: false)
+    conn = sign_in_as_admin(conn)
     {:ok, view, _html} = live(conn, ~p"/invoices/#{invoice.id}/edit")
 
     assert view |> element("#invoice-status") |> render() =~ "sent"
@@ -63,7 +69,8 @@ defmodule InvoicingWeb.InvoiceEditorLiveTest do
     assert view |> element("#invoice-status") |> render() =~ "paid"
   end
 
-  test "voids a draft invoice", %{conn: conn, invoice: invoice} do
+  test "an admin voids a draft invoice", %{conn: conn, invoice: invoice} do
+    conn = sign_in_as_admin(conn)
     {:ok, view, _html} = live(conn, ~p"/invoices/#{invoice.id}/edit")
 
     assert view |> element("#invoice-status") |> render() =~ "draft"
@@ -71,6 +78,14 @@ defmodule InvoicingWeb.InvoiceEditorLiveTest do
     view |> element("#void-invoice") |> render_click()
 
     assert view |> element("#invoice-status") |> render() =~ "void"
+  end
+
+  test "an accountant does not see Mark paid or Void", %{conn: conn, invoice: invoice} do
+    {:ok, view, _html} = live(conn, ~p"/invoices/#{invoice.id}/edit")
+
+    assert has_element?(view, "#send-invoice")
+    refute has_element?(view, "#mark-paid-invoice")
+    refute has_element?(view, "#void-invoice")
   end
 
   test "an anonymous visitor is sent to the login page", %{invoice: invoice} do

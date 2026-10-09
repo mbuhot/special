@@ -3,7 +3,8 @@ defmodule Invoicing.Billing.Customer do
 
   use Ash.Resource,
     domain: Invoicing.Billing,
-    data_layer: AshPostgres.DataLayer
+    data_layer: AshPostgres.DataLayer,
+    authorizers: [Ash.Policy.Authorizer]
 
   postgres do
     table "customers"
@@ -12,6 +13,21 @@ defmodule Invoicing.Billing.Customer do
 
   actions do
     defaults [:read, :destroy, create: [:name, :email], update: [:name, :email]]
+  end
+
+  policies do
+    policy action_type(:read) do
+      authorize_if actor_present()
+    end
+
+    policy action_type([:create, :update]) do
+      authorize_if actor_attribute_equals(:role, :accountant)
+      authorize_if actor_attribute_equals(:role, :admin)
+    end
+
+    policy action_type(:destroy) do
+      authorize_if actor_attribute_equals(:role, :admin)
+    end
   end
 
   attributes do

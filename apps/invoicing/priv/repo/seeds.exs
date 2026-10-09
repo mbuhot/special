@@ -11,6 +11,6 @@ end
 seed_user.("accounts@example.com", :accountant)
 seed_user.("admin@example.com", :admin)
 
-if Billing.list_customers!() == [] do
-  Billing.create_customer!(%{name: "Acme", email: "billing@acme.example"})
+if Billing.list_customers!(authorize?: false) == [] do
+  Billing.create_customer!(%{name: "Acme", email: "billing@acme.example"}, authorize?: false)
 end

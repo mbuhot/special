@@ -44,9 +44,9 @@ Narrate: The invoice status changes to sent.
 
 Given a Customer "Acme"
 Given an Invoice "INV-001" with status sent, customer Acme
-When Accounts opens Invoice editor for INV-001
-And Accounts clicks "Mark paid"
-Then Accounts sees "paid" in "Status"
+When Manager opens Invoice editor for INV-001
+And Manager clicks "Mark paid"
+Then Manager sees "paid" in "Status"
 And INV-001 has status paid
 Narrate: The invoice status changes to paid.
 
@@ -54,9 +54,9 @@ Narrate: The invoice status changes to paid.
 
 Given a Customer "Acme"
 Given an Invoice "INV-001" with status draft, customer Acme
-When Accounts opens Invoice editor for INV-001
-And Accounts clicks "Void"
-Then Accounts sees "void" in "Status"
+When Manager opens Invoice editor for INV-001
+And Manager clicks "Void"
+Then Manager sees "void" in "Status"
 And INV-001 has status void
 Narrate: The invoice status changes to void.
 

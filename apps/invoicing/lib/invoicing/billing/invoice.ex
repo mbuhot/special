@@ -4,6 +4,7 @@ defmodule Invoicing.Billing.Invoice do
   use Ash.Resource,
     domain: Invoicing.Billing,
     data_layer: AshPostgres.DataLayer,
+    authorizers: [Ash.Policy.Authorizer],
     extensions: [AshStateMachine]
 
   postgres do
@@ -49,6 +50,21 @@ defmodule Invoicing.Billing.Invoice do
     update :void do
       accept []
       change transition_state(:void)
+    end
+  end
+
+  policies do
+    policy action_type(:read) do
+      authorize_if actor_present()
+    end
+
+    policy action([:create, :update, :send]) do
+      authorize_if actor_attribute_equals(:role, :accountant)
+      authorize_if actor_attribute_equals(:role, :admin)
+    end
+
+    policy action([:mark_paid, :void, :destroy]) do
+      authorize_if actor_attribute_equals(:role, :admin)
     end
   end
 

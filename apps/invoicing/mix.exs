@@ -42,6 +42,7 @@ defmodule Invoicing.MixProject do
   defp deps do
     [
       {:ash_state_machine, "~> 0.2"},
+      {:simple_sat, "~> 0.1"},
       {:sourceror, "~> 1.8", only: [:dev, :test, :e2e]},
       {:ash_phoenix, "~> 2.0"},
       {:ash_postgres, "~> 2.0"},

@@ -4,23 +4,40 @@ defmodule InvoicingWeb.InvoiceLive.Index do
   use InvoicingWeb, :live_view
 
   alias Invoicing.Billing
+  alias Invoicing.Billing.Invoice
   alias InvoicingWeb.AmountFormat
 
   @impl true
   def mount(_params, _session, socket) do
-    invoices = Billing.list_invoices!(load: [:total, :customer], query: [sort: [number: :asc]])
-    {:ok, stream(socket, :invoices, invoices)}
+    current_user = socket.assigns.current_user
+
+    invoices =
+      Billing.list_invoices!(
+        actor: current_user,
+        load: [:total, :customer],
+        query: [sort: [number: :asc]]
+      )
+
+    socket =
+      socket
+      |> assign(:can_create_invoice, Ash.can?({Invoice, :create}, current_user))
+      |> stream(:invoices, invoices)
+
+    {:ok, socket}
   end
 
   @impl true
   def handle_event("new_invoice", _params, socket) do
-    case Billing.list_customers!(query: [sort: [inserted_at: :asc], limit: 1]) do
+    case Billing.list_customers!(
+           actor: socket.assigns.current_user,
+           query: [sort: [inserted_at: :asc], limit: 1]
+         ) do
       [customer | _] ->
         invoice =
-          Billing.create_invoice!(%{
-            number: Billing.next_invoice_number(),
-            customer_id: customer.id
-          })
+          Billing.create_invoice!(
+            %{number: Billing.next_invoice_number(), customer_id: customer.id},
+            actor: socket.assigns.current_user
+          )
 
         {:noreply, push_navigate(socket, to: ~p"/invoices/#{invoice.id}/edit")}
 
@@ -36,7 +53,14 @@ defmodule InvoicingWeb.InvoiceLive.Index do
       <.header>
         Invoices
         <:actions>
-          <.button id="new-invoice" variant="primary" phx-click="new_invoice">New invoice</.button>
+          <.button
+            :if={@can_create_invoice}
+            id="new-invoice"
+            variant="primary"
+            phx-click="new_invoice"
+          >
+            New invoice
+          </.button>
         </:actions>
       </.header>
 

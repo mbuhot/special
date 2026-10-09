@@ -42,7 +42,7 @@ defmodule Invoicing.SpecSupport.Factory do
     resource = resource_for!(entity_name)
 
     resource
-    |> Ash.get!(id, load: Map.get(@calculations, resource, []))
+    |> Ash.get!(id, load: Map.get(@calculations, resource, []), authorize?: false)
     |> to_field_map(resource)
   end
 
@@ -52,7 +52,7 @@ defmodule Invoicing.SpecSupport.Factory do
     attrs
     |> Map.put_new("name", "Customer #{sequence}")
     |> Map.put_new("email", "customer-#{sequence}@example.com")
-    |> Billing.create_customer!()
+    |> Billing.create_customer!(authorize?: false)
   end
 
   defp build(attrs, Invoice) do
@@ -61,14 +61,14 @@ defmodule Invoicing.SpecSupport.Factory do
     invoice_attrs
     |> Map.put_new_lazy("customer_id", fn -> create("Customer", %{}).id end)
     |> Map.put_new_lazy("number", &Billing.next_invoice_number/0)
-    |> Billing.create_invoice!()
+    |> Billing.create_invoice!(authorize?: false)
     |> put_status(status)
   end
 
   defp build(attrs, LineItem) do
     attrs
     |> Map.put_new_lazy("invoice_id", fn -> create("Invoice", %{}).id end)
-    |> Billing.create_line_item!()
+    |> Billing.create_line_item!(authorize?: false)
   end
 
   defp build(attrs, User) do

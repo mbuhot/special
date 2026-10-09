@@ -8,7 +8,12 @@ defmodule InvoicingWeb.InvoiceLive.Edit do
 
   @impl true
   def mount(%{"id" => id}, _session, socket) do
-    invoice = Billing.get_invoice!(id, load: [:total, line_items: [:line_total]])
+    invoice =
+      Billing.get_invoice!(id,
+        actor: socket.assigns.current_user,
+        load: [:total, line_items: [:line_total]]
+      )
+
     {:ok, socket |> assign(form: to_form(%{}, as: :invoice)) |> assign_invoice(invoice)}
   end
 
@@ -16,19 +21,22 @@ defmodule InvoicingWeb.InvoiceLive.Edit do
   def handle_event("validate", %{"invoice" => %{"lines" => lines_params}}, socket) do
     rows = rows_from_params(lines_params)
     total = total_of(rows)
-    persist_rows(rows)
+    persist_rows(rows, socket.assigns.current_user)
     {:noreply, assign(socket, rows: rows, total: total)}
   end
 
   def handle_event("validate", _params, socket), do: {:noreply, socket}
 
   def handle_event("add_line", _params, socket) do
-    Billing.create_line_item!(%{invoice_id: socket.assigns.invoice.id})
+    Billing.create_line_item!(%{invoice_id: socket.assigns.invoice.id},
+      actor: socket.assigns.current_user
+    )
+
     {:noreply, reload_invoice(socket)}
   end
 
   def handle_event("send", _params, socket) do
-    case Billing.send_invoice(socket.assigns.invoice) do
+    case Billing.send_invoice(socket.assigns.invoice, actor: socket.assigns.current_user) do
       {:ok, _invoice} ->
         {:noreply, socket |> reload_invoice() |> put_flash(:info, "Invoice sent")}
 
@@ -38,7 +46,7 @@ defmodule InvoicingWeb.InvoiceLive.Edit do
   end
 
   def handle_event("mark_paid", _params, socket) do
-    case Billing.mark_invoice_paid(socket.assigns.invoice) do
+    case Billing.mark_invoice_paid(socket.assigns.invoice, actor: socket.assigns.current_user) do
       {:ok, _invoice} ->
         {:noreply, socket |> reload_invoice() |> put_flash(:info, "Invoice marked paid")}
 
@@ -48,7 +56,7 @@ defmodule InvoicingWeb.InvoiceLive.Edit do
   end
 
   def handle_event("void", _params, socket) do
-    case Billing.void_invoice(socket.assigns.invoice) do
+    case Billing.void_invoice(socket.assigns.invoice, actor: socket.assigns.current_user) do
       {:ok, _invoice} ->
         {:noreply, socket |> reload_invoice() |> put_flash(:info, "Invoice voided")}
 
@@ -60,6 +68,7 @@ defmodule InvoicingWeb.InvoiceLive.Edit do
   defp reload_invoice(socket) do
     invoice =
       Billing.get_invoice!(socket.assigns.invoice.id,
+        actor: socket.assigns.current_user,
         load: [:total, line_items: [:line_total]]
       )
 
@@ -67,8 +76,13 @@ defmodule InvoicingWeb.InvoiceLive.Edit do
   end
 
   defp assign_invoice(socket, invoice) do
+    current_user = socket.assigns.current_user
+
     assign(socket,
       invoice: invoice,
+      can_send: Ash.can?({invoice, :send}, current_user),
+      can_mark_paid: Ash.can?({invoice, :mark_paid}, current_user),
+      can_void: Ash.can?({invoice, :void}, current_user),
       rows: Enum.map(invoice.line_items, &row_from_line_item/1),
       total: invoice.total
     )
@@ -118,15 +132,15 @@ defmodule InvoicingWeb.InvoiceLive.Edit do
     end
   end
 
-  defp persist_rows(rows) do
+  defp persist_rows(rows, actor) do
     Enum.each(rows, fn row ->
-      line_item = Billing.get_line_item!(row.id)
+      line_item = Billing.get_line_item!(row.id, actor: actor)
 
-      Billing.update_line_item(line_item, %{
-        description: row.description,
-        quantity: row.quantity,
-        unit_price: row.unit_price
-      })
+      Billing.update_line_item(
+        line_item,
+        %{description: row.description, quantity: row.quantity, unit_price: row.unit_price},
+        actor: actor
+      )
     end)
   end
 
@@ -140,9 +154,13 @@ defmodule InvoicingWeb.InvoiceLive.Edit do
           <span id="invoice-status" class="badge badge-outline">{@invoice.status}</span>
         </:subtitle>
         <:actions>
-          <.button id="send-invoice" variant="primary" phx-click="send">Send</.button>
-          <.button id="mark-paid-invoice" phx-click="mark_paid">Mark paid</.button>
-          <.button id="void-invoice" phx-click="void">Void</.button>
+          <.button :if={@can_send} id="send-invoice" variant="primary" phx-click="send">
+            Send
+          </.button>
+          <.button :if={@can_mark_paid} id="mark-paid-invoice" phx-click="mark_paid">
+            Mark paid
+          </.button>
+          <.button :if={@can_void} id="void-invoice" phx-click="void">Void</.button>
         </:actions>
       </.header>
 

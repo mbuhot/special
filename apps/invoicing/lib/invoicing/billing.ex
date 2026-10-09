@@ -29,7 +29,7 @@ defmodule Invoicing.Billing do
   @doc "Returns the next unused invoice number of the form INV-<n>."
   def next_invoice_number do
     highest_sequence =
-      list_invoices!()
+      list_invoices!(authorize?: false)
       |> Enum.map(& &1.number)
       |> Enum.flat_map(&sequence_of/1)
       |> Enum.max(fn -> 0 end)

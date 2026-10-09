@@ -44,7 +44,9 @@ defmodule Invoicing.Billing.Invoice do
 
     update :mark_paid do
       accept []
+      require_atomic? false
       change transition_state(:paid)
+      change Invoicing.Billing.Invoice.LogPaymentNote
     end
 
     update :void do

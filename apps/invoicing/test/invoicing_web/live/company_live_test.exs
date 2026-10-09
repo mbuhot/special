@@ -3,7 +3,7 @@ defmodule InvoicingWeb.CompanyLiveTest do
 
   import Phoenix.LiveViewTest
 
-  alias Invoicing.{Accounts, CRM}
+  alias Invoicing.{Accounts, Billing, CRM}
 
   setup %{conn: conn} do
     accountant =
@@ -98,6 +98,18 @@ defmodule InvoicingWeb.CompanyLiveTest do
       view |> element("#edit-company") |> render_click() |> follow_redirect(conn)
 
     assert editor |> element("#company-name") |> render() =~ "Acme"
+  end
+
+  test "company page lists its invoices", %{conn: conn, acme: acme, globex: globex} do
+    Billing.create_invoice!(%{number: "INV-002", company_id: acme.id}, authorize?: false)
+    Billing.create_invoice!(%{number: "INV-001", company_id: acme.id}, authorize?: false)
+    Billing.create_invoice!(%{number: "INV-003", company_id: globex.id}, authorize?: false)
+
+    {:ok, view, _html} = live(conn, ~p"/companies/#{acme.id}")
+
+    invoices_table = view |> element("#company-invoices") |> render()
+    assert invoices_table =~ ~r/INV-001.*draft.*INV-002.*draft/s
+    refute invoices_table =~ "INV-003"
   end
 
   test "an anonymous visitor is sent to the login page" do

@@ -40,13 +40,15 @@ And Sales rep clicks "Save"
 Then Sales rep sees "Acme-Corp" in "Company name"
 Narrate: The company name changes to Acme-Corp.
 
-## Scenario: Company page lists its contacts
+## Scenario: Company page lists its contacts and invoices
 
 Given a Company "Acme"
 Given a Contact "Ada Lovelace" with first name Ada, last name Lovelace, company Acme
+Given an Invoice "INV-001" with status sent, company Acme
 When Sales rep opens Company page for Acme
 Then Sales rep sees "Acme" in "Company name"
 And Sales rep sees "Ada Lovelace" in "Company contacts"
+And Sales rep sees "INV-001" in "Company invoices"
 When Sales rep clicks "Edit company"
 Then Sales rep is on Company editor
-Narrate: The company page shows the name Acme, lists Ada Lovelace and offers an edit button.
+Narrate: The company page shows the name Acme, lists Ada Lovelace and the invoice INV-001, and offers an edit button.

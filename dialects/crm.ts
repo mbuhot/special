@@ -73,6 +73,7 @@ export const crmSurfaces = {
     controls: {
       "Company name": region({ css: "#company-name", lv: "#company-name" }),
       "Company contacts": table({ css: "#company-contacts", lv: "#company-contacts" }),
+      "Company invoices": table({ css: "#company-invoices", lv: "#company-invoices" }),
       "Edit company": button({ css: "#edit-company", lv: "#edit-company" }),
     },
   }),

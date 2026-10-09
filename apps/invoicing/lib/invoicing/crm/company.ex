@@ -58,7 +58,10 @@ defmodule Invoicing.CRM.Company do
   end
 
   relationships do
-    has_many :invoices, Invoicing.Billing.Invoice
+    has_many :invoices, Invoicing.Billing.Invoice do
+      sort number: :asc
+    end
+
     has_many :contacts, Invoicing.CRM.Contact
     has_many :deals, Invoicing.Pipeline.Deal
   end

@@ -1,5 +1,5 @@
 defmodule InvoicingWeb.CompanyLive.Show do
-  @moduledoc "Shows a company with its contacts."
+  @moduledoc "Shows a company with its contacts and invoices."
 
   use InvoicingWeb, :live_view
 
@@ -12,7 +12,7 @@ defmodule InvoicingWeb.CompanyLive.Show do
     company =
       CRM.get_company!(id,
         actor: actor,
-        load: [contacts: Ash.Query.load(Invoicing.CRM.Contact, :full_name)]
+        load: [:invoices, contacts: Ash.Query.load(Invoicing.CRM.Contact, :full_name)]
       )
 
     socket =
@@ -52,6 +52,21 @@ defmodule InvoicingWeb.CompanyLive.Show do
           <tr :for={contact <- @company.contacts} id={"contact-#{contact.id}"}>
             <td>{contact.full_name}</td>
             <td>{contact.email}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <table id="company-invoices" class="table">
+        <thead>
+          <tr>
+            <th>Number</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr :for={invoice <- @company.invoices} id={"invoice-#{invoice.id}"}>
+            <td>{invoice.number}</td>
+            <td>{invoice.status}</td>
           </tr>
         </tbody>
       </table>

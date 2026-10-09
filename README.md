@@ -3,7 +3,7 @@
 One Markdown spec, three uses: acceptance criteria in a Linear ticket, executable tests in two runtimes, and a narrated demo video.
 
 ```
-specs/invoicing.md ──► specdsl bind ──► specs/invoicing.ast.json
+specs/invoicing/*.md ──► pnpm bind ──► specs/invoicing/<feature>.ast.json
                                               │
                         ┌─────────────────────┼─────────────────────┐
                         ▼                     ▼                     ▼
@@ -16,7 +16,7 @@ specs/invoicing.md ──► specdsl bind ──► specs/invoicing.ast.json
 | Path                          | Holds                                                                                            |
 | ----------------------------- | ------------------------------------------------------------------------------------------------ |
 | `dialects/`                   | The vocabulary, as TypeScript: sections, step patterns, contexts, surfaces with locators, checks |
-| `specs/`                      | Specs in Markdown and their bound AST                                                            |
+| `specs/`                      | Specs in Markdown, one directory per project, with the bound AST                                 |
 | `packages/specdsl-core`       | Parse, bind, lint, lock. CLI `specdsl`                                                           |
 | `packages/specdsl-playwright` | Browser runtime: test mode and demo mode                                                         |
 | `packages/specdsl-linear`     | Pull specs from Linear issues, lint, attach videos                                               |
@@ -26,16 +26,15 @@ specs/invoicing.md ──► specdsl bind ──► specs/invoicing.ast.json
 
 ## Commands
 
-| Task                   | Command                                                                                                                                                  |
-| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Install                | `pnpm install`                                                                                                                                           |
-| Bind a spec            | `cd packages/specdsl-core && pnpm exec specdsl bind ../../specs/invoicing.md --dialect ../../dialects/invoicing.ts --out ../../specs/invoicing.ast.json` |
-| Lint a spec            | `pnpm exec specdsl lint ../../specs/invoicing.md --dialect ../../dialects/invoicing.ts`                                                                  |
-| Regenerate the lock    | `pnpm exec specdsl lock --dialect ../../dialects/invoicing.ts --out ../../dialects/invoicing.lock.json`                                                  |
-| Core tests             | `pnpm --filter @special/specdsl-core test`                                                                                                               |
-| Scenarios in ExUnit    | `cd apps/invoicing && mix test test/spec`                                                                                                                |
-| Scenarios in a browser | `pnpm e2e`                                                                                                                                               |
-| Demo videos            | `pnpm demo`                                                                                                                                              |
+| Task                   | Command                                    |
+| ---------------------- | ------------------------------------------ |
+| Install                | `pnpm install`                             |
+| Bind and lint specs    | `pnpm bind`                                |
+| Regenerate the lock    | `pnpm lock`                                |
+| Core tests             | `pnpm --filter @special/specdsl-core test` |
+| Scenarios in ExUnit    | `cd apps/invoicing && mix test test/spec`  |
+| Scenarios in a browser | `pnpm e2e`                                 |
+| Demo videos            | `pnpm demo`                                |
 
 ## Prerequisites
 
@@ -45,6 +44,16 @@ specs/invoicing.md ──► specdsl bind ──► specs/invoicing.ast.json
 - `cd apps/invoicing && mix setup && MIX_ENV=e2e mix ash.setup && MIX_ENV=e2e mix assets.build`
 
 ## Writing a spec
+
+Each project has one directory under `specs/`. A file without a `## Scenario` section is a base file and holds `## Model`, `## Surfaces`, `## Actors` and `## Policies`. A file with scenarios is a feature file. `specdsl bind-all <dir> --dialect <path.ts>` lints the whole directory and writes `<feature>.ast.json` for each feature file, bound against every base file.
+
+```
+specs/invoicing/
+├── model.md  surfaces.md  policies.md     base files
+└── line-totals.md  sending.md  ...        feature files ──► line-totals.ast.json  sending.ast.json  ...
+```
+
+A single file may hold every section. Bound with `specdsl bind`, it is its own base:
 
 ```markdown
 # Invoicing

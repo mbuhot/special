@@ -1,22 +1,48 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { bindSource, bindSuccess, DRAFT_INVOICE, lineOf, specWith } from "./helpers.js";
+import {
+  bindSource,
+  bindSourcesSuccess,
+  bindSuccess,
+  DRAFT_INVOICE,
+  lineOf,
+  specWith,
+} from "./helpers.js";
+import type { SpecSource } from "../src/index.js";
 
-const invoicingSpec = readFileSync(new URL("../../../specs/invoicing.md", import.meta.url), "utf8");
+const INVOICING_FILES = [
+  "model.md",
+  "surfaces.md",
+  "policies.md",
+  "line-totals.md",
+  "sending.md",
+  "settling.md",
+  "invoice-list.md",
+];
+
+function readInvoicingSource(name: string): SpecSource {
+  return {
+    file: `specs/invoicing/${name}`,
+    markdown: readFileSync(new URL(`../../../specs/invoicing/${name}`, import.meta.url), "utf8"),
+  };
+}
+
+const invoicingSources = INVOICING_FILES.map(readInvoicingSource);
+const lineTotalsSource = readInvoicingSource("line-totals.md");
 
 describe("binding the invoicing spec", () => {
-  const { ast } = bindSuccess(invoicingSpec);
+  const { ast } = bindSourcesSuccess(...invoicingSources);
 
   it("produces one scenario per Scenario section", () => {
     expect(ast.scenarios.map((scenario) => scenario.name)).toEqual([
       "Line total updates as quantity changes",
       "Sending a draft invoice marks it sent",
+      "A manager sees an invoice once it is sent",
       "Marking a sent invoice paid",
       "Voiding a draft invoice",
+      "Only a manager can void or mark an invoice paid",
       "Invoice list shows every invoice",
       "Creating an invoice from the list",
-      "A manager sees an invoice once it is sent",
-      "Only a manager can void or mark an invoice paid",
     ]);
   });
 
@@ -35,10 +61,6 @@ describe("binding the invoicing spec", () => {
         "narrate",
       ],
       ["given-entity", "given-entity", "opens", "clicks", "sees", "has-field", "narrate"],
-      ["given-entity", "given-entity", "opens", "clicks", "sees", "has-field", "narrate"],
-      ["given-entity", "given-entity", "opens", "clicks", "sees", "has-field", "narrate"],
-      ["given-entity", "given-entity", "given-entity", "opens", "sees", "sees", "narrate"],
-      ["given-entity", "opens", "clicks", "is-on", "sees", "narrate"],
       [
         "given-entity",
         "given-entity",
@@ -50,6 +72,8 @@ describe("binding the invoicing spec", () => {
         "sees",
         "narrate",
       ],
+      ["given-entity", "given-entity", "opens", "clicks", "sees", "has-field", "narrate"],
+      ["given-entity", "given-entity", "opens", "clicks", "sees", "has-field", "narrate"],
       [
         "given-entity",
         "given-entity",
@@ -61,20 +85,22 @@ describe("binding the invoicing spec", () => {
         "does-not-see",
         "narrate",
       ],
+      ["given-entity", "given-entity", "given-entity", "opens", "sees", "sees", "narrate"],
+      ["given-entity", "opens", "clicks", "is-on", "sees", "narrate"],
     ]);
   });
 
   it("records the scenario source line", () => {
     expect(ast.scenarios[0]?.source).toEqual({
-      file: "spec.md",
-      line: lineOf(invoicingSpec, "## Scenario: Line total"),
+      file: lineTotalsSource.file,
+      line: lineOf(lineTotalsSource.markdown, "## Scenario: Line total"),
     });
   });
 
   it("captures entity declarations with their field pairs", () => {
     expect(ast.scenarios[0]?.steps[1]).toEqual({
       id: "given-entity",
-      line: lineOf(invoicingSpec, 'Given an Invoice "INV-001"'),
+      line: lineOf(lineTotalsSource.markdown, 'Given an Invoice "INV-001"'),
       args: {
         Entity: "Invoice",
         Ref: "INV-001",
@@ -89,7 +115,7 @@ describe("binding the invoicing spec", () => {
   it("renders the narration template of a step", () => {
     expect(ast.scenarios[0]?.steps[3]).toEqual({
       id: "opens",
-      line: lineOf(invoicingSpec, "When Accounts opens Invoice editor"),
+      line: lineOf(lineTotalsSource.markdown, "When Accounts opens Invoice editor"),
       args: { Actor: "Accounts", Surface: "Invoice editor", Ref: "INV-001" },
       narrate: "Accounts opens the Invoice editor.",
     });
@@ -98,7 +124,7 @@ describe("binding the invoicing spec", () => {
   it("carries a Narrate item as demo-only narration text", () => {
     expect(ast.scenarios[0]?.steps[9]).toEqual({
       id: "narrate",
-      line: lineOf(invoicingSpec, "Narrate: The line total"),
+      line: lineOf(lineTotalsSource.markdown, "Narrate: The line total"),
       text: "The line total updates as the quantity and the unit price change.",
       modes: ["demo"],
     });
@@ -371,7 +397,7 @@ describe("context section", () => {
 
 describe("surfaces in the AST", () => {
   it("includes every surface the dialect declares", () => {
-    const { ast } = bindSuccess(invoicingSpec);
+    const { ast } = bindSourcesSuccess(...invoicingSources);
     expect(Object.keys(ast.surfaces["Login"]?.controls ?? {})).toEqual(["Email", "Log in"]);
     expect(ast.surfaces["Login"]?.controls["Email"]?.locators).toEqual({
       css: "#login-email",

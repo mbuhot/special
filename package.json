@@ -6,6 +6,8 @@
     "build": "pnpm -r build",
     "test": "pnpm -r test",
     "format": "prettier --write .",
+    "bind": "pnpm --filter @special/specdsl-core build && pnpm --filter @special/specdsl-core exec specdsl bind-all ../../specs/invoicing --dialect ../../dialects/invoicing.ts",
+    "lock": "pnpm --filter @special/specdsl-core build && pnpm --filter @special/specdsl-core exec specdsl lock --dialect ../../dialects/invoicing.ts --out ../../dialects/invoicing.lock.json",
     "e2e": "pnpm --filter @special/specdsl-playwright test",
     "demo": "pnpm --filter @special/specdsl-playwright demo"
   },

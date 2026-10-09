@@ -3,7 +3,13 @@ defmodule Invoicing.ModelConformanceTest do
 
   alias Invoicing.SpecSupport.Factory
 
-  @model SpecDSL.AST.load!("../../specs/invoicing.ast.json").model
+  @model "../../specs/**/*.ast.json"
+         |> Path.expand()
+         |> Path.wildcard()
+         |> Enum.sort()
+         |> hd()
+         |> SpecDSL.AST.load!()
+         |> Map.fetch!(:model)
 
   for {entity_name, entity} <- @model do
     test "#{entity_name}: every entity maps to a resource" do

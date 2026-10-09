@@ -18,10 +18,11 @@ function readJson<Parsed>(path: string): Parsed {
   return JSON.parse(readFileSync(path, "utf8")) as Parsed;
 }
 
-/** Loads every specs/*.ast.json together with the lock file of its dialect. */
+/** Loads every .ast.json under specs/ together with the lock file of its dialect. */
 export function loadSpecs(): LoadedSpec[] {
-  return readdirSync(specsDirectory)
+  return readdirSync(specsDirectory, { recursive: true, encoding: "utf8" })
     .filter((file) => file.endsWith(".ast.json"))
+    .sort()
     .map((file) => {
       const spec = readJson<SpecAst>(join(specsDirectory, file));
       const lock = readJson<LockFile>(join(dialectsDirectory, `${spec.dialect.name}.lock.json`));

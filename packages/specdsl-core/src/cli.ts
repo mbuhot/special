@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-import { globSync, readFileSync, writeFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { globSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { basename, dirname, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { bindSpec, type SpecSource } from "./bind.js";
 import type { Dialect } from "./dialect.js";
@@ -18,6 +18,7 @@ interface Arguments {
 const USAGE = [
   "specdsl bind <spec.md> [--base <path>]... --dialect <path.ts> [--out <file>]",
   "specdsl lint <spec.md> [--base <path>]... --dialect <path.ts>",
+  "specdsl bind-all <dir> --dialect <path.ts>",
   "specdsl lock --dialect <path.ts> --out <file>",
 ].join("\n");
 
@@ -90,25 +91,83 @@ function runBind(
 ): number {
   const result = bindSpec(readSources(parsed, specPath), dialect);
   if (!result.ok) {
-    result.errors.forEach((error) =>
-      console.error(`${error.file}:${error.line}: error: ${error.message}`),
-    );
+    printErrors(result.errors);
     return 1;
   }
   if (mode === "bind") {
     emit(result.ast, parsed.outPath);
     return 0;
   }
-  lint(result, dialect).forEach((warning) =>
+  printWarnings(lint(result, dialect));
+  return 0;
+}
+
+interface Diagnostic {
+  file: string;
+  line: number;
+  message: string;
+}
+
+function printErrors(errors: Diagnostic[]): void {
+  errors.forEach((error) => console.error(`${error.file}:${error.line}: error: ${error.message}`));
+}
+
+function printWarnings(warnings: Diagnostic[]): void {
+  warnings.forEach((warning) =>
     console.error(`${warning.file}:${warning.line}: warning: ${warning.message}`),
   );
-  return 0;
+}
+
+const SCENARIO_HEADING = /^## Scenario\b/m;
+
+interface ProjectSources {
+  baseSources: SpecSource[];
+  featureSources: SpecSource[];
+}
+
+function readProjectSources(directory: string): ProjectSources {
+  const sources = readdirSync(directory)
+    .filter((file) => file.endsWith(".md"))
+    .sort()
+    .map((file) => {
+      const path = join(directory, file);
+      return { file: path, markdown: readFileSync(path, "utf8") };
+    });
+  return {
+    baseSources: sources.filter((source) => !SCENARIO_HEADING.test(source.markdown)),
+    featureSources: sources.filter((source) => SCENARIO_HEADING.test(source.markdown)),
+  };
+}
+
+function astPathFor(featureFile: string): string {
+  return join(dirname(featureFile), `${basename(featureFile, ".md")}.ast.json`);
+}
+
+function runBindAll(directory: string, dialect: Dialect): number {
+  const { baseSources, featureSources } = readProjectSources(directory);
+  const whole = bindSpec([...baseSources, ...featureSources], dialect);
+  if (!whole.ok) {
+    printErrors(whole.errors);
+    return 1;
+  }
+  printWarnings(lint(whole, dialect));
+  let status = 0;
+  for (const feature of featureSources) {
+    const result = bindSpec([...baseSources, feature], dialect);
+    if (result.ok) {
+      emit(result.ast, astPathFor(feature.file));
+    } else {
+      printErrors(result.errors);
+      status = 1;
+    }
+  }
+  return status;
 }
 
 async function main(): Promise<number> {
   const parsed = parseArguments(process.argv.slice(2));
   const { command, specPath, dialectPath } = parsed;
-  if (dialectPath === undefined || !["bind", "lint", "lock"].includes(command)) {
+  if (dialectPath === undefined || !["bind", "bind-all", "lint", "lock"].includes(command)) {
     console.error(USAGE);
     return 2;
   }
@@ -120,6 +179,9 @@ async function main(): Promise<number> {
   if (specPath === undefined) {
     console.error(USAGE);
     return 2;
+  }
+  if (command === "bind-all") {
+    return runBindAll(specPath, dialect);
   }
   return runBind(parsed, dialect, specPath, command as "bind" | "lint");
 }

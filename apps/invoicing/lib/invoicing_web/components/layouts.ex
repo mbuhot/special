@@ -37,6 +37,7 @@ defmodule InvoicingWeb.Layouts do
       <div class="flex-1">
         <.link navigate={~p"/invoices"} class="text-lg font-semibold">Invoicing</.link>
         <.link navigate={~p"/contacts"} class="ml-4">Contacts</.link>
+        <.link navigate={~p"/companies"} class="ml-4">Companies</.link>
       </div>
       <div class="flex-none flex items-center gap-4">
         <span :if={@current_user} id="current-user" class="text-sm">{@current_user.email}</span>

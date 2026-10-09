@@ -4,7 +4,10 @@ defmodule Invoicing.CRM.Company do
   use Ash.Resource,
     domain: Invoicing.CRM,
     data_layer: AshPostgres.DataLayer,
-    authorizers: [Ash.Policy.Authorizer]
+    authorizers: [Ash.Policy.Authorizer],
+    primary_read_warning?: false
+
+  require Ash.Query
 
   postgres do
     table "companies"
@@ -13,11 +16,20 @@ defmodule Invoicing.CRM.Company do
 
   actions do
     defaults [
-      :read,
       :destroy,
       create: [:name, :domain, :industry],
       update: [:name, :domain, :industry]
     ]
+
+    read :read do
+      primary? true
+
+      argument :search, :string
+
+      prepare fn query, _context ->
+        filter_by_name(query, query.arguments[:search])
+      end
+    end
   end
 
   policies do
@@ -46,5 +58,12 @@ defmodule Invoicing.CRM.Company do
   relationships do
     has_many :invoices, Invoicing.Billing.Invoice
     has_many :contacts, Invoicing.CRM.Contact
+  end
+
+  defp filter_by_name(query, search) when search in [nil, ""], do: query
+
+  defp filter_by_name(query, search) do
+    pattern = "%#{search}%"
+    Ash.Query.filter(query, ilike(name, ^pattern))
   end
 end

@@ -6,7 +6,9 @@ defmodule Invoicing.CRM do
   resources do
     resource Invoicing.CRM.Company do
       define :create_company, action: :create
-      define :list_companies, action: :read
+      define :list_companies, action: :read, args: [{:optional, :search}]
+      define :get_company, action: :read, get_by: [:id]
+      define :update_company, action: :update
     end
 
     resource Invoicing.CRM.Contact do

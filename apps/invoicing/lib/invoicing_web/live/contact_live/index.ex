@@ -13,7 +13,10 @@ defmodule InvoicingWeb.ContactLive.Index do
     socket =
       socket
       |> assign(:can_create_contact, Ash.can?({Contact, :create}, current_user))
-      |> assign(:companies, CRM.list_companies!(actor: current_user, query: [sort: [name: :asc]]))
+      |> assign(
+        :companies,
+        CRM.list_companies!(nil, actor: current_user, query: [sort: [name: :asc]])
+      )
       |> assign(:filter_form, to_form(%{"search" => "", "company" => ""}, as: :filter))
       |> assign_contacts(%{"search" => "", "company" => ""})
 

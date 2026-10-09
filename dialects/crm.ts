@@ -42,4 +42,38 @@ export const crmSurfaces = {
       "Contact name": region({ css: "#contact-name", lv: "#contact-name" }),
     },
   }),
+  "Company list": surface({
+    route: "/companies",
+    controls: {
+      Search: field({
+        css: "#company-search",
+        lv: "filter[search]",
+        form: "#company-filter-form",
+      }),
+      Companies: table({ css: "#companies", lv: "#companies" }),
+      "New company": button({ css: "#new-company", lv: "#new-company" }),
+    },
+  }),
+  "Company editor": surface({
+    route: "/companies/{id}/edit",
+    controls: {
+      Name: field({ css: "#company-name-input", lv: "company[name]", form: "#company-form" }),
+      Domain: field({ css: "#company-domain", lv: "company[domain]", form: "#company-form" }),
+      Industry: field({
+        css: "#company-industry",
+        lv: "company[industry]",
+        form: "#company-form",
+      }),
+      Save: button({ css: "#save-company", lv: "#save-company" }),
+      "Company name": region({ css: "#company-name", lv: "#company-name" }),
+    },
+  }),
+  "Company page": surface({
+    route: "/companies/{id}",
+    controls: {
+      "Company name": region({ css: "#company-name", lv: "#company-name" }),
+      "Company contacts": table({ css: "#company-contacts", lv: "#company-contacts" }),
+      "Edit company": button({ css: "#edit-company", lv: "#edit-company" }),
+    },
+  }),
 };

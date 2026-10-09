@@ -30,6 +30,7 @@ defmodule InvoicingWeb.InvoiceLive.Index do
   @impl true
   def handle_event("new_invoice", _params, socket) do
     case CRM.list_companies!(
+           nil,
            actor: socket.assigns.current_user,
            query: [sort: [inserted_at: :asc], limit: 1]
          ) do

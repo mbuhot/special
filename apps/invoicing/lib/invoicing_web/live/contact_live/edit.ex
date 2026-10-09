@@ -10,7 +10,7 @@ defmodule InvoicingWeb.ContactLive.Edit do
   @impl true
   def mount(_params, _session, socket) do
     companies =
-      CRM.list_companies!(actor: socket.assigns.current_user, query: [sort: [name: :asc]])
+      CRM.list_companies!(nil, actor: socket.assigns.current_user, query: [sort: [name: :asc]])
 
     {:ok, assign(socket, :company_options, Enum.map(companies, &{&1.name, &1.id}))}
   end

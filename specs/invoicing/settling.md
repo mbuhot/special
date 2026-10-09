@@ -2,10 +2,11 @@
 
 ## Scenario: Marking a sent invoice paid
 
+Story: As the admin, I need to mark INV-001 paid, so that it no longer counts as money owed.
 Given a Company "Acme"
 Given an Invoice "INV-001" with status sent, company Acme
 When Admin opens Invoice editor for INV-001
-Narrate: This is the invoice editor for INV-001. The status is sent. A Mark paid button is available.
+Narrate: The invoice editor shows INV-001 with status sent. A Mark paid button is available.
 And Admin clicks "Mark paid"
 Then Admin sees "paid" in "Status"
 Narrate: Mark paid changes the status to paid.
@@ -13,10 +14,11 @@ And INV-001 has status paid
 
 ## Scenario: Voiding a draft invoice
 
+Story: As the admin, I need to void the draft invoice INV-001, so that an invoice raised in error is cancelled.
 Given a Company "Acme"
 Given an Invoice "INV-001" with status draft, company Acme
 When Admin opens Invoice editor for INV-001
-Narrate: This is the invoice editor for INV-001. The status is draft. A Void button is available.
+Narrate: The invoice editor shows INV-001 with status draft. A Void button is available.
 And Admin clicks "Void"
 Then Admin sees "void" in "Status"
 Narrate: Void changes the status to void.
@@ -24,6 +26,7 @@ And INV-001 has status void
 
 ## Scenario: Only an admin can void or mark an invoice paid
 
+Story: As the admin, I need to be the only one who can void an invoice or mark one paid, so that invoices are cancelled and settled deliberately.
 Given a Company "Acme"
 Given an Invoice "INV-001" with status draft, company Acme
 Then Accounts may send INV-001
@@ -41,11 +44,12 @@ Narrate: The editor has no Mark paid button. Accounts has the Send button.
 
 ## Scenario: Marking an invoice paid logs a note on the company's contact
 
+Story: As the admin, I need to mark INV-001 paid and have a note appear on Ada Lovelace's timeline, so that the sales team knows Acme has paid.
 Given a Company "Acme"
 Given a Contact "Ada Lovelace" with first name Ada, last name Lovelace, company Acme
 Given an Invoice "INV-001" with status sent, company Acme
 When Admin opens Invoice editor for INV-001
-Narrate: This is the invoice editor for INV-001. The status is sent. The company Acme has a contact, Ada Lovelace.
+Narrate: The invoice editor shows INV-001 with status sent. The company Acme has a contact, Ada Lovelace.
 And Admin clicks "Mark paid"
 Then Admin sees "paid" in "Status"
 Narrate: Mark paid changes the status to paid.

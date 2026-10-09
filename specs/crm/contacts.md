@@ -2,11 +2,12 @@
 
 ## Scenario: Contact list shows every contact
 
+Story: As the sales rep, I need to see every contact in one list, so that I can find who to call.
 Given a Company "Acme"
 Given a Contact "Ada Lovelace" with first name Ada, last name Lovelace, company Acme
 Given a Contact "Grace Hopper" with first name Grace, last name Hopper, company Acme
 When Sales rep opens Contact list
-Narrate: This is the contact list. A search box and a company filter sit above the contact table.
+Narrate: The contact list has a search box and a company filter above the contact table.
 Then Sales rep sees "Ada Lovelace" in "Contacts"
 Narrate: The contact table lists Ada Lovelace.
 And Sales rep sees "Grace Hopper" in "Contacts"
@@ -14,11 +15,12 @@ Narrate: The contact table also lists Grace Hopper. Every contact has a row.
 
 ## Scenario: Searching contacts by name
 
+Story: As the sales rep, I need to find Grace Hopper by searching for her first name, so that I can reach her without scrolling the whole list.
 Given a Company "Acme"
 Given a Contact "Ada Lovelace" with first name Ada, last name Lovelace, company Acme
 Given a Contact "Grace Hopper" with first name Grace, last name Hopper, company Acme
 When Sales rep opens Contact list
-Narrate: This is the contact list. It shows Ada Lovelace and Grace Hopper.
+Narrate: The contact list shows Ada Lovelace and Grace Hopper.
 And Sales rep enters Grace into "Search"
 Narrate: Grace is typed into the search box.
 Then Sales rep sees "Grace Hopper" in "Contacts"
@@ -27,12 +29,13 @@ Narrate: The contact table narrows to Grace Hopper. Ada Lovelace leaves the tabl
 
 ## Scenario: Filtering contacts by company
 
+Story: As the sales rep, I need to see only the contacts at Acme, so that I can follow up with one customer at a time.
 Given a Company "Acme"
 Given a Company "Globex"
 Given a Contact "Ada Lovelace" with first name Ada, last name Lovelace, company Acme
 Given a Contact "Grace Hopper" with first name Grace, last name Hopper, company Globex
 When Sales rep opens Contact list
-Narrate: This is the contact list. Ada Lovelace works at Acme. Grace Hopper works at Globex.
+Narrate: The contact list shows Ada Lovelace, who works at Acme, and Grace Hopper, who works at Globex.
 And Sales rep selects Acme in "Company filter"
 Narrate: The company filter is set to Acme.
 Then Sales rep sees "Ada Lovelace" in "Contacts"
@@ -41,9 +44,10 @@ Narrate: The contact table narrows to the contacts of Acme. Grace Hopper leaves 
 
 ## Scenario: Creating a contact
 
+Story: As the sales rep, I need to add Ada Lovelace as a new contact at Acme, so that her details are on record.
 Given a Company "Acme"
 When Sales rep opens Contact list
-Narrate: This is the contact list. A New contact button sits above the table.
+Narrate: The contact list has a New contact button above the table.
 And Sales rep clicks "New contact"
 Then Sales rep is on Contact editor
 Narrate: The contact editor opens with an empty form.
@@ -63,10 +67,11 @@ Narrate: The saved contact page shows the name Ada Lovelace. A new contact has b
 
 ## Scenario: Editing a contact
 
+Story: As the sales rep, I need to change Ada Lovelace's first name to Ada-Byron, so that her record carries the correct name.
 Given a Company "Acme"
 Given a Contact "Ada Lovelace" with first name Ada, last name Lovelace, company Acme
 When Sales rep opens Contact editor for Ada Lovelace
-Narrate: This is the contact editor for Ada Lovelace. The form holds the current details.
+Narrate: This is the contact editor for Ada Lovelace. The form holds her current details.
 And Sales rep enters Ada-Byron into "First name"
 Narrate: The first name changes to Ada-Byron.
 And Sales rep clicks "Save"

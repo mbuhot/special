@@ -2,10 +2,11 @@
 
 ## Scenario: Company list shows every company
 
+Story: As the sales rep, I need to see every company in one list, so that I can find the one I am working with.
 Given a Company "Acme"
 Given a Company "Globex"
 When Sales rep opens Company list
-Narrate: This is the company list. A search box sits above the company table.
+Narrate: The company list has a search box above the company table.
 Then Sales rep sees "Acme" in "Companies"
 Narrate: The company table lists Acme.
 And Sales rep sees "Globex" in "Companies"
@@ -13,10 +14,11 @@ Narrate: The company table also lists Globex. Every company has a row.
 
 ## Scenario: Searching companies by name
 
+Story: As the sales rep, I need to find Globex by searching for part of its name, so that I can reach it without scrolling the whole list.
 Given a Company "Acme"
 Given a Company "Globex"
 When Sales rep opens Company list
-Narrate: This is the company list. It shows Acme and Globex.
+Narrate: The company list shows Acme and Globex.
 And Sales rep enters Glo into "Search"
 Narrate: Glo is typed into the search box.
 Then Sales rep sees "Globex" in "Companies"
@@ -25,8 +27,9 @@ Narrate: The company table narrows to Globex. Acme leaves the table.
 
 ## Scenario: Creating a company
 
+Story: As the sales rep, I need to add Initech as a new company, so that its contacts and invoices have a place to be recorded.
 When Sales rep opens Company list
-Narrate: This is the company list. A New company button sits above the table.
+Narrate: The company list has a New company button above the table.
 And Sales rep clicks "New company"
 Then Sales rep is on Company editor
 Narrate: The company editor opens with an empty form.
@@ -42,9 +45,10 @@ Narrate: The saved company page shows the name Initech. A new company has been c
 
 ## Scenario: Editing a company
 
+Story: As the sales rep, I need to rename Acme to Acme-Corp, so that the company record matches its current name.
 Given a Company "Acme"
 When Sales rep opens Company editor for Acme
-Narrate: This is the company editor for Acme. The form holds the current details.
+Narrate: This is the company editor for Acme. The name field holds the current name.
 And Sales rep enters Acme-Corp into "Name"
 Narrate: The company name changes to Acme-Corp.
 And Sales rep clicks "Save"
@@ -53,11 +57,12 @@ Narrate: The company page shows the new name Acme-Corp.
 
 ## Scenario: Company page lists its contacts and invoices
 
+Story: As the sales rep, I need to see Acme's contacts and invoices on its page, so that I have the whole relationship in one place.
 Given a Company "Acme"
 Given a Contact "Ada Lovelace" with first name Ada, last name Lovelace, company Acme
 Given an Invoice "INV-001" with status sent, company Acme
 When Sales rep opens Company page for Acme
-Narrate: This is the company page for Acme. The company name is at the top.
+Narrate: The company page for Acme shows the company name at the top.
 Then Sales rep sees "Acme" in "Company name"
 And Sales rep sees "Ada Lovelace" in "Company contacts"
 Narrate: The contacts region lists Ada Lovelace.

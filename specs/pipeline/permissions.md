@@ -2,6 +2,7 @@
 
 ## Scenario: Who may move a deal through the pipeline
 
+Story: As the sales manager, I need to be the only one who can win or reassign a deal, so that sales are confirmed deliberately.
 Given a Company "Acme"
 Given a Deal "Lead deal" with stage lead, company Acme
 Given a Deal "Proposal deal" with stage proposal, company Acme
@@ -24,6 +25,7 @@ Narrate: The board has no Win button for a sales rep. Winning a deal is left to 
 
 ## Scenario: Who may complete a task
 
+Story: As the sales manager, I need tasks to be completed only by the sales team, so that task status can be trusted.
 Given a Company "Acme"
 Given a Deal "Big deal" with stage lead, company Acme
 Given a Task "Send proposal" with title Send-proposal, due date 2026-01-20, deal Big deal, status open

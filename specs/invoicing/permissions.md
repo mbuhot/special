@@ -2,6 +2,7 @@
 
 ## Scenario: Who may send and settle invoices
 
+Story: As the admin, I need accounts to send invoices and only an admin to void them, so that invoices go out routinely and are cancelled deliberately.
 Given a Company "Acme"
 Given an Invoice "INV-001" with status draft, company Acme
 Then Accounts may send INV-001

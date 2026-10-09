@@ -1,4 +1,4 @@
-import { region, surface } from "../packages/specdsl-core/src/index.ts";
+import { link, region, surface } from "../packages/specdsl-core/src/index.ts";
 
 export const dashboardSurfaces = {
   Dashboard: surface({
@@ -13,6 +13,9 @@ export const dashboardSurfaces = {
         css: "#unpaid-invoices-count",
         lv: "#unpaid-invoices-count",
       }),
+      "Recent activity": region({ css: "#recent-activity", lv: "#recent-activity" }),
+      "View pipeline": link({ css: "#view-pipeline", lv: "#view-pipeline" }),
+      "View invoices": link({ css: "#view-invoices", lv: "#view-invoices" }),
     },
   }),
 };

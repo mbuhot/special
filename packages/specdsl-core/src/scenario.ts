@@ -184,6 +184,9 @@ export class ScenarioResolver {
     if (step.narrate !== undefined) {
       node.narrate = step.narrate(Object.fromEntries(resolved));
     }
+    if (step.modes !== undefined) {
+      node.modes = [...step.modes];
+    }
     return node;
   }
 

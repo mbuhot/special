@@ -2,7 +2,7 @@
 
 ## Model
 
-- Customer: name, email
+- Customer: name, email. Has many Invoice.
 - Invoice: number, status, total. Belongs to Customer. Has many LineItem.
 - Invoice.status: draft -> sent -> paid, draft -> void
 - LineItem: description, quantity, unit price. Belongs to Invoice.
@@ -16,6 +16,15 @@
 
 - Accounts: role accountant
 - Manager: role admin
+
+## Policies
+
+- Customer: accountant may read, create, update
+- Customer: admin may read, create, update
+- Invoice: accountant may read, create, update, send
+- Invoice: admin may read, create, update, send, mark paid, void
+- LineItem: accountant may read, create, update
+- LineItem: admin may read, create, update
 
 ## Scenario: Line total updates as quantity changes
 
@@ -90,3 +99,15 @@ Caption: The manager now reviews the same invoice.
 When Manager opens Invoice editor for INV-001
 Then Manager sees "sent" in "Status"
 Narrate: The manager sees the invoice with status sent.
+
+## Scenario: Only a manager can void or mark an invoice paid
+
+Given a Customer "Acme"
+Given an Invoice "INV-001" with status draft, customer Acme
+Then Accounts may send INV-001
+And Accounts may not void INV-001
+And Manager may void INV-001
+When Accounts opens Invoice editor for INV-001
+Then Accounts does not see "Void"
+And Accounts does not see "Mark paid"
+Narrate: The accountant's editor shows Send and no Void or Mark paid.

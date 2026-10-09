@@ -110,6 +110,27 @@ defmodule Invoicing.SpecHandlers do
     ctx
   end
 
+  step "may", %{actor: actor, action: action, ref: ref_name}, ctx do
+    assert may?(ctx, actor, action, ref_name),
+           "expected #{actor} to be allowed to #{action} #{ref_name}"
+
+    ctx
+  end
+
+  step "may-not", %{actor: actor, action: action, ref: ref_name}, ctx do
+    refute may?(ctx, actor, action, ref_name),
+           "expected #{actor} to be refused from #{action} #{ref_name}"
+
+    ctx
+  end
+
+  step "does-not-see", %{actor: actor, control: control}, ctx do
+    refute has_element?(Ctx.view(ctx, actor), control.locators.lv),
+           "expected #{actor} not to see #{control.name}"
+
+    ctx
+  end
+
   step "time-advances", %{duration: duration}, ctx do
     Clock.freeze(DateTime.add(Clock.now(), duration_seconds(duration)))
     ctx
@@ -134,6 +155,11 @@ defmodule Invoicing.SpecHandlers do
       })
 
     %{user: user, conn: Accounts.log_in_conn(build_conn(), user)}
+  end
+
+  defp may?(ctx, actor, action, ref_name) do
+    %{entity: entity, id: id} = Ctx.ref(ctx, ref_name)
+    Factory.can?(entity, id, action, actor_session(ctx, actor).user)
   end
 
   defp actor_session(ctx, actor), do: Map.fetch!(ctx.actors, actor)

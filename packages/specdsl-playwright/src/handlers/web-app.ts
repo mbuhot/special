@@ -65,6 +65,9 @@ export interface WebAppStepArgs {
   };
   "given-entity": { Entity: string; Ref: string; pairs: EntityPair[] };
   "has-field": { Ref: string; Field: string; Value: string };
+  may: { Actor: string; Action: string; Ref: string };
+  "may-not": { Actor: string; Action: string; Ref: string };
+  "does-not-see": { Actor: string; Control: ResolvedControl; Surface?: ResolvedSurface };
   "time-advances": { Duration: string };
   "job-runs": { Job: string };
 }
@@ -200,6 +203,11 @@ export const webAppSteps: StepHandlers<WebAppStepArgs, WebAppServices, WebAppCon
     expect(response.ok(), `GET entity ${entity}/${id}`).toBe(true);
     const fields = (await response.json()) as Record<string, unknown>;
     expect(String(fields[args.Field])).toBe(args.Value);
+  },
+  async may() {},
+  async "may-not"() {},
+  async "does-not-see"(args, env) {
+    await expect(locate(env, args.Actor, args.Control)).toHaveCount(0);
   },
   async "time-advances"(args, env) {
     const clock = env.context("clock");

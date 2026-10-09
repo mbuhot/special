@@ -5,7 +5,7 @@ export type NamespaceResolution = "declared" | "free";
 export type SectionOccurrence = "once" | "many";
 export type SectionBody = "steps" | "composites";
 export type ControlKind = "field" | "button" | "region" | "table" | "link";
-export type StepMode = "test" | "demo";
+export type StepMode = "test" | "demo" | "domain";
 export type ItemRelation = "belongs-to" | "has-many";
 export type ItemOutput = "actors" | "contexts" | "policies";
 

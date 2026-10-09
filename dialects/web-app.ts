@@ -131,13 +131,15 @@ export default dialect({
     }),
     step("<Actor> may <Action> <Ref>", {
       id: "may",
-      uses: ["data"],
+      uses: ["data", "actor"],
+      modes: ["domain", "demo"],
       emits: { kind: "PolicyUse", fields: { Actor: "Actor", Action: "Action", Ref: "Ref" } },
       narrate: ({ Actor, Action, Ref }) => `${Actor} may ${Action} ${Ref}.`,
     }),
     step("<Actor> may not <Action> <Ref>", {
       id: "may-not",
-      uses: ["data"],
+      uses: ["data", "actor"],
+      modes: ["domain", "demo"],
       emits: { kind: "PolicyUse", fields: { Actor: "Actor", Action: "Action", Ref: "Ref" } },
       narrate: ({ Actor, Action, Ref }) => `${Actor} may not ${Action} ${Ref}.`,
     }),

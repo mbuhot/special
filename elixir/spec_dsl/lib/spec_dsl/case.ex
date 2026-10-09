@@ -42,7 +42,7 @@ defmodule SpecDSL.Case do
             unquote(Macro.escape(ast)),
             unquote(Macro.escape(scenario)),
             unquote(handlers),
-            modes: [:test]
+            modes: [:test, :domain]
           )
         end
       end

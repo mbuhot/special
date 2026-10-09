@@ -23,7 +23,7 @@ end
 defmodule SpecDSL.Step do
   @moduledoc "One bound step of a scenario."
 
-  @type mode :: :test | :demo
+  @type mode :: :test | :demo | :domain
   @type t :: %__MODULE__{
           id: String.t(),
           line: non_neg_integer(),
@@ -102,7 +102,7 @@ defmodule SpecDSL.AST do
     "form" => :form
   }
   @relation_kinds %{"belongs-to" => :belongs_to, "has-many" => :has_many}
-  @step_modes %{"test" => :test, "demo" => :demo}
+  @step_modes %{"test" => :test, "demo" => :demo, "domain" => :domain}
 
   @doc "Reads and decodes an AST JSON file."
   @spec load!(Path.t()) :: t()

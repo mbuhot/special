@@ -46,6 +46,19 @@ defmodule Invoicing.SpecSupport.Factory do
     |> to_field_map(resource)
   end
 
+  @doc "Returns the record of the named entity with the given id."
+  def fetch(entity_name, id) do
+    entity_name
+    |> resource_for!()
+    |> Ash.get!(id, authorize?: false)
+  end
+
+  @doc "Reports whether the user may run the spec-spelled action on the record."
+  def can?(entity_name, id, action_name, user) do
+    action = action_name |> String.replace(" ", "_") |> String.to_existing_atom()
+    Ash.can?({fetch(entity_name, id), action}, user)
+  end
+
   defp build(attrs, Customer) do
     sequence = System.unique_integer([:positive])
 
@@ -85,7 +98,8 @@ defmodule Invoicing.SpecSupport.Factory do
     Ash.Seed.update!(invoice, %{status: String.to_existing_atom(status)})
   end
 
-  defp resource_for!(entity_name) do
+  @doc "Returns the Ash resource module for the spec entity name."
+  def resource_for!(entity_name) do
     case Map.fetch(@resources, entity_name) do
       {:ok, resource} -> resource
       :error -> raise ArgumentError, "unknown entity #{inspect(entity_name)}"

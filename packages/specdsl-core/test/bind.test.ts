@@ -16,6 +16,7 @@ describe("binding the invoicing spec", () => {
       "Invoice list shows every invoice",
       "Creating an invoice from the list",
       "A manager sees an invoice once it is sent",
+      "Only a manager can void or mark an invoice paid",
     ]);
   });
 
@@ -47,6 +48,17 @@ describe("binding the invoicing spec", () => {
         "caption",
         "opens",
         "sees",
+        "narrate",
+      ],
+      [
+        "given-entity",
+        "given-entity",
+        "may",
+        "may-not",
+        "may",
+        "opens",
+        "does-not-see",
+        "does-not-see",
         "narrate",
       ],
     ]);
@@ -117,7 +129,7 @@ describe("binding the invoicing spec", () => {
     });
     expect(ast.model["Customer"]).toEqual({
       fields: ["name", "email"],
-      relations: [],
+      relations: [{ kind: "has-many", entity: "Invoice" }],
       machines: {},
     });
   });
@@ -425,6 +437,7 @@ describe("policies", () => {
       line: lineOf(source, "Then Accounts may mark paid"),
       args: { Actor: "Accounts", Action: "mark paid", Ref: "INV-001" },
       narrate: "Accounts may mark paid INV-001.",
+      modes: ["domain", "demo"],
     });
   });
 

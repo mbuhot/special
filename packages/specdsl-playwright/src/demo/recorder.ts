@@ -15,7 +15,7 @@ type Env = ScenarioEnv<WebAppServices, WebAppContextStates>;
 
 type StepPresentation = "card" | "control" | "plain";
 
-const CARD_STEP_IDS: readonly string[] = ["time-advances", "job-runs"];
+const CARD_STEP_IDS: readonly string[] = ["time-advances", "job-runs", "may", "may-not"];
 const CONTROL_STEP_IDS: readonly string[] = [
   "opens",
   "enters",

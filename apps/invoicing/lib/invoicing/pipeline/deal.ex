@@ -38,7 +38,11 @@ defmodule Invoicing.Pipeline.Deal do
 
     update :update do
       primary? true
-      accept [:name, :amount, :close_date, :company_id, :contact_id, :owner_id]
+      accept [:name, :amount, :close_date, :company_id, :contact_id]
+    end
+
+    update :reassign do
+      accept [:owner_id]
     end
 
     update :qualify do
@@ -67,8 +71,14 @@ defmodule Invoicing.Pipeline.Deal do
       authorize_if actor_present()
     end
 
-    policy action([:create, :update, :qualify, :propose, :win, :lose]) do
-      authorize_if actor_attribute_equals(:role, :accountant)
+    policy action([:create, :update, :qualify, :propose]) do
+      authorize_if actor_attribute_equals(:role, :sales)
+      authorize_if actor_attribute_equals(:role, :manager)
+      authorize_if actor_attribute_equals(:role, :admin)
+    end
+
+    policy action([:win, :lose, :reassign]) do
+      authorize_if actor_attribute_equals(:role, :manager)
       authorize_if actor_attribute_equals(:role, :admin)
     end
 

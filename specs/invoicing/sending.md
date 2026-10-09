@@ -17,7 +17,7 @@ Given an Invoice "INV-001" with status draft, company Acme
 When Accounts opens Invoice editor for INV-001
 And Accounts clicks "Send"
 Then Accounts sees "sent" in "Status"
-Caption: The manager now reviews the same invoice.
-When Manager opens Invoice editor for INV-001
-Then Manager sees "sent" in "Status"
-Narrate: The manager sees the invoice with status sent.
+Caption: The admin now reviews the same invoice.
+When Admin opens Invoice editor for INV-001
+Then Admin sees "sent" in "Status"
+Narrate: The admin sees the invoice with status sent.

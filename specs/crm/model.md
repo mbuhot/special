@@ -7,5 +7,7 @@
 
 ## Policies
 
-- Activity: accountant may read, create, update
+- Activity: sales may read, create, update
+- Activity: manager may read, create, update
+- Activity: accountant may read
 - Activity: admin may read, create, update

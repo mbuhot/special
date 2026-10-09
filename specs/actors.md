@@ -2,5 +2,7 @@
 
 ## Actors
 
+- Sales rep: role sales
+- Sales manager: role manager
 - Accounts: role accountant
-- Manager: role admin
+- Admin: role admin

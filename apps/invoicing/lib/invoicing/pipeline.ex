@@ -13,6 +13,7 @@ defmodule Invoicing.Pipeline do
       define :propose_deal, action: :propose
       define :win_deal, action: :win
       define :lose_deal, action: :lose
+      define :reassign_deal, action: :reassign, args: [:owner_id]
     end
 
     resource Invoicing.Pipeline.Task do

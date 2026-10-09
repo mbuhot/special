@@ -106,7 +106,7 @@ type DurationUnit = keyof typeof DURATION_UNIT_MILLISECONDS;
 
 /** Email address the actor signs in with. */
 export function actorEmail(actorName: string): string {
-  return `${actorName}@example.com`.toLowerCase();
+  return `${actorName.replace(/\s+/g, "-")}@example.com`.toLowerCase();
 }
 
 export const webAppContexts: ContextHandlers<WebAppServices, WebAppContextStates> = {

@@ -15,7 +15,12 @@ defmodule Invoicing.SpecHandlers do
   @endpoint InvoicingWeb.Endpoint
 
   @seconds_per_unit %{"second" => 1, "minute" => 60, "hour" => 3_600, "day" => 86_400}
-  @roles %{"accountant" => :accountant, "admin" => :admin}
+  @roles %{
+    "sales" => :sales,
+    "manager" => :manager,
+    "accountant" => :accountant,
+    "admin" => :admin
+  }
 
   context(:app,
     setup: fn _config, _ctx -> %{endpoint: InvoicingWeb.Endpoint} end

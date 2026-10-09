@@ -6,5 +6,7 @@
 
 ## Policies
 
-- Contact: accountant may read, create, update
+- Contact: sales may read, create, update
+- Contact: manager may read, create, update
+- Contact: accountant may read
 - Contact: admin may read, create, update

@@ -8,6 +8,8 @@ seed_user = fn email, role ->
   end
 end
 
+seed_user.("sales@example.com", :sales)
+seed_user.("manager@example.com", :manager)
 seed_user.("accounts@example.com", :accountant)
 seed_user.("admin@example.com", :admin)
 

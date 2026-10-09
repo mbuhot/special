@@ -60,7 +60,8 @@ defmodule Invoicing.Pipeline.Task do
     end
 
     policy action([:create, :update, :complete]) do
-      authorize_if actor_attribute_equals(:role, :accountant)
+      authorize_if actor_attribute_equals(:role, :sales)
+      authorize_if actor_attribute_equals(:role, :manager)
       authorize_if actor_attribute_equals(:role, :admin)
     end
 

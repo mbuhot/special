@@ -4,74 +4,86 @@ defmodule Invoicing.Pipeline.DealTest do
   alias Invoicing.{Accounts, CRM, Pipeline}
 
   setup do
-    accountant =
-      Accounts.create_user!(%{email: "accounts@example.com", role: :accountant},
+    manager =
+      Accounts.create_user!(%{email: "manager@example.com", role: :manager},
         authorize?: false
       )
 
     admin = Accounts.create_user!(%{email: "admin@example.com", role: :admin}, authorize?: false)
-    company = CRM.create_company!(%{name: "Acme"}, actor: accountant)
+    company = CRM.create_company!(%{name: "Acme"}, actor: manager)
 
-    %{accountant: accountant, admin: admin, company: company}
+    %{manager: manager, admin: admin, company: company}
   end
 
-  defp create_deal(accountant, company, stage \\ :lead) do
-    deal = Pipeline.create_deal!(%{name: "Big deal", company_id: company.id}, actor: accountant)
+  defp create_deal(manager, company, stage \\ :lead) do
+    deal = Pipeline.create_deal!(%{name: "Big deal", company_id: company.id}, actor: manager)
     Ash.Seed.update!(deal, %{stage: stage})
   end
 
   test "a new deal starts as a lead owned by the user who created it", %{
-    accountant: accountant,
+    manager: manager,
     company: company
   } do
-    deal = Pipeline.create_deal!(%{name: "Big deal", company_id: company.id}, actor: accountant)
+    deal = Pipeline.create_deal!(%{name: "Big deal", company_id: company.id}, actor: manager)
 
     assert deal.stage == :lead
-    assert deal.owner_id == accountant.id
+    assert deal.owner_id == manager.id
   end
 
   test "a deal moves through qualified and proposal to won", %{
-    accountant: accountant,
+    manager: manager,
     company: company
   } do
-    deal = create_deal(accountant, company)
+    deal = create_deal(manager, company)
 
-    qualified_deal = Pipeline.qualify_deal!(deal, actor: accountant)
-    proposed_deal = Pipeline.propose_deal!(qualified_deal, actor: accountant)
-    won_deal = Pipeline.win_deal!(proposed_deal, actor: accountant)
+    qualified_deal = Pipeline.qualify_deal!(deal, actor: manager)
+    proposed_deal = Pipeline.propose_deal!(qualified_deal, actor: manager)
+    won_deal = Pipeline.win_deal!(proposed_deal, actor: manager)
 
     assert {qualified_deal.stage, proposed_deal.stage, won_deal.stage} ==
              {:qualified, :proposal, :won}
   end
 
   for stage <- [:lead, :qualified, :proposal] do
-    test "a #{stage} deal can be lost", %{accountant: accountant, company: company} do
-      deal = create_deal(accountant, company, unquote(stage))
+    test "a #{stage} deal can be lost", %{manager: manager, company: company} do
+      deal = create_deal(manager, company, unquote(stage))
 
-      assert Pipeline.lose_deal!(deal, actor: accountant).stage == :lost
+      assert Pipeline.lose_deal!(deal, actor: manager).stage == :lost
     end
   end
 
-  test "a lead cannot be won before it is proposed", %{accountant: accountant, company: company} do
-    deal = create_deal(accountant, company)
+  test "a lead cannot be won before it is proposed", %{manager: manager, company: company} do
+    deal = create_deal(manager, company)
 
-    assert {:error, %Ash.Error.Invalid{}} = Pipeline.win_deal(deal, actor: accountant)
+    assert {:error, %Ash.Error.Invalid{}} = Pipeline.win_deal(deal, actor: manager)
   end
 
-  test "a won deal cannot be lost", %{accountant: accountant, company: company} do
-    deal = create_deal(accountant, company, :won)
+  test "a won deal cannot be lost", %{manager: manager, company: company} do
+    deal = create_deal(manager, company, :won)
 
-    assert {:error, %Ash.Error.Invalid{}} = Pipeline.lose_deal(deal, actor: accountant)
+    assert {:error, %Ash.Error.Invalid{}} = Pipeline.lose_deal(deal, actor: manager)
   end
 
-  test "an accountant cannot delete a deal", %{accountant: accountant, company: company} do
-    deal = create_deal(accountant, company)
+  test "a sales manager can reassign a deal to another user", %{
+    manager: manager,
+    company: company
+  } do
+    sales_rep =
+      Accounts.create_user!(%{email: "new-owner@example.com", role: :sales}, authorize?: false)
 
-    assert {:error, %Ash.Error.Forbidden{}} = Ash.destroy(deal, actor: accountant)
+    deal = create_deal(manager, company)
+
+    assert Pipeline.reassign_deal!(deal, sales_rep.id, actor: manager).owner_id == sales_rep.id
   end
 
-  test "an admin can delete a deal", %{accountant: accountant, admin: admin, company: company} do
-    deal = create_deal(accountant, company)
+  test "a sales manager cannot delete a deal", %{manager: manager, company: company} do
+    deal = create_deal(manager, company)
+
+    assert {:error, %Ash.Error.Forbidden{}} = Ash.destroy(deal, actor: manager)
+  end
+
+  test "an admin can delete a deal", %{manager: manager, admin: admin, company: company} do
+    deal = create_deal(manager, company)
 
     assert :ok = Ash.destroy(deal, actor: admin)
   end

@@ -47,7 +47,15 @@ defmodule InvoicingWeb.DealLive.Board do
         query: [sort: [inserted_at: :asc, id: :asc]]
       )
 
-    assign(socket, :deals_by_stage, Enum.group_by(deals, & &1.stage))
+    socket
+    |> assign(:deals_by_stage, Enum.group_by(deals, & &1.stage))
+    |> assign(:permitted_transitions, Map.new(deals, &{&1.id, permitted_transitions(&1, socket)}))
+  end
+
+  defp permitted_transitions(deal, socket) do
+    deal.stage
+    |> transitions_from()
+    |> Enum.filter(&Ash.can?({deal, &1}, socket.assigns.current_user))
   end
 
   defp transitions_from(stage) do
@@ -90,9 +98,9 @@ defmodule InvoicingWeb.DealLive.Board do
             <.link navigate={~p"/deals/#{deal.id}"} class="font-medium">{deal.name}</.link>
             <p :if={deal.amount}>{deal.amount}</p>
             <p class="text-sm">{deal.company.name}</p>
-            <div :if={@can_change_deals} class="flex flex-wrap gap-1">
+            <div class="flex flex-wrap gap-1">
               <button
-                :for={transition <- transitions_from(stage)}
+                :for={transition <- Map.fetch!(@permitted_transitions, deal.id)}
                 type="button"
                 class="btn btn-xs"
                 data-transition={transition}

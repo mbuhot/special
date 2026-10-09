@@ -12,7 +12,11 @@
 
 ## Policies
 
-- Deal: accountant may read, create, update, qualify, propose, win, lose
-- Deal: admin may read, create, update, qualify, propose, win, lose
-- Task: accountant may read, create, update, complete
+- Deal: sales may read, create, update, qualify, propose
+- Deal: manager may read, create, update, qualify, propose, win, lose, reassign
+- Deal: accountant may read
+- Deal: admin may read, create, update, qualify, propose, win, lose, reassign
+- Task: sales may read, create, update, complete
+- Task: manager may read, create, update, complete
+- Task: accountant may read
 - Task: admin may read, create, update, complete

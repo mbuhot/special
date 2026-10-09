@@ -6,8 +6,8 @@ defmodule InvoicingWeb.ContactShowLiveTest do
   alias Invoicing.{Accounts, Clock, CRM}
 
   setup %{conn: conn} do
-    accountant =
-      Accounts.create_user!(%{email: "accounts@example.com", role: :accountant},
+    sales_rep =
+      Accounts.create_user!(%{email: "sales@example.com", role: :sales},
         authorize?: false
       )
 
@@ -22,14 +22,14 @@ defmodule InvoicingWeb.ContactShowLiveTest do
     Clock.freeze(~U[2026-01-15 09:00:00Z])
     on_exit(&Clock.unfreeze/0)
 
-    %{conn: Accounts.log_in_conn(conn, accountant), accountant: accountant, ada: ada}
+    %{conn: Accounts.log_in_conn(conn, sales_rep), sales_rep: sales_rep, ada: ada}
   end
 
   defp timeline(view), do: view |> element("#timeline") |> render()
 
   test "the timeline lists a contact's activities newest first", %{
     conn: conn,
-    accountant: accountant,
+    sales_rep: sales_rep,
     ada: ada
   } do
     for {body, occurred_at} <- [
@@ -38,7 +38,7 @@ defmodule InvoicingWeb.ContactShowLiveTest do
         ] do
       CRM.create_activity!(
         %{kind: :call, body: body, occurred_at: occurred_at, contact_id: ada.id},
-        actor: accountant
+        actor: sales_rep
       )
     end
 

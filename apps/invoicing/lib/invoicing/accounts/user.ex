@@ -33,7 +33,7 @@ defmodule Invoicing.Accounts.User do
       allow_nil?: false,
       default: :accountant,
       public?: true,
-      constraints: [one_of: [:accountant, :admin]]
+      constraints: [one_of: [:sales, :manager, :accountant, :admin]]
 
     timestamps()
   end

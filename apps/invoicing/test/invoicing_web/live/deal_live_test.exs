@@ -6,8 +6,8 @@ defmodule InvoicingWeb.DealLiveTest do
   alias Invoicing.{Accounts, CRM, Pipeline}
 
   setup %{conn: conn} do
-    accountant =
-      Accounts.create_user!(%{email: "accounts@example.com", role: :accountant},
+    manager =
+      Accounts.create_user!(%{email: "manager@example.com", role: :manager},
         authorize?: false
       )
 
@@ -21,11 +21,11 @@ defmodule InvoicingWeb.DealLiveTest do
 
     deal =
       Pipeline.create_deal!(
-        %{name: "Big deal", amount: "12000", company_id: acme.id, owner_id: accountant.id},
+        %{name: "Big deal", amount: "12000", company_id: acme.id, owner_id: manager.id},
         authorize?: false
       )
 
-    %{conn: Accounts.log_in_conn(conn, accountant), acme: acme, ada: ada, deal: deal}
+    %{conn: Accounts.log_in_conn(conn, manager), acme: acme, ada: ada, deal: deal}
   end
 
   defp column(view, stage), do: view |> element("#column-#{stage}") |> render()
@@ -90,6 +90,19 @@ defmodule InvoicingWeb.DealLiveTest do
 
     assert column(view, :lost) =~ "Big deal"
     refute column(view, :lead) =~ "Big deal"
+  end
+
+  test "a sales rep does not see Win or Lose on the board", %{conn: conn, deal: deal} do
+    deal |> Pipeline.qualify_deal!(authorize?: false) |> Pipeline.propose_deal!(authorize?: false)
+
+    sales_rep =
+      Accounts.create_user!(%{email: "sales@example.com", role: :sales}, authorize?: false)
+
+    {:ok, view, _html} = live(Accounts.log_in_conn(conn, sales_rep), ~p"/pipeline")
+
+    assert column(view, :proposal) =~ "Big deal"
+    refute has_element?(view, "#column-proposal button", "Win")
+    refute has_element?(view, "#column-proposal button", "Lose")
   end
 
   test "a won deal offers no moves", %{conn: conn, deal: deal} do

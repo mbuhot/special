@@ -102,16 +102,18 @@ specs/
 
 ## Commands
 
-| Task                   | Command                                    |
-| ---------------------- | ------------------------------------------ |
-| Install                | `pnpm install`                             |
-| Bind and lint specs    | `pnpm bind`                                |
-| Regenerate the lock    | `pnpm lock`                                |
-| Core tests             | `pnpm --filter @special/specdsl-core test` |
-| Scenarios in ExUnit    | `cd apps/invoicing && mix test`            |
-| Scenarios in a browser | `pnpm e2e`                                 |
-| Demo videos            | `pnpm demo`                                |
-| One reel with chapters | `pnpm demo:reel`                           |
+| Task                   | Command                                                                                                                                                         |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Install                | `pnpm install`                                                                                                                                                  |
+| Set up the app         | `cd apps/invoicing && mix setup`                                                                                                                                |
+| Run the app            | `cd apps/invoicing && mix phx.server`, then http://localhost:4000; sign in as sales@example.com, manager@example.com, accounts@example.com or admin@example.com |
+| Bind and lint specs    | `pnpm bind`                                                                                                                                                     |
+| Regenerate the lock    | `pnpm lock`                                                                                                                                                     |
+| Core tests             | `pnpm --filter @special/specdsl-core test`                                                                                                                      |
+| Scenarios in ExUnit    | `cd apps/invoicing && mix test`                                                                                                                                 |
+| Scenarios in a browser | `pnpm e2e`                                                                                                                                                      |
+| Demo videos            | `pnpm demo`                                                                                                                                                     |
+| One reel with chapters | `pnpm demo:reel`                                                                                                                                                |
 
 ## Prerequisites
 

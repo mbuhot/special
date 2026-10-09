@@ -1,15 +1,14 @@
 import type { Scenario } from "@special/specdsl-core";
 
-/** Maps each step's source line to its narration; a `narrate` step overrides the step above it. */
+/** Maps each step's source line to the text of the `Narrate:` line directly after it. */
 export function planNarration(scenario: Scenario): Map<number, string> {
   const narrationByLine = new Map<number, string>();
   scenario.steps.forEach((node, index) => {
     if ("text" in node) return;
     const following = scenario.steps[index + 1];
-    const override =
-      following && "text" in following && following.id === "narrate" ? following : undefined;
-    const text = override?.text ?? node.narrate;
-    if (text !== undefined && text !== "") narrationByLine.set(node.line, text);
+    if (following && "text" in following && following.id === "narrate" && following.text !== "") {
+      narrationByLine.set(node.line, following.text);
+    }
   });
   return narrationByLine;
 }
@@ -31,8 +30,8 @@ export function scenarioActors(scenario: Scenario): string[] {
 }
 
 /** Narration of the title card that opens an actor's recording. */
-export function signInNarration(actorName: string, email: string): string {
-  return `${actorName} is signed in as ${email}.`;
+export function signInNarration(actorName: string): string {
+  return `Signed in as ${actorName}.`;
 }
 
 export function scenarioSlug(scenarioName: string): string {

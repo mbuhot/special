@@ -116,7 +116,7 @@ dialect({
   sections:   { Model: section({ occurs: "once", items: [{ pattern, declares, references, emits }] }),
                 Scenario: section({ heading: "Scenario: <Name>", occurs: "many", body: "steps", items: [...] }) },
   surfaces:   { "Invoice editor": surface({ route, controls: { Quantity: field({ css, lv }) } }) },
-  steps:      [ step(pattern, { uses, declares, emits, narrate, modes }) ],
+  steps:      [ step(pattern, { uses, declares, emits, modes }) ],
   checks:     [ check.coverage({ declared, usedBy }), check.sequence({ machine, observed, within }) ],
 })
 ```
@@ -206,8 +206,7 @@ Merging is add-only: redeclaring an entity, actor, or surface is an error naming
         {
           "id": "opens",
           "line": 23,
-          "args": { "Actor": "Accounts", "Surface": "Invoice editor", "Ref": "INV-001" },
-          "narrate": "Accounts opens the Invoice editor."
+          "args": { "Actor": "Accounts", "Surface": "Invoice editor", "Ref": "INV-001" }
         },
         {
           "id": "narrate",
@@ -257,7 +256,7 @@ One ExUnit test per scenario, tagged with spec file and line.
 3. Mux clips at timestamps with ffmpeg. `Caption:` and non-UI steps render as overlay cards.
 4. Emit mp4 and per-step screenshots.
 
-Narration defaults to the step's `narrate` template. `Narrate:` lines override. Narration is present tense and describes what is on screen.
+Narration comes from `Narrate:` and `Caption:` lines and is present tense, describing what is on screen.
 
 ## Build order
 

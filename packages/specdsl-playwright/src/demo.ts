@@ -13,7 +13,6 @@ import {
 import { DemoRecorder } from "./demo/recorder.js";
 import type { ActorRecording } from "./demo/recorder.js";
 import { synthesizeAll } from "./demo/tts.js";
-import { actorEmail } from "./handlers/web-app.js";
 import type { WebAppServices } from "./handlers/web-app.js";
 import { demoOutputDirectory } from "./paths.js";
 import { loadSpecs, webAppRuntime } from "./specs.js";
@@ -35,9 +34,7 @@ async function produceDemo(
   mkdirSync(screenshotDirectory, { recursive: true });
 
   const narrationByLine = planNarration(scenario);
-  const signInTexts = scenarioActors(scenario).map((actorName) =>
-    signInNarration(actorName, actorEmail(actorName)),
-  );
+  const signInTexts = scenarioActors(scenario).map(signInNarration);
   const clipsByText = await synthesizeAll([
     ...narrationByLine.values(),
     ...planCaptions(scenario),

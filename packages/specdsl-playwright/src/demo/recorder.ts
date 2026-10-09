@@ -138,17 +138,13 @@ export class DemoRecorder implements StepHooks<WebAppServices, WebAppContextStat
       placements: [],
       endSeconds: 0,
     });
-    await this.showSignInCard(invocation, actorName, email);
+    await this.showSignInCard(invocation, actorName);
   }
 
-  private async showSignInCard(
-    invocation: StepInvocation,
-    actorName: string,
-    email: string,
-  ): Promise<void> {
+  private async showSignInCard(invocation: StepInvocation, actorName: string): Promise<void> {
     const recording = this.recordings.get(actorName);
     if (recording === undefined) return;
-    const narration = signInNarration(actorName, email);
+    const narration = signInNarration(actorName);
     const clip = this.configuration.clipsByText.get(narration);
     this.logStep(SIGN_IN_STEP_ID, invocation.line, narration, clip, this.elapsedSeconds());
     await showCard(recording.page, narration, holdSeconds(clip));

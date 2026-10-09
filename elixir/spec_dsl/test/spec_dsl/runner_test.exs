@@ -76,8 +76,7 @@ defmodule SpecDSL.RunnerTest do
     failing_step = %Step{
       id: "enters",
       line: 24,
-      args: %{actor: "Accounts", value: "BOOM"},
-      narrate: "Accounts enters BOOM."
+      args: %{actor: "Accounts", value: "BOOM"}
     }
 
     scenario = scenario_with(ast, [failing_step])
@@ -86,11 +85,11 @@ defmodule SpecDSL.RunnerTest do
 
     assert error.step_id == "enters"
     assert error.line == 24
-    assert error.text == "Accounts enters BOOM."
+    assert error.text == nil
     assert error.exception == %RuntimeError{message: "entry rejected"}
 
     assert Exception.message(error) ==
-             "step \"enters\" at specs/invoicing.md:24 (Accounts enters BOOM.) failed: ** (RuntimeError) entry rejected"
+             "step \"enters\" at specs/invoicing.md:24 failed: ** (RuntimeError) entry rejected"
   end
 
   test "tears down contexts after a step fails", %{ast: ast} do

@@ -54,15 +54,12 @@ export interface EmissionRule {
   fields: Readonly<Record<string, string>>;
 }
 
-export type NarrateTemplate = (slots: Record<string, string>) => string;
-
 export interface StepDefinition {
   pattern: string;
   id?: string;
   uses?: readonly string[];
   declares?: readonly string[];
   emits?: EmissionRule;
-  narrate?: NarrateTemplate;
   modes?: readonly StepMode[];
 }
 

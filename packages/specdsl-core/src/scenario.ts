@@ -182,9 +182,6 @@ export class ScenarioResolver {
       pairNames?.includes(name) || (args[name] = list);
     }
     const node: StepNode = { id: step.id, line, args };
-    if (step.narrate !== undefined) {
-      node.narrate = step.narrate(Object.fromEntries(resolved));
-    }
     if (step.modes !== undefined) {
       node.modes = [...step.modes];
     }

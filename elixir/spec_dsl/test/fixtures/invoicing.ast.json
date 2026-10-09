@@ -1,0 +1,42 @@
+{
+  "dialect": { "name": "invoicing", "version": "1", "stepIds": ["given-entity", "opens", "enters", "sees"] },
+  "contexts": { "clock": { "DateTime": "2026-01-15T09:00:00Z" } },
+  "actors": { "Accounts": { "Role": "accountant", "extra": {} } },
+  "surfaces": {
+    "Invoice editor": {
+      "route": "/invoices/{id}/edit",
+      "controls": {
+        "Quantity": { "kind": "field", "locators": { "css": "#line-0-quantity", "lv": "invoice[lines][0][quantity]", "form": "#invoice-form" } },
+        "Totals": { "kind": "region", "locators": { "testid": "totals", "role": "status" } }
+      }
+    },
+    "Invoice list": {
+      "route": "/invoices",
+      "controls": {
+        "Invoices": { "kind": "table", "locators": { "css": "table.invoices" } },
+        "New invoice": { "kind": "button", "locators": { "css": "a.new" } }
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Line total updates as quantity changes",
+      "source": { "file": "specs/invoicing.md", "line": 20 },
+      "steps": [
+        { "id": "given-entity", "line": 21, "args": { "Entity": "Customer", "Ref": "Acme", "pairs": [] } },
+        { "id": "opens", "line": 23, "args": { "Actor": "Accounts", "Surface": "Invoice editor", "Ref": "INV-001" } },
+        { "id": "enters", "line": 24, "args": { "Actor": "Accounts", "Value": "3", "Surface": "Invoice editor", "Control": "Quantity" } },
+        { "id": "sees", "line": 25, "args": { "Actor": "Accounts", "Text": "300.00", "Surface": "Invoice editor", "Control": "Totals" } },
+        { "id": "narrate", "line": 26, "text": "The line total updates as the quantity changes.", "modes": ["demo"] }
+      ]
+    },
+    {
+      "name": "Invoice list shows the new invoice button",
+      "source": { "file": "specs/invoicing.md", "line": 30 },
+      "steps": [
+        { "id": "opens", "line": 31, "args": { "Actor": "Accounts", "Surface": "Invoice list", "Ref": "list" } },
+        { "id": "sees", "line": 32, "args": { "Actor": "Accounts", "Text": "New invoice", "Surface": "Invoice list", "Control": "New invoice" }, "modes": ["test", "demo"] }
+      ]
+    }
+  ]
+}

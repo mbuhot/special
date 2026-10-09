@@ -12,7 +12,6 @@ export interface StepNode {
   id: string;
   line: number;
   args: Record<string, AstValue>;
-  narrate?: string;
   modes?: StepMode[];
 }
 

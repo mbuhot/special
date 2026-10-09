@@ -7,32 +7,42 @@ Given a Contact "Ada Lovelace" with first name Ada, last name Lovelace, company 
 Given an Activity "Intro call" with kind call, body Intro-call, occurred at 2026-01-10T10:00:00Z, contact Ada Lovelace
 Given an Activity "Follow up" with kind email, body Follow-up, occurred at 2026-01-12T10:00:00Z, contact Ada Lovelace
 When Sales rep opens Contact page for Ada Lovelace
+Narrate: This is the contact page for Ada Lovelace. The contact name is at the top. Below it is the timeline of activities.
 Then Sales rep sees "Ada Lovelace" in "Contact name"
 And Sales rep sees "Follow-up" in "Timeline"
+Narrate: The follow-up email is the newest activity. It is listed first in the timeline.
 And Sales rep sees "Follow-up" before "Intro-call" in "Timeline"
 And Sales rep sees "Intro-call" in "Timeline"
-Narrate: The contact page shows the name Ada Lovelace and a timeline listing the newest activity first: the follow-up email, then the intro call.
+Narrate: The intro call is the older activity. It is listed below the follow-up. The timeline lists the newest activity first.
 
 ## Scenario: Logging a note on a contact
 
 Given a Company "Acme"
 Given a Contact "Ada Lovelace" with first name Ada, last name Lovelace, company Acme
 When Sales rep opens Contact page for Ada Lovelace
+Narrate: This is the contact page for Ada Lovelace. It has a timeline and a form for logging an activity.
 And Sales rep selects note in "Activity kind"
+Narrate: The activity kind is set to note.
 And Sales rep enters Called-about-renewal into "Activity body"
+Narrate: The note text is typed into the activity body.
 And Sales rep clicks "Log activity"
 Then Sales rep sees "Called-about-renewal" in "Timeline"
+Narrate: The note appears in the timeline.
 And Sales rep sees "2026-01-15" in "Timeline"
-Narrate: The note appears in the timeline with today's date.
+Narrate: The note carries today's date. The timeline now shows the logged note.
 
 ## Scenario: Activity timeline advances with the clock
 
 Given a Company "Acme"
 Given a Contact "Ada Lovelace" with first name Ada, last name Lovelace, company Acme
 When Sales rep opens Contact page for Ada Lovelace
+Narrate: This is the contact page for Ada Lovelace. The timeline is empty.
 And time advances 2 days
+Narrate: Two days pass.
 And Sales rep selects meeting in "Activity kind"
+Narrate: The activity kind is set to meeting.
 And Sales rep enters Kickoff into "Activity body"
+Narrate: The meeting text Kickoff is typed into the activity body.
 And Sales rep clicks "Log activity"
 Then Sales rep sees "2026-01-17" in "Timeline"
-Narrate: The meeting appears in the timeline dated two days later.
+Narrate: The meeting appears in the timeline. It is dated two days after the contact page was opened.

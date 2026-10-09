@@ -28,12 +28,11 @@ defmodule SpecDSL.Step do
           id: String.t(),
           line: non_neg_integer(),
           args: %{atom() => term()},
-          narrate: String.t() | nil,
           modes: [mode()] | nil,
           text: String.t() | nil
         }
 
-  defstruct [:id, :line, :narrate, :modes, :text, args: %{}]
+  defstruct [:id, :line, :modes, :text, args: %{}]
 end
 
 defmodule SpecDSL.Scenario do
@@ -211,7 +210,6 @@ defmodule SpecDSL.AST do
       id: Map.fetch!(raw, "id"),
       line: Map.get(raw, "line"),
       args: raw |> Map.get("args", %{}) |> resolve_args(surfaces),
-      narrate: Map.get(raw, "narrate"),
       modes: build_modes(Map.get(raw, "modes")),
       text: Map.get(raw, "text")
     }

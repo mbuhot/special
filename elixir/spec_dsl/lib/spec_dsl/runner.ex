@@ -66,7 +66,7 @@ defmodule SpecDSL.Runner do
     %StepError{
       step_id: step.id,
       line: step.line,
-      text: step.text || step.narrate,
+      text: step.text,
       file: scenario.source.file,
       exception: exception,
       stacktrace: stacktrace

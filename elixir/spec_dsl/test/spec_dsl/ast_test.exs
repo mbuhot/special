@@ -64,11 +64,10 @@ defmodule SpecDSL.ASTTest do
            }
   end
 
-  test "reads narration text, narration override and step modes", %{ast: ast} do
-    %Scenario{steps: [given, opens, _enters, _sees, narrate]} = hd(ast.scenarios)
+  test "reads narration text and step modes", %{ast: ast} do
+    %Scenario{steps: [given, _opens, _enters, _sees, narrate]} = hd(ast.scenarios)
 
     assert given.modes == nil
-    assert opens.narrate == "Accounts opens the Invoice editor."
 
     assert narrate == %Step{
              id: "narrate",

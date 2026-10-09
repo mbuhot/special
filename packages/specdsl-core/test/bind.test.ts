@@ -78,12 +78,11 @@ describe("binding the invoicing spec", () => {
     });
   });
 
-  it("renders the narration template of a step", () => {
+  it("binds the slots of a step into arguments", () => {
     expect(ast.scenarios[0]?.steps[3]).toEqual({
       id: "opens",
       line: lineOf(lineTotalsSource.markdown, "When Accounts opens Invoice editor"),
       args: { Actor: "Accounts", Surface: "Invoice editor", Ref: "INV-001" },
-      narrate: "Accounts opens the Invoice editor.",
     });
   });
 
@@ -303,7 +302,6 @@ describe("composite steps", () => {
       id: "enters",
       line: lineOf(source, "fills in the quantity 5"),
       args: { Actor: "Accounts", Value: "5", Surface: "Invoice editor", Control: "Quantity" },
-      narrate: "Accounts enters 5 into Quantity.",
     });
   });
 });
@@ -320,7 +318,6 @@ describe("controls and the open surface", () => {
       id: "enters",
       line: lineOf(source, '"Quantity"'),
       args: { Actor: "Accounts", Value: "3", Surface: "Invoice editor", Control: "Quantity" },
-      narrate: "Accounts enters 3 into Quantity.",
     });
   });
 
@@ -433,7 +430,6 @@ describe("policies", () => {
       id: "may",
       line: lineOf(source, "Then Accounts may mark paid"),
       args: { Actor: "Accounts", Action: "mark paid", Ref: "INV-001" },
-      narrate: "Accounts may mark paid INV-001.",
       modes: ["domain", "demo"],
     });
   });
@@ -469,7 +465,6 @@ describe("policies", () => {
     expect(steps?.map((entry) => entry.id)).toEqual(["may-not", "may"]);
     expect(steps?.[0]).toMatchObject({
       args: { Actor: "Accounts", Action: "void", Ref: "INV-001" },
-      narrate: "Accounts may not void INV-001.",
     });
   });
 });

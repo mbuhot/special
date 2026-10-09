@@ -89,42 +89,33 @@ export default dialect({
   steps: [
     step("<Actor> opens <Surface> [for <Ref>]", {
       uses: ["app", "actor"],
-      narrate: ({ Actor, Surface }) => `${Actor} opens the ${Surface}.`,
     }),
     step("<Actor> is on <Surface>", {
       id: "is-on",
       uses: ["actor"],
-      narrate: ({ Actor, Surface }) => `${Actor} is on the ${Surface}.`,
     }),
     step('<Actor> enters <Value> into "<Control:field>"', {
       id: "enters",
       uses: ["actor"],
-      narrate: ({ Actor, Value, Control }) => `${Actor} enters ${Value} into ${Control}.`,
     }),
     step('<Actor> clicks "<Control:button>"', {
       uses: ["actor"],
-      narrate: ({ Actor, Control }) => `${Actor} clicks ${Control}.`,
     }),
     step('<Actor> selects <Value> in "<Control:field>"', {
       id: "selects",
       uses: ["actor"],
-      narrate: ({ Actor, Value, Control }) => `${Actor} selects ${Value} in ${Control}.`,
     }),
     step('<Actor> sees "<Text>" in "<Control>"', {
       id: "sees",
       uses: ["actor"],
-      narrate: ({ Actor, Text, Control }) => `${Actor} sees ${Text} in ${Control}.`,
     }),
     step('<Actor> sees "<Text>" before "<Other=Text>" in "<Control>"', {
       id: "sees-before",
       uses: ["actor"],
-      narrate: ({ Actor, Text, Other, Control }) =>
-        `${Actor} sees ${Text} before ${Other} in ${Control}.`,
     }),
     step('<Actor> no longer sees "<Text>" in "<Control>"', {
       id: "no-longer-sees",
       uses: ["actor"],
-      narrate: ({ Actor, Text, Control }) => `${Actor} no longer sees ${Text} in ${Control}.`,
     }),
     step('[<a|an>] <Entity> "<Ref>" [with <Field> <Value>, ...]', {
       id: "given-entity",
@@ -135,34 +126,28 @@ export default dialect({
       id: "has-field",
       uses: ["data"],
       emits: { kind: "TransitionUse", fields: { Ref: "Ref", Field: "Field", State: "Value" } },
-      narrate: ({ Ref, Field, Value }) => `${Ref} has ${Field} ${Value}.`,
     }),
     step("time advances <Duration>", {
       uses: ["clock"],
-      narrate: ({ Duration }) => `Time advances ${Duration}.`,
     }),
     step("job <Job> runs", {
       uses: ["data"],
-      narrate: ({ Job }) => `The ${Job} job runs.`,
     }),
     step("<Actor> may <Action> <Ref>", {
       id: "may",
       uses: ["data", "actor"],
       modes: ["domain", "demo"],
       emits: { kind: "PolicyUse", fields: { Actor: "Actor", Action: "Action", Ref: "Ref" } },
-      narrate: ({ Actor, Action, Ref }) => `${Actor} may ${Action} ${Ref}.`,
     }),
     step("<Actor> may not <Action> <Ref>", {
       id: "may-not",
       uses: ["data", "actor"],
       modes: ["domain", "demo"],
       emits: { kind: "PolicyUse", fields: { Actor: "Actor", Action: "Action", Ref: "Ref" } },
-      narrate: ({ Actor, Action, Ref }) => `${Actor} may not ${Action} ${Ref}.`,
     }),
     step('<Actor> does not see "<Control>"', {
       id: "does-not-see",
       uses: ["actor"],
-      narrate: ({ Actor, Control }) => `${Actor} does not see ${Control}.`,
     }),
   ],
   checks: [

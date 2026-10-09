@@ -11,24 +11,25 @@ import {
 import type { SpecSource } from "../src/index.js";
 
 const INVOICING_FILES = [
-  "model.md",
-  "surfaces.md",
-  "policies.md",
-  "line-totals.md",
-  "sending.md",
-  "settling.md",
-  "invoice-list.md",
+  "customer.md",
+  "invoicing/model.md",
+  "invoicing/surfaces.md",
+  "invoicing/policies.md",
+  "invoicing/line-totals.md",
+  "invoicing/sending.md",
+  "invoicing/settling.md",
+  "invoicing/invoice-list.md",
 ];
 
-function readInvoicingSource(name: string): SpecSource {
+function readSpecSource(name: string): SpecSource {
   return {
-    file: `specs/invoicing/${name}`,
-    markdown: readFileSync(new URL(`../../../specs/invoicing/${name}`, import.meta.url), "utf8"),
+    file: `specs/${name}`,
+    markdown: readFileSync(new URL(`../../../specs/${name}`, import.meta.url), "utf8"),
   };
 }
 
-const invoicingSources = INVOICING_FILES.map(readInvoicingSource);
-const lineTotalsSource = readInvoicingSource("line-totals.md");
+const invoicingSources = INVOICING_FILES.map(readSpecSource);
+const lineTotalsSource = readSpecSource("invoicing/line-totals.md");
 
 describe("binding the invoicing spec", () => {
   const { ast } = bindSourcesSuccess(...invoicingSources);

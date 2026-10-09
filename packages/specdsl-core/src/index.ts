@@ -56,3 +56,13 @@ export { lint } from "./lint.js";
 export type { LintWarning } from "./lint.js";
 export { lockFile } from "./lock.js";
 export type { LockFile } from "./lock.js";
+export {
+  baseSourcesFor,
+  classify,
+  featureFiles,
+  findTreeRoot,
+  locateTreeRoot,
+  treeConfig,
+  treeSourceOf,
+} from "./tree.js";
+export type { SpecFileKind, TreeConfig } from "./tree.js";

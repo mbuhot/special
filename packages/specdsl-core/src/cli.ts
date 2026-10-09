@@ -1,11 +1,12 @@
 #!/usr/bin/env node
-import { globSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { globSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { bindSpec, type SpecSource } from "./bind.js";
 import type { Dialect } from "./dialect.js";
 import { lint } from "./lint.js";
 import { lockFile } from "./lock.js";
+import { baseSourcesFor, featureFiles, locateTreeRoot, treeConfig, treeSourceOf } from "./tree.js";
 
 interface Arguments {
   command: string;
@@ -16,9 +17,9 @@ interface Arguments {
 }
 
 const USAGE = [
-  "specdsl bind <spec.md> [--base <path>]... --dialect <path.ts> [--out <file>]",
-  "specdsl lint <spec.md> [--base <path>]... --dialect <path.ts>",
-  "specdsl bind-all <dir> --dialect <path.ts>",
+  "specdsl bind <spec.md> [--base <path>]... [--dialect <path.ts>] [--out <file>]",
+  "specdsl lint <spec.md> [--base <path>]... [--dialect <path.ts>]",
+  "specdsl bind-all <root> [--dialect <path.ts>]",
   "specdsl lock --dialect <path.ts> --out <file>",
 ].join("\n");
 
@@ -71,11 +72,26 @@ function isDialect(value: unknown): value is Dialect {
   return typeof value === "object" && value !== null && "stepIds" in value;
 }
 
-function readSources(parsed: Arguments, specPath: string): SpecSource[] {
-  const baseFiles = parsed.basePatterns
+function readFile(file: string): SpecSource {
+  return { file, markdown: readFileSync(file, "utf8") };
+}
+
+function explicitBases(parsed: Arguments, specPath: string): SpecSource[] {
+  return parsed.basePatterns
     .flatMap((pattern) => globSync(pattern).sort())
-    .filter((file) => resolve(file) !== resolve(specPath));
-  return [...baseFiles, specPath].map((file) => ({ file, markdown: readFileSync(file, "utf8") }));
+    .filter((file) => resolve(file) !== resolve(specPath))
+    .map(readFile);
+}
+
+function cascadedBases(specPath: string): SpecSource[] {
+  const inTree = locateTreeRoot(dirname(resolve(specPath))) !== undefined;
+  return inTree ? baseSourcesFor(specPath) : [];
+}
+
+function readSources(parsed: Arguments, specPath: string): SpecSource[] {
+  const bases =
+    parsed.basePatterns.length === 0 ? cascadedBases(specPath) : explicitBases(parsed, specPath);
+  return [...bases, readFile(specPath)];
 }
 
 function emit(json: unknown, outPath: string | undefined): void {
@@ -118,33 +134,21 @@ function printWarnings(warnings: Diagnostic[]): void {
   );
 }
 
-const SCENARIO_HEADING = /^## Scenario\b/m;
-
-interface ProjectSources {
-  baseSources: SpecSource[];
-  featureSources: SpecSource[];
-}
-
-function readProjectSources(directory: string): ProjectSources {
-  const sources = readdirSync(directory)
-    .filter((file) => file.endsWith(".md"))
-    .sort()
-    .map((file) => {
-      const path = join(directory, file);
-      return { file: path, markdown: readFileSync(path, "utf8") };
-    });
-  return {
-    baseSources: sources.filter((source) => !SCENARIO_HEADING.test(source.markdown)),
-    featureSources: sources.filter((source) => SCENARIO_HEADING.test(source.markdown)),
-  };
-}
-
 function astPathFor(featureFile: string): string {
   return join(dirname(featureFile), `${basename(featureFile, ".md")}.ast.json`);
 }
 
-function runBindAll(directory: string, dialect: Dialect): number {
-  const { baseSources, featureSources } = readProjectSources(directory);
+function uniqueByFile(sources: SpecSource[]): SpecSource[] {
+  return [...new Map(sources.map((source) => [source.file, source])).values()];
+}
+
+function runBindAll(root: string, dialect: Dialect): number {
+  const featurePaths = featureFiles(root);
+  const featureSources = featurePaths.map((path) => treeSourceOf(root, path));
+  const baseSources = uniqueByFile([
+    ...baseSourcesFor(root),
+    ...featurePaths.flatMap((path) => baseSourcesFor(path)),
+  ]);
   const whole = bindSpec([...baseSources, ...featureSources], dialect);
   if (!whole.ok) {
     printErrors(whole.errors);
@@ -152,36 +156,52 @@ function runBindAll(directory: string, dialect: Dialect): number {
   }
   printWarnings(lint(whole, dialect));
   let status = 0;
-  for (const feature of featureSources) {
-    const result = bindSpec([...baseSources, feature], dialect);
+  featurePaths.forEach((path, index) => {
+    const result = bindSpec(
+      [...baseSourcesFor(path), featureSources[index] as SpecSource],
+      dialect,
+    );
     if (result.ok) {
-      emit(result.ast, astPathFor(feature.file));
+      emit(result.ast, astPathFor(path));
     } else {
       printErrors(result.errors);
       status = 1;
     }
-  }
+  });
   return status;
+}
+
+function defaultDialectPath(command: string, specPath: string): string | undefined {
+  const root =
+    command === "bind-all" ? resolve(specPath) : locateTreeRoot(dirname(resolve(specPath)));
+  return root === undefined ? undefined : treeConfig(root).dialectPath;
 }
 
 async function main(): Promise<number> {
   const parsed = parseArguments(process.argv.slice(2));
-  const { command, specPath, dialectPath } = parsed;
-  if (dialectPath === undefined || !["bind", "bind-all", "lint", "lock"].includes(command)) {
+  const { command, specPath, outPath } = parsed;
+  if (!["bind", "bind-all", "lint", "lock"].includes(command)) {
+    console.error(USAGE);
+    return 2;
+  }
+  if (command === "lock") {
+    if (parsed.dialectPath === undefined) {
+      console.error(USAGE);
+      return 2;
+    }
+    emit(lockFile(await loadDialect(parsed.dialectPath)), outPath);
+    return 0;
+  }
+  const dialectPath =
+    parsed.dialectPath ??
+    (specPath === undefined ? undefined : defaultDialectPath(command, specPath));
+  if (specPath === undefined || dialectPath === undefined) {
     console.error(USAGE);
     return 2;
   }
   const dialect = await loadDialect(dialectPath);
-  if (command === "lock") {
-    emit(lockFile(dialect), parsed.outPath);
-    return 0;
-  }
-  if (specPath === undefined) {
-    console.error(USAGE);
-    return 2;
-  }
   if (command === "bind-all") {
-    return runBindAll(specPath, dialect);
+    return runBindAll(resolve(specPath), dialect);
   }
   return runBind(parsed, dialect, specPath, command as "bind" | "lint");
 }

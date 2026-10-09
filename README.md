@@ -3,7 +3,7 @@
 One Markdown spec, three uses: acceptance criteria in a Linear ticket, executable tests in two runtimes, and a narrated demo video.
 
 ```
-specs/invoicing/*.md ──► pnpm bind ──► specs/invoicing/<feature>.ast.json
+specs/**/*.md ──► pnpm bind ──► specs/invoicing/<feature>.ast.json
                                               │
                         ┌─────────────────────┼─────────────────────┐
                         ▼                     ▼                     ▼
@@ -16,7 +16,7 @@ specs/invoicing/*.md ──► pnpm bind ──► specs/invoicing/<feature>.ast
 | Path                          | Holds                                                                                            |
 | ----------------------------- | ------------------------------------------------------------------------------------------------ |
 | `dialects/`                   | The vocabulary, as TypeScript: sections, step patterns, contexts, surfaces with locators, checks |
-| `specs/`                      | Specs in Markdown, one directory per project, with the bound AST                                 |
+| `specs/`                      | Specs in Markdown: shared base files at the root, one directory per project, bound ASTs          |
 | `packages/specdsl-core`       | Parse, bind, lint, lock. CLI `specdsl`                                                           |
 | `packages/specdsl-playwright` | Browser runtime: test mode and demo mode                                                         |
 | `packages/specdsl-linear`     | Pull specs from Linear issues, lint, attach videos                                               |
@@ -45,12 +45,17 @@ specs/invoicing/*.md ──► pnpm bind ──► specs/invoicing/<feature>.ast
 
 ## Writing a spec
 
-Each project has one directory under `specs/`. A file without a `## Scenario` section is a base file and holds `## Model`, `## Surfaces`, `## Actors` and `## Policies`. A file with scenarios is a feature file. `specdsl bind-all <dir> --dialect <path.ts>` lints the whole directory and writes `<feature>.ast.json` for each feature file, bound against every base file.
+A directory holding `specdsl.json` (`{ "dialect": "../dialects/invoicing.ts" }`) is the root of a specs tree. A file without a `## Scenario` section is a base file and holds `## Model`, `## Surfaces`, `## Actors` and `## Policies`. A file with scenarios is a feature file. `specdsl bind-all <root>` lints the whole tree and writes `<feature>.ast.json` beside each feature file.
+
+A feature file binds against the base files of the root, then of each directory down to its own, then itself. Models shared between projects live once at a higher level and cascade down.
 
 ```
-specs/invoicing/
-├── model.md  surfaces.md  policies.md     base files
-└── line-totals.md  sending.md  ...        feature files ──► line-totals.ast.json  sending.ast.json  ...
+specs/
+├── specdsl.json
+├── customer.md                            shared base file
+└── invoicing/
+    ├── model.md  surfaces.md  policies.md     project base files
+    └── line-totals.md  sending.md  ...        feature files ──► line-totals.ast.json  sending.ast.json  ...
 ```
 
 A single file may hold every section. Bound with `specdsl bind`, it is its own base:

@@ -136,13 +136,13 @@ Dialect extension is object spread. A derived dialect adds; it does not remove o
 
 ### Base specs
 
-`specdsl bind <spec.md> [--base <path>]... --dialect <path.ts>` binds base files first and the feature spec last into one registry. `--base` repeats and accepts globs; `lint` takes the same flag. A ticket spec holds scenarios; the Model, Surfaces, Actors and Policies live once in base files.
+A specs tree root holds `specdsl.json` (`{ "dialect": "../dialects/invoicing.ts" }`, relative to that file). A `.md` file with no `## Scenario` section is a base file; one with scenarios is a feature file.
 
-Merging is add-only, like dialect extension:
+A feature file binds against the base files of the root, then of each directory down to its own (each level sorted by name), then itself, into one registry.
 
-- Redeclaring an entity, an actor, or a surface an earlier file lists is an error naming both locations.
-- Transition lines and Policies lines extend what earlier files declared.
-- Scenario names are unique across files.
+`specdsl bind-all <root>` lints every base file and feature file in the tree together, so coverage and referenced checks are tree-wide, then writes `<feature>.ast.json` beside each feature file. `bind` and `lint` on a file inside a tree default `--base` to the cascade and `--dialect` to the config.
+
+Merging is add-only: redeclaring an entity, actor, or surface is an error naming both locations; Transition and Policies lines extend earlier declarations; scenario names are unique across files.
 
 ## Lint checks
 

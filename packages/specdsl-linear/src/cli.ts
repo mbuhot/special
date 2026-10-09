@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { parseArgs } from "node:util";
-import type { SpecSource } from "@special/specdsl-core";
-import { baseSourcesFromGlobs, baseSourcesFromSpecsDir } from "./base-sources.js";
+import { baseSourcesFor, findTreeRoot, treeConfig, type SpecSource } from "@special/specdsl-core";
+import { baseSourcesFromGlobs } from "./base-sources.js";
 import {
   attach,
   lint,
@@ -12,7 +12,6 @@ import {
 } from "./commands.js";
 import { createLinearClient } from "./linear.js";
 
-const DEFAULT_DIALECT_PATH = "dialects/invoicing.ts";
 const DEFAULT_OUT_DIR = "specs";
 
 const USAGE = [
@@ -22,8 +21,12 @@ const USAGE = [
 ].join("\n");
 
 function baseSources(specsDir: string | undefined, patterns: string[]): SpecSource[] {
-  const fromSpecsDir = specsDir === undefined ? [] : baseSourcesFromSpecsDir(specsDir);
+  const fromSpecsDir = specsDir === undefined ? [] : baseSourcesFor(specsDir);
   return [...fromSpecsDir, ...baseSourcesFromGlobs(patterns)];
+}
+
+function dialectPathFor(explicit: string | undefined, specsDir: string | undefined): string {
+  return explicit ?? treeConfig(findTreeRoot(specsDir ?? process.cwd())).dialectPath;
 }
 
 function destinationOf(specsDir: string | undefined, outDir: string): SpecDestination {
@@ -35,7 +38,7 @@ async function run(argv: string[], environment: NodeJS.ProcessEnv): Promise<Exit
     args: argv,
     allowPositionals: true,
     options: {
-      dialect: { type: "string", default: DEFAULT_DIALECT_PATH },
+      dialect: { type: "string" },
       "out-dir": { type: "string", default: DEFAULT_OUT_DIR },
       specs: { type: "string" },
       base: { type: "string", multiple: true, default: [] },
@@ -59,7 +62,7 @@ async function run(argv: string[], environment: NodeJS.ProcessEnv): Promise<Exit
       return pull(
         identifier,
         {
-          dialectPath: values.dialect,
+          dialectPath: dialectPathFor(values.dialect, values.specs),
           bases: baseSources(values.specs, values.base),
           destination: destinationOf(values.specs, values["out-dir"]),
         },
@@ -69,7 +72,7 @@ async function run(argv: string[], environment: NodeJS.ProcessEnv): Promise<Exit
       return lint(
         identifier,
         {
-          dialectPath: values.dialect,
+          dialectPath: dialectPathFor(values.dialect, values.specs),
           bases: baseSources(values.specs, values.base),
           comment: values.comment,
         },

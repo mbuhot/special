@@ -1,8 +1,8 @@
 import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { basename, join, resolve } from "node:path";
+import { baseSourcesFor } from "@special/specdsl-core";
 import { describe, expect, it } from "vitest";
-import { baseSourcesFromSpecsDir } from "../src/base-sources.js";
 import { attach, buildLintComment, lint, pull, type CommandContext } from "../src/commands.js";
 import { createLinearClient } from "../src/linear.js";
 import { fakeLinear, issueResponse, type FakeLinear } from "./fake-linear.js";
@@ -99,11 +99,11 @@ const SPEC_WARNINGS_COMMENT = (specsDir: string): string =>
       "surfaces.md:6: warning: Control Invoice editor/Send is not referenced by any step",
       "surfaces.md:6: warning: Control Invoice editor/Mark paid is not referenced by any step",
       "surfaces.md:6: warning: Control Invoice editor/Void is not referenced by any step",
-    ].map((warning) => `- ${specsDir}/${warning}`),
+    ].map((warning) => `- ${basename(specsDir)}/${warning}`),
   ].join("\n");
 
 const EXPECTED_REDECLARATION_ERROR = (specsDir: string): string =>
-  `INV-12:5: error: Customer is already declared in ${specsDir}/model.md:5`;
+  `INV-12:5: error: Customer is already declared in ${basename(specsDir)}/model.md:5`;
 
 function unknownControlLine(): number {
   return SPEC_WITH_UNKNOWN_CONTROL.split("\n").findIndex((line) => line.includes("Teleport")) + 1;
@@ -133,6 +133,7 @@ function scratchDirectory(): string {
 
 function specsDirectory(): string {
   const directory = scratchDirectory();
+  writeFileSync(join(directory, "specdsl.json"), JSON.stringify({ dialect: DIALECT_PATH }));
   Object.entries(BASE_FILES).forEach(([name, markdown]) =>
     writeFileSync(join(directory, name), markdown),
   );
@@ -152,7 +153,7 @@ describe("pull", () => {
       "INV-12",
       {
         dialectPath: DIALECT_PATH,
-        bases: baseSourcesFromSpecsDir(specsDirectory()),
+        bases: baseSourcesFor(specsDirectory()),
         destination: { kind: "out-dir", outDir },
       },
       context,
@@ -171,7 +172,7 @@ describe("pull", () => {
       "INV-12",
       {
         dialectPath: DIALECT_PATH,
-        bases: baseSourcesFromSpecsDir(specsDirectory()),
+        bases: baseSourcesFor(specsDirectory()),
         destination: { kind: "out-dir", outDir: scratchDirectory() },
       },
       context,
@@ -189,7 +190,7 @@ describe("pull", () => {
       "INV-12",
       {
         dialectPath: DIALECT_PATH,
-        bases: baseSourcesFromSpecsDir(specsDir),
+        bases: baseSourcesFor(specsDir),
         destination: { kind: "specs-dir", specsDir },
       },
       context,
@@ -207,7 +208,7 @@ describe("pull", () => {
       "INV-12",
       {
         dialectPath: DIALECT_PATH,
-        bases: baseSourcesFromSpecsDir(specsDir),
+        bases: baseSourcesFor(specsDir),
         destination: { kind: "specs-dir", specsDir },
       },
       context,
@@ -229,7 +230,7 @@ describe("lint", () => {
 
     const exitCode = await lint(
       "INV-12",
-      { dialectPath: DIALECT_PATH, bases: baseSourcesFromSpecsDir(specsDir), comment: true },
+      { dialectPath: DIALECT_PATH, bases: baseSourcesFor(specsDir), comment: true },
       context,
     );
 
@@ -252,7 +253,7 @@ describe("lint", () => {
       "INV-12",
       {
         dialectPath: DIALECT_PATH,
-        bases: baseSourcesFromSpecsDir(specsDirectory()),
+        bases: baseSourcesFor(specsDirectory()),
         comment: false,
       },
       context,
@@ -268,7 +269,7 @@ describe("lint", () => {
       "INV-12",
       {
         dialectPath: DIALECT_PATH,
-        bases: baseSourcesFromSpecsDir(specsDirectory()),
+        bases: baseSourcesFor(specsDirectory()),
         comment: false,
       },
       context,

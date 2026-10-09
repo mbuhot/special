@@ -1,7 +1,7 @@
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join, resolve } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { SpecAst } from "../src/index.js";
@@ -10,20 +10,31 @@ const testDirectory = dirname(fileURLToPath(import.meta.url));
 const cliPath = resolve(testDirectory, "../bin/specdsl.js");
 const dialectPath = resolve(testDirectory, "../../../dialects/invoicing.ts");
 
-const baseMarkdown = [
-  "# Invoicing",
+const sharedMarkdown = [
+  "# Shared",
   "",
   "## Model",
   "",
-  "- Customer: name, email. Has many Invoice.",
-  "- Invoice: number, status, total. Belongs to Customer.",
-  "- Invoice.status: draft -> sent",
+  "- Customer: name, email.",
   "",
   "## Actors",
   "",
   "- Accounts: role accountant",
   "",
 ].join("\n");
+
+const invoiceMarkdown = [
+  "# Billing",
+  "",
+  "## Model",
+  "",
+  "- Invoice: number, status, total. Belongs to Customer.",
+  "- Invoice.status: draft -> sent",
+  "",
+].join("\n");
+
+const customerOnlyMarkdown = (scenarioName: string) =>
+  ["# Shipping", "", `## Scenario: ${scenarioName}`, "", 'Given a Customer "Acme"', ""].join("\n");
 
 const featureMarkdown = (scenarioName: string, invoiceNumber: string) =>
   [
@@ -41,29 +52,65 @@ function readAst(path: string): SpecAst {
 }
 
 describe("specdsl bind-all", () => {
-  let projectDirectory: string;
+  let specsRoot: string;
 
   beforeEach(() => {
-    projectDirectory = mkdtempSync(join(tmpdir(), "specdsl-project-"));
-    writeFileSync(join(projectDirectory, "model.md"), baseMarkdown);
-    writeFileSync(join(projectDirectory, "first.md"), featureMarkdown("First", "INV-001"));
-    writeFileSync(join(projectDirectory, "second.md"), featureMarkdown("Second", "INV-002"));
+    specsRoot = mkdtempSync(join(tmpdir(), "specdsl-tree-"));
+    writeFileSync(join(specsRoot, "specdsl.json"), JSON.stringify({ dialect: dialectPath }));
+    writeFileSync(join(specsRoot, "shared.md"), sharedMarkdown);
+    mkdirSync(join(specsRoot, "billing"));
+    writeFileSync(join(specsRoot, "billing", "model.md"), invoiceMarkdown);
+    writeFileSync(join(specsRoot, "billing", "first.md"), featureMarkdown("First", "INV-001"));
+    mkdirSync(join(specsRoot, "shipping"));
+    writeFileSync(join(specsRoot, "shipping", "second.md"), customerOnlyMarkdown("Second"));
   });
 
   afterEach(() => {
-    rmSync(projectDirectory, { recursive: true, force: true });
+    rmSync(specsRoot, { recursive: true, force: true });
   });
 
-  it("writes one AST per feature file, each carrying the model from the base file", () => {
-    execFileSync("node", [cliPath, "bind-all", projectDirectory, "--dialect", dialectPath], {
+  it("writes an AST beside each feature file, each carrying the shared model", () => {
+    execFileSync("node", [cliPath, "bind-all", specsRoot], { stdio: "pipe" });
+
+    const billingAst = readAst(join(specsRoot, "billing", "first.ast.json"));
+    const shippingAst = readAst(join(specsRoot, "shipping", "second.ast.json"));
+    expect(Object.keys(billingAst.model)).toEqual(["Customer", "Invoice"]);
+    expect(Object.keys(shippingAst.model)).toEqual(["Customer"]);
+    expect(billingAst.scenarios.map((scenario) => scenario.name)).toEqual(["First"]);
+    expect(shippingAst.scenarios.map((scenario) => scenario.name)).toEqual(["Second"]);
+  });
+
+  it("names each scenario's source file relative to the parent of the tree root", () => {
+    execFileSync("node", [cliPath, "bind-all", specsRoot], { stdio: "pipe" });
+
+    const billingAst = readAst(join(specsRoot, "billing", "first.ast.json"));
+    expect(billingAst.scenarios.map((scenario) => scenario.source.file)).toEqual([
+      join(basename(specsRoot), "billing", "first.md"),
+    ]);
+  });
+});
+
+describe("specdsl bind", () => {
+  let specsRoot: string;
+
+  beforeEach(() => {
+    specsRoot = mkdtempSync(join(tmpdir(), "specdsl-tree-"));
+    writeFileSync(join(specsRoot, "specdsl.json"), JSON.stringify({ dialect: dialectPath }));
+    writeFileSync(join(specsRoot, "shared.md"), sharedMarkdown);
+    writeFileSync(join(specsRoot, "feature.md"), customerOnlyMarkdown("Only"));
+  });
+
+  afterEach(() => {
+    rmSync(specsRoot, { recursive: true, force: true });
+  });
+
+  it("binds a feature file against the tree's base files and dialect without flags", () => {
+    const output = execFileSync("node", [cliPath, "bind", join(specsRoot, "feature.md")], {
       stdio: "pipe",
     });
 
-    const firstAst = readAst(join(projectDirectory, "first.ast.json"));
-    const secondAst = readAst(join(projectDirectory, "second.ast.json"));
-    expect(Object.keys(firstAst.model)).toEqual(["Customer", "Invoice"]);
-    expect(Object.keys(secondAst.model)).toEqual(["Customer", "Invoice"]);
-    expect(firstAst.scenarios.map((scenario) => scenario.name)).toEqual(["First"]);
-    expect(secondAst.scenarios.map((scenario) => scenario.name)).toEqual(["Second"]);
+    const ast = JSON.parse(output.toString()) as SpecAst;
+    expect(Object.keys(ast.model)).toEqual(["Customer"]);
+    expect(ast.scenarios.map((scenario) => scenario.name)).toEqual(["Only"]);
   });
 });

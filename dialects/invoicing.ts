@@ -42,6 +42,8 @@ export default dialect({
         Totals: region({ css: "#totals", lv: "#totals" }),
         Status: region({ css: "#invoice-status", lv: "#invoice-status" }),
         Send: button({ css: "#send-invoice", lv: "#send-invoice" }),
+        "Mark paid": button({ css: "#mark-paid-invoice", lv: "#mark-paid-invoice" }),
+        Void: button({ css: "#void-invoice", lv: "#void-invoice" }),
       },
     }),
     "Invoice list": surface({

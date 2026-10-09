@@ -52,6 +52,27 @@ defmodule InvoicingWeb.InvoiceEditorLiveTest do
     assert view |> element("#invoice-status") |> render() =~ "sent"
   end
 
+  test "marks a sent invoice paid", %{conn: conn, invoice: invoice} do
+    Billing.send_invoice!(invoice)
+    {:ok, view, _html} = live(conn, ~p"/invoices/#{invoice.id}/edit")
+
+    assert view |> element("#invoice-status") |> render() =~ "sent"
+
+    view |> element("#mark-paid-invoice") |> render_click()
+
+    assert view |> element("#invoice-status") |> render() =~ "paid"
+  end
+
+  test "voids a draft invoice", %{conn: conn, invoice: invoice} do
+    {:ok, view, _html} = live(conn, ~p"/invoices/#{invoice.id}/edit")
+
+    assert view |> element("#invoice-status") |> render() =~ "draft"
+
+    view |> element("#void-invoice") |> render_click()
+
+    assert view |> element("#invoice-status") |> render() =~ "void"
+  end
+
   test "an anonymous visitor is sent to the login page", %{invoice: invoice} do
     conn = Phoenix.ConnTest.build_conn()
 

@@ -37,6 +37,26 @@ defmodule InvoicingWeb.InvoiceLive.Edit do
     end
   end
 
+  def handle_event("mark_paid", _params, socket) do
+    case Billing.mark_invoice_paid(socket.assigns.invoice) do
+      {:ok, _invoice} ->
+        {:noreply, socket |> reload_invoice() |> put_flash(:info, "Invoice marked paid")}
+
+      {:error, _error} ->
+        {:noreply, put_flash(socket, :error, "Only a sent invoice can be marked paid")}
+    end
+  end
+
+  def handle_event("void", _params, socket) do
+    case Billing.void_invoice(socket.assigns.invoice) do
+      {:ok, _invoice} ->
+        {:noreply, socket |> reload_invoice() |> put_flash(:info, "Invoice voided")}
+
+      {:error, _error} ->
+        {:noreply, put_flash(socket, :error, "Only a draft invoice can be voided")}
+    end
+  end
+
   defp reload_invoice(socket) do
     invoice =
       Billing.get_invoice!(socket.assigns.invoice.id,
@@ -121,6 +141,8 @@ defmodule InvoicingWeb.InvoiceLive.Edit do
         </:subtitle>
         <:actions>
           <.button id="send-invoice" variant="primary" phx-click="send">Send</.button>
+          <.button id="mark-paid-invoice" phx-click="mark_paid">Mark paid</.button>
+          <.button id="void-invoice" phx-click="void">Void</.button>
         </:actions>
       </.header>
 

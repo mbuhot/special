@@ -14,8 +14,9 @@ Goal: a small business owner would consider running the app in place of HubSpot.
 
 ## Iterations
 
-| #   | Change | Why | Status |
-| --- | ------ | --- | ------ |
+| #   | Change                                                                                                         | Why                                                                                                                                       | Status      |
+| --- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
+| 1   | Application shell: sidebar on every page, identity block, dashboard as linked cards; DSL gains shared surfaces | Every screen reviewed is an unstyled scaffold under a top bar; the shell is what a buyer sees first and every later screen sits inside it | in progress |
 
 ## Spec-first notes
 
@@ -35,3 +36,28 @@ Interleaved with UI iterations. The specs must capture the critical behaviour an
 | D6  | Design reference per surface              | `design: <figma url or image path>` on a surface; reviewer compares the step screenshot with the frame                                 |
 | D7  | Computed fields and derived lists         | `Invoice.total = sum of LineItem.total`; dashboards declared as counts over a filter                                                   |
 | D8  | Notifications and jobs                    | `## Jobs` with triggers; `<Actor> receives email "<Subject>"`                                                                          |
+
+### Iteration 1, application shell
+
+- Helped: the sidebar had to be a surface before any code existed, which forced the question "which surface owns a control that is on every page". The answer became a DSL feature (shared surfaces) instead of a Playwright workaround.
+- Helped: declaring the dashboard links in the spec fixed the control names before the design and the implementation workers started; both used the same names without coordination.
+- Hindered: the spec change needed a DSL change first, so the red gate could not run until core landed; implementation was dispatched on the spec text alone and the red/green sequence was reconstructed afterwards.
+- Hindered: `clicks` accepted only buttons, so sidebar links needed kind alternatives in the pattern language (`<Control:button|link>`). A vocabulary gap surfaces as a bind error, which is cheap to find and costs a core change to fix.
+- Design: artboards carry `data-control` names matching the spec; a lint that checks them is not written yet (D6).
+
+### Invariants and architecture (queued)
+
+| #   | Idea                          | Shape                                                                                                                                                                                                                                                                                                                                         |
+| --- | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D9  | `## Invariants` section       | Closed shapes: `<Entity>.<Field> = sum of <Rel>.<Field>`, `<Entity>.<Field> = <Field> * <Field>`, `<Entity>.<Field> is unique`, `is required`, `<Entity> is <Predicate> when <condition>`, `<Entity>.<Field> only changes through <Action>, ...`. ExUnit runtime generates a StreamData property per line, using the factory as the generator |
+| D10 | Machine properties            | From the existing `Transition` emissions: a stateful property runs random action sequences and asserts every observed change is a declared edge and every undeclared one errors                                                                                                                                                               |
+| D11 | Policy properties             | From `## Policies`: sample roles × states × records and assert `Ash.can?` equals the matrix (today one record per role)                                                                                                                                                                                                                       |
+| D12 | `## Domains` for architecture | `Billing: Invoice, LineItem`, `Billing uses CRM`; conformance holds Ash domains and `mix xref` boundaries to it                                                                                                                                                                                                                               |
+
+- Caught: the implementation worker built "Recent activity" from the artboard and added an Ash read action for it; the policy conformance test failed because the spec names no such action. The design ran ahead of the spec. Fix: declare the region and a scenario in the spec, and query through the primary read action.
+
+### Architecture queue
+
+| #   | Item         | Shape                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| --- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A1  | ash_boundary | Add the `ash_boundary` dep to apps/invoicing; every domain exposes code interfaces only; `Ash.Query` / `Ash.Changeset` / `Ash.read` etc. are forbidden in `InvoicingWeb` (today: 2 call sites in deal*live/board.ex and company_live/show.ex, plus 13 `Ash.can?` calls to replace with generated `can*<action>?` interface functions). Compile fails on a leak. Pairs with D12 (`## Domains`), which the conformance test can then hold against the boundary config |

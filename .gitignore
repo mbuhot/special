@@ -1,0 +1,15 @@
+node_modules/
+dist/
+*.ast.json
+*.lock.json
+.tts-cache/
+demo-output/
+apps/*/_build/
+apps/*/deps/
+apps/*/.elixir_ls/
+apps/*/assets/node_modules/
+apps/*/priv/static/assets/
+elixir/*/_build/
+elixir/*/deps/
+.DS_Store
+test-results/

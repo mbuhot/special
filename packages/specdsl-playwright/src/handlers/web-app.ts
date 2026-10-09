@@ -52,6 +52,7 @@ export interface WebAppContextStates {
 
 export interface WebAppStepArgs {
   opens: { Actor: string; Surface: ResolvedSurface; Ref?: string };
+  "is-on": { Actor: string; Surface: ResolvedSurface };
   enters: { Actor: string; Value: string; Control: ResolvedControl; Surface?: ResolvedSurface };
   clicks: { Actor: string; Control: ResolvedControl; Surface?: ResolvedSurface };
   selects: { Actor: string; Value: string; Control: ResolvedControl; Surface?: ResolvedSurface };
@@ -162,6 +163,13 @@ export const webAppSteps: StepHandlers<WebAppStepArgs, WebAppServices, WebAppCon
     await page.goto(path);
     await waitForLiveView(page);
   },
+  async "is-on"(args, env) {
+    const route = args.Surface.route;
+    if (route === undefined) throw new Error(`surface "${args.Surface.name}" has no route`);
+    const page = pageOf(env, args.Actor);
+    await page.waitForURL((url) => routePattern(route).test(url.pathname));
+    await waitForLiveView(page);
+  },
   async enters(args, env) {
     await locate(env, args.Actor, args.Control).fill(args.Value);
   },
@@ -219,6 +227,15 @@ function locate(env: Env, actorName: string, control: ResolvedControl) {
   const selector = control.locators["css"];
   if (selector === undefined) throw new Error(`control "${control.name}" has no css locator`);
   return pageOf(env, actorName).locator(selector);
+}
+
+function routePattern(route: string): RegExp {
+  const segments = route.split("{id}").map((segment) => escapeRegExp(segment));
+  return new RegExp(`^${segments.join("[^/]+")}$`);
+}
+
+function escapeRegExp(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 async function waitForLiveView(page: Page): Promise<void> {

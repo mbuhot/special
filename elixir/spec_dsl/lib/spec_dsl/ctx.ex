@@ -1,5 +1,5 @@
 defmodule SpecDSL.Ctx do
-  @moduledoc "Scenario execution state: context instances, actor sessions, refs and per-actor views."
+  @moduledoc "Scenario execution state: context instances, actor sessions, refs and per-actor views and paths."
 
   alias SpecDSL.{AST, Lock}
 
@@ -12,6 +12,7 @@ defmodule SpecDSL.Ctx do
           actors: %{String.t() => term()},
           refs: %{String.t() => term()},
           views: %{String.t() => term()},
+          paths: %{String.t() => String.t()},
           setup_order: [setup_entry()]
         }
 
@@ -23,6 +24,7 @@ defmodule SpecDSL.Ctx do
     actors: %{},
     refs: %{},
     views: %{},
+    paths: %{},
     setup_order: []
   ]
 
@@ -101,6 +103,15 @@ defmodule SpecDSL.Ctx do
   @doc "Returns the current view of an actor, or nil before the first navigation."
   @spec view(t(), String.t()) :: term()
   def view(%__MODULE__{views: views}, actor_name), do: Map.get(views, actor_name)
+
+  @doc "Stores the current path of an actor."
+  @spec put_path(t(), String.t(), String.t()) :: t()
+  def put_path(%__MODULE__{} = ctx, actor_name, path),
+    do: %{ctx | paths: Map.put(ctx.paths, actor_name, path)}
+
+  @doc "Returns the current path of an actor, or nil before the first navigation."
+  @spec path(t(), String.t()) :: String.t() | nil
+  def path(%__MODULE__{paths: paths}, actor_name), do: Map.get(paths, actor_name)
 
   @doc "Tears down actors and contexts in reverse setup order."
   @spec teardown(t()) :: :ok

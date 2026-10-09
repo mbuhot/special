@@ -68,6 +68,11 @@ export default dialect({
       uses: ["app", "actor"],
       narrate: ({ Actor, Surface }) => `${Actor} opens the ${Surface}.`,
     }),
+    step("<Actor> is on <Surface>", {
+      id: "is-on",
+      uses: ["actor"],
+      narrate: ({ Actor, Surface }) => `${Actor} is on the ${Surface}.`,
+    }),
     step('<Actor> enters <Value> into "<Control:field>"', {
       id: "enters",
       uses: ["actor"],

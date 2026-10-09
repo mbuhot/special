@@ -14,6 +14,7 @@ describe("binding the invoicing spec", () => {
       "Marking a sent invoice paid",
       "Voiding a draft invoice",
       "Invoice list shows every invoice",
+      "Creating an invoice from the list",
     ]);
   });
 
@@ -35,6 +36,7 @@ describe("binding the invoicing spec", () => {
       ["given-entity", "given-entity", "opens", "clicks", "sees", "has-field", "narrate"],
       ["given-entity", "given-entity", "opens", "clicks", "sees", "has-field", "narrate"],
       ["given-entity", "given-entity", "given-entity", "opens", "sees", "sees", "narrate"],
+      ["given-entity", "opens", "clicks", "is-on", "sees", "narrate"],
     ]);
   });
 

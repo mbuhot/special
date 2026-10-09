@@ -8,6 +8,7 @@ describe("lock file", () => {
   it("lists every step id of the dialect", () => {
     expect(lock.steps.map((entry) => entry.id)).toEqual([
       "opens",
+      "is-on",
       "enters",
       "clicks",
       "selects",

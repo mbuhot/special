@@ -41,8 +41,18 @@ defmodule Invoicing.SpecHandlers do
 
   step "opens", %{actor: actor, surface: surface} = args, ctx do
     session = actor_session(ctx, actor)
-    {:ok, view, _html} = live(session.conn, expand_route(surface.route, Map.get(args, :ref), ctx))
-    Ctx.put_view(ctx, actor, view)
+    path = expand_route(surface.route, Map.get(args, :ref), ctx)
+    {:ok, view, _html} = live(session.conn, path)
+    store_navigation(ctx, actor, view, path)
+  end
+
+  step "is-on", %{actor: actor, surface: surface}, ctx do
+    actual_path = Ctx.path(ctx, actor)
+
+    assert to_string(actual_path) =~ route_pattern(surface.route),
+           "expected #{actor} to be on #{surface.name} (#{surface.route}), found #{inspect(actual_path)}"
+
+    ctx
   end
 
   step "enters", %{actor: actor, value: value, control: control}, ctx do
@@ -134,6 +144,15 @@ defmodule Invoicing.SpecHandlers do
     String.replace(route, "{id}", Ctx.ref(ctx, ref_name).id)
   end
 
+  defp store_navigation(ctx, actor, view, path) do
+    ctx |> Ctx.put_view(actor, view) |> Ctx.put_path(actor, path)
+  end
+
+  defp route_pattern(route) do
+    source = route |> String.split("{id}") |> Enum.map_join("[^/]+", &Regex.escape/1)
+    Regex.compile!("^" <> source <> "$")
+  end
+
   defp resolve_value(ctx, value) when is_binary(value) do
     case Map.fetch(ctx.refs, value) do
       {:ok, %{id: id}} -> id
@@ -161,7 +180,7 @@ defmodule Invoicing.SpecHandlers do
   defp follow_navigation(ctx, actor, {:error, {:live_redirect, %{to: path}}}) do
     session = actor_session(ctx, actor)
     {:ok, view, _html} = live(session.conn, path)
-    Ctx.put_view(ctx, actor, view)
+    store_navigation(ctx, actor, view, path)
   end
 
   defp follow_navigation(ctx, _actor, _rendered), do: ctx

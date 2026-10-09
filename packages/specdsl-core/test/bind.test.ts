@@ -41,7 +41,7 @@ describe("binding the invoicing spec", () => {
       "A manager sees an invoice once it is sent",
       "Marking a sent invoice paid",
       "Voiding a draft invoice",
-      "Only a manager can void or mark an invoice paid",
+      "Only an admin can void or mark an invoice paid",
       "Invoice list shows every invoice",
       "Creating an invoice from the list",
     ]);
@@ -133,8 +133,10 @@ describe("binding the invoicing spec", () => {
 
   it("emits actors and the surfaces the spec uses", () => {
     expect(ast.actors).toEqual({
+      "Sales rep": { Role: "sales", extra: {} },
+      "Sales manager": { Role: "manager", extra: {} },
       Accounts: { Role: "accountant", extra: {} },
-      Manager: { Role: "admin", extra: {} },
+      Admin: { Role: "admin", extra: {} },
     });
     expect(ast.surfaces["Invoice editor"]?.route).toBe("/invoices/{id}/edit");
     const quantity = ast.surfaces["Invoice editor"]?.controls["Quantity"];

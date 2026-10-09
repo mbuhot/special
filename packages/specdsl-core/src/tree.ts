@@ -16,17 +16,15 @@ export function classify(markdown: string): SpecFileKind {
   return SCENARIO_HEADING.test(markdown) ? "feature" : "base";
 }
 
-/** Nearest ancestor directory holding specdsl.json, or undefined when there is none. */
+/** Outermost ancestor directory holding specdsl.json, or undefined when there is none. */
 export function locateTreeRoot(startDir: string): string | undefined {
   const directory = resolve(startDir);
-  if (isFile(join(directory, CONFIG_FILE))) {
-    return directory;
-  }
   const parent = dirname(directory);
-  return parent === directory ? undefined : locateTreeRoot(parent);
+  const outer = parent === directory ? undefined : locateTreeRoot(parent);
+  return outer ?? (isFile(join(directory, CONFIG_FILE)) ? directory : undefined);
 }
 
-/** Nearest ancestor directory holding specdsl.json; throws when there is none. */
+/** Outermost ancestor directory holding specdsl.json; throws when there is none. */
 export function findTreeRoot(startDir: string): string {
   const root = locateTreeRoot(startDir);
   if (root === undefined) {
@@ -46,13 +44,13 @@ export function treeConfig(root: string): TreeConfig {
   return { dialectPath: resolve(root, dialect) };
 }
 
-/** Base files of the tree root and each directory down to the file or directory, in cascade order. */
+/** Base files of the root, then each project directory's used projects and own files, in cascade order. */
 export function baseSourcesFor(fileOrDir: string): SpecSource[] {
   const target = resolve(fileOrDir);
   const directory = statSync(target).isDirectory() ? target : dirname(target);
   const root = findTreeRoot(directory);
-  return directoriesFromRoot(root, directory)
-    .flatMap(baseFilesIn)
+  const files = [...baseFilesIn(root), ...projectCascade(root, directory, new Set())];
+  return [...new Set(files)]
     .filter((file) => file !== target)
     .map((file) => treeSourceOf(root, file));
 }
@@ -78,6 +76,38 @@ function isFile(path: string): boolean {
   } catch {
     return false;
   }
+}
+
+function projectCascade(root: string, project: string, visited: Set<string>): string[] {
+  if (visited.has(project)) {
+    return [];
+  }
+  visited.add(project);
+  return directoriesFromRoot(root, project)
+    .slice(1)
+    .flatMap((directory) => [
+      ...usedProjects(directory).flatMap((used) => projectCascade(root, used, visited)),
+      ...baseFilesIn(directory),
+    ]);
+}
+
+function usedProjects(directory: string): string[] {
+  const configPath = join(directory, CONFIG_FILE);
+  if (!isFile(configPath)) {
+    return [];
+  }
+  const config = (JSON.parse(readFileSync(configPath, "utf8")) ?? {}) as {
+    dialect?: unknown;
+    uses?: unknown;
+  };
+  if (config.dialect !== undefined) {
+    throw new Error(`${configPath} is a project config and must not set "dialect"`);
+  }
+  const uses = config.uses ?? [];
+  if (!Array.isArray(uses) || !uses.every((entry) => typeof entry === "string")) {
+    throw new Error(`${configPath} must hold { "uses": ["<path>", ...] }`);
+  }
+  return uses.map((entry) => resolve(directory, entry));
 }
 
 function directoriesFromRoot(root: string, directory: string): string[] {

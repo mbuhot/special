@@ -99,3 +99,53 @@ describe("featureFiles", () => {
     ]);
   });
 });
+
+describe("baseSourcesFor with project config", () => {
+  function projectsTree(): string {
+    const root = realpathSync(mkdtempSync(join(tmpdir(), "specdsl-tree-")));
+    writeAt(root, "specdsl.json", '{ "dialect": "../dialects/invoicing.ts" }');
+    writeAt(root, "a-root.md", BASE_MARKDOWN);
+    writeAt(root, "crm/model.md", BASE_MARKDOWN);
+    writeAt(root, "pipeline/model.md", BASE_MARKDOWN);
+    writeAt(root, "pipeline/specdsl.json", '{ "uses": ["../crm"] }');
+    writeAt(root, "dashboard/model.md", BASE_MARKDOWN);
+    writeAt(root, "dashboard/feature.md", FEATURE_MARKDOWN);
+    return root;
+  }
+
+  it("a project's cascade includes the base files of projects it uses", () => {
+    const root = projectsTree();
+    writeAt(root, "dashboard/specdsl.json", '{ "uses": ["../crm"] }');
+
+    const sources = baseSourcesFor(join(root, "dashboard", "feature.md"));
+    const treeName = basename(root);
+
+    expect(sources.map((source) => source.file)).toEqual([
+      join(treeName, "a-root.md"),
+      join(treeName, "crm", "model.md"),
+      join(treeName, "dashboard", "model.md"),
+    ]);
+  });
+
+  it("a used project's own uses are included once", () => {
+    const root = projectsTree();
+    writeAt(root, "dashboard/specdsl.json", '{ "uses": ["../pipeline", "../crm"] }');
+
+    const sources = baseSourcesFor(join(root, "dashboard"));
+    const treeName = basename(root);
+
+    expect(sources.map((source) => source.file)).toEqual([
+      join(treeName, "a-root.md"),
+      join(treeName, "crm", "model.md"),
+      join(treeName, "pipeline", "model.md"),
+      join(treeName, "dashboard", "model.md"),
+    ]);
+  });
+
+  it("a project config that names a dialect is an error", () => {
+    const root = projectsTree();
+    writeAt(root, "dashboard/specdsl.json", '{ "dialect": "../dialects/other.ts" }');
+
+    expect(() => baseSourcesFor(join(root, "dashboard"))).toThrow(/must not set "dialect"/);
+  });
+});

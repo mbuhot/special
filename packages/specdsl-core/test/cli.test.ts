@@ -114,3 +114,39 @@ describe("specdsl bind", () => {
     expect(ast.scenarios.map((scenario) => scenario.name)).toEqual(["Only"]);
   });
 });
+
+describe("specdsl bind across projects", () => {
+  let specsRoot: string;
+
+  beforeEach(() => {
+    specsRoot = mkdtempSync(join(tmpdir(), "specdsl-tree-"));
+    writeFileSync(join(specsRoot, "specdsl.json"), JSON.stringify({ dialect: dialectPath }));
+    writeFileSync(join(specsRoot, "shared.md"), sharedMarkdown);
+    mkdirSync(join(specsRoot, "a"));
+    writeFileSync(join(specsRoot, "a", "model.md"), invoiceMarkdown);
+    mkdirSync(join(specsRoot, "b"));
+    writeFileSync(join(specsRoot, "b", "specdsl.json"), JSON.stringify({ uses: ["../a"] }));
+    writeFileSync(join(specsRoot, "b", "feature.md"), featureMarkdown("Across", "INV-001"));
+  });
+
+  afterEach(() => {
+    rmSync(specsRoot, { recursive: true, force: true });
+  });
+
+  it("binds a feature that references an entity of a project it uses", () => {
+    const output = execFileSync("node", [cliPath, "bind", join(specsRoot, "b", "feature.md")], {
+      stdio: "pipe",
+    });
+
+    const ast = JSON.parse(output.toString()) as SpecAst;
+    expect(Object.keys(ast.model)).toEqual(["Customer", "Invoice"]);
+    expect(ast.scenarios.map((scenario) => scenario.name)).toEqual(["Across"]);
+  });
+
+  it("writes an AST for the feature of the using project", () => {
+    execFileSync("node", [cliPath, "bind-all", specsRoot], { stdio: "pipe" });
+
+    const ast = readAst(join(specsRoot, "b", "feature.ast.json"));
+    expect(Object.keys(ast.model)).toEqual(["Customer", "Invoice"]);
+  });
+});

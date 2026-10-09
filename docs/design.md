@@ -141,6 +141,8 @@ A specs tree root holds `specdsl.json` (`{ "dialect": "../dialects/invoicing.ts"
 
 A feature file binds against the base files of the root, then of each directory down to its own (each level sorted by name), then itself, into one registry.
 
+A project directory may hold its own `specdsl.json` with `{ "uses": ["../pipeline", "../invoicing"] }` (paths relative to that file; no `dialect`). At each directory, the base files of the used projects (each with its own cascade and `uses`, included once) precede the directory's own.
+
 `specdsl bind-all <root>` lints every base file and feature file in the tree together, so coverage and referenced checks are tree-wide, then writes `<feature>.ast.json` beside each feature file. `bind` and `lint` on a file inside a tree default `--base` to the cascade and `--dialect` to the config.
 
 Merging is add-only: redeclaring an entity, actor, or surface is an error naming both locations; Transition and Policies lines extend earlier declarations; scenario names are unique across files.

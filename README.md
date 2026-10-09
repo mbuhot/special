@@ -142,7 +142,7 @@ A single file may hold every section. Bound with `specdsl bind`, it is its own b
 
 ## Model
 
-- Invoice: number, status, total. Belongs to Customer. Has many LineItem.
+- Invoice: number (text, required), status, total (money). Belongs to Customer. Has many LineItem.
 - Invoice.status: draft -> sent -> paid, draft -> void
 
 ## Surfaces
@@ -166,7 +166,8 @@ Narrate: The line total updates as the quantity changes.
 ```
 
 - Every step matches one pattern from the dialect. Unknown words fail at bind time with a line number.
-- Nouns come from `## Model`, `## Surfaces` and `## Actors`. Quoted names are controls on the surface the actor has open.
+- Nouns come from `## Model`, `## Surfaces` and `## Actors`. Quoted names are controls on the surface the actor has open, or on a surface marked `(shared)`.
+- A field may carry a type and `required`: text, email, phone, url, money, integer, decimal, date, datetime, boolean, or `one of a, b, c`. A relation may be named: `Belongs to User as author`. Conformance tests hold the Ash resources to these.
 - `Story:` is the first line of every scenario: "As <who>, I need <what>, so that <why>." Demo mode speaks it over the opening card, and lint warns when it is missing.
 - `Narrate:` applies to the step above it and is used by demo mode only.
 

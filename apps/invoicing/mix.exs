@@ -41,11 +41,12 @@ defmodule Invoicing.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:sourceror, "~> 1.8", only: [:dev, :test]},
+      {:ash_state_machine, "~> 0.2"},
+      {:sourceror, "~> 1.8", only: [:dev, :test, :e2e]},
       {:ash_phoenix, "~> 2.0"},
       {:ash_postgres, "~> 2.0"},
       {:ash, "~> 3.0"},
-      {:igniter, "~> 0.6", only: [:dev, :test]},
+      {:igniter, "~> 0.6", only: [:dev, :test, :e2e]},
       {:phoenix, "~> 1.8.15"},
       {:phoenix_ecto, "~> 4.5"},
       {:ecto_sql, "~> 3.13"},
@@ -78,7 +79,8 @@ defmodule Invoicing.MixProject do
       {:gettext, "~> 1.0"},
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.2.0"},
-      {:bandit, "~> 1.5"}
+      {:bandit, "~> 1.5"},
+      {:spec_dsl, path: "../../elixir/spec_dsl", only: :test}
     ]
   end
 

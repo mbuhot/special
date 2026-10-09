@@ -1,6 +1,8 @@
 defmodule InvoicingWeb.Router do
   use InvoicingWeb, :router
 
+  import InvoicingWeb.UserAuth, only: [require_user: 2]
+
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
@@ -8,6 +10,10 @@ defmodule InvoicingWeb.Router do
     plug :put_root_layout, html: {InvoicingWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
+  end
+
+  pipeline :authenticated do
+    plug :require_user
   end
 
   pipeline :api do
@@ -18,6 +24,28 @@ defmodule InvoicingWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :home
+    live "/login", LoginLive
+    post "/session", SessionController, :create
+  end
+
+  scope "/invoices", InvoicingWeb do
+    pipe_through [:browser, :authenticated]
+
+    live_session :authenticated, on_mount: {InvoicingWeb.UserAuth, :require_user} do
+      live "/", InvoiceLive.Index
+      live "/:id/edit", InvoiceLive.Edit
+    end
+  end
+
+  if Application.compile_env(:invoicing, :spec_support, false) do
+    scope "/__spec__", InvoicingWeb do
+      pipe_through :api
+
+      post "/reset", SpecSupportController, :reset
+      post "/factory", SpecSupportController, :factory
+      get "/entity/:entity/:id", SpecSupportController, :show
+      post "/clock", SpecSupportController, :clock
+    end
   end
 
   # Other scopes may use custom stacks.

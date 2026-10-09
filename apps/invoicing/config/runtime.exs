@@ -20,8 +20,10 @@ if System.get_env("PHX_SERVER") do
   config :invoicing, InvoicingWeb.Endpoint, server: true
 end
 
+default_port = if config_env() == :e2e, do: "4012", else: "4000"
+
 config :invoicing, InvoicingWeb.Endpoint,
-  http: [port: String.to_integer(System.get_env("PORT", "4000"))]
+  http: [port: String.to_integer(System.get_env("PORT", default_port))]
 
 if config_env() == :dev do
   # Reload browser tabs when matching files change.

@@ -1,11 +1,16 @@
-# Script for populating the database. You can run it as:
-#
-#     mix run priv/repo/seeds.exs
-#
-# Inside the script, you can read and write to any of your
-# repositories directly:
-#
-#     Invoicing.Repo.insert!(%Invoicing.SomeSchema{})
-#
-# We recommend using the bang functions (`insert!`, `update!`
-# and so on) as they will fail if something goes wrong.
+alias Invoicing.Accounts
+alias Invoicing.Billing
+
+seed_user = fn email, role ->
+  case Accounts.get_user_by_email(email, not_found_error?: false) do
+    {:ok, nil} -> Accounts.create_user!(%{email: email, role: role})
+    {:ok, existing_user} -> existing_user
+  end
+end
+
+seed_user.("accounts@example.com", :accountant)
+seed_user.("admin@example.com", :admin)
+
+if Billing.list_customers!() == [] do
+  Billing.create_customer!(%{name: "Acme", email: "billing@acme.example"})
+end

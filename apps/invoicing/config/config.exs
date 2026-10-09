@@ -55,6 +55,7 @@ config :spark,
   ]
 
 config :invoicing,
+  ash_domains: [Invoicing.Billing, Invoicing.Accounts],
   ecto_repos: [Invoicing.Repo],
   generators: [timestamp_type: :utc_datetime]
 

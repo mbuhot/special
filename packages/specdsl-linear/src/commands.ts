@@ -1,13 +1,14 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, dirname, extname, join } from "node:path";
 import {
-  bind,
+  bindSpec,
   lint as lintSpec,
-  parseMarkdown,
   type BindError,
   type Dialect,
   type LintWarning,
+  type SpecSource,
 } from "@special/specdsl-core";
+import { slugOf } from "./base-sources.js";
 import { loadDialect } from "./dialect-loader.js";
 import type { LinearClient, LinearIssue } from "./linear.js";
 import { extractSpec } from "./spec-block.js";
@@ -18,13 +19,19 @@ export interface CommandContext {
   printError: (line: string) => void;
 }
 
+export type SpecDestination =
+  | { kind: "out-dir"; outDir: string }
+  | { kind: "specs-dir"; specsDir: string };
+
 export interface PullOptions {
   dialectPath: string;
-  outDir: string;
+  bases: SpecSource[];
+  destination: SpecDestination;
 }
 
 export interface LintOptions {
   dialectPath: string;
+  bases: SpecSource[];
   comment: boolean;
 }
 
@@ -41,6 +48,9 @@ export interface SpecCheck {
   scenarioCount: number;
 }
 
+const PROJECT_WIDE_WARNING_NOTE =
+  "note: warnings are project-wide coverage checks over the base files plus this feature";
+
 type MediaType = "video/mp4" | "image/png" | "application/json" | "application/octet-stream";
 
 const MEDIA_TYPES_BY_EXTENSION: Record<string, MediaType> = {
@@ -49,9 +59,14 @@ const MEDIA_TYPES_BY_EXTENSION: Record<string, MediaType> = {
   ".json": "application/json",
 };
 
-/** Binds and lints spec markdown, labelling every diagnostic with the given file name. */
-export function checkSpec(markdown: string, file: string, dialect: Dialect): SpecCheck {
-  const result = bind(parseMarkdown(markdown), dialect, { file });
+/** Binds the issue spec against the base sources and lints the result, labelling issue diagnostics with its identifier. */
+export function checkSpec(
+  markdown: string,
+  identifier: string,
+  bases: readonly SpecSource[],
+  dialect: Dialect,
+): SpecCheck {
+  const result = bindSpec([...bases, { file: identifier, markdown }], dialect);
   if (!result.ok) {
     return { errors: result.errors, warnings: [], scenarioCount: 0 };
   }
@@ -75,7 +90,7 @@ export function buildLintComment(check: SpecCheck): string {
   return [heading, "", ...diagnostics.map((line) => `- ${line}`)].join("\n");
 }
 
-/** Writes the issue's spec to `<outDir>/<identifier>.md` and reports bind errors and lint warnings. */
+/** Writes the issue spec to its destination file and reports bind errors and lint warnings. */
 export async function pull(
   identifier: string,
   options: PullOptions,
@@ -86,11 +101,16 @@ export async function pull(
   if (markdown === null) {
     return 1;
   }
-  mkdirSync(options.outDir, { recursive: true });
-  const specPath = join(options.outDir, `${issue.identifier}.md`);
+  const specPath = destinationPath(options.destination, issue);
+  mkdirSync(dirname(specPath), { recursive: true });
   writeFileSync(specPath, `${markdown}\n`);
   context.print(`Wrote ${specPath}`);
-  const check = checkSpec(markdown, issue.identifier, await loadDialect(options.dialectPath));
+  const check = checkSpec(
+    markdown,
+    issue.identifier,
+    options.bases,
+    await loadDialect(options.dialectPath),
+  );
   reportCheck(check, context);
   return check.errors.length === 0 ? 0 : 1;
 }
@@ -106,7 +126,12 @@ export async function lint(
   if (markdown === null) {
     return 1;
   }
-  const check = checkSpec(markdown, issue.identifier, await loadDialect(options.dialectPath));
+  const check = checkSpec(
+    markdown,
+    issue.identifier,
+    options.bases,
+    await loadDialect(options.dialectPath),
+  );
   reportCheck(check, context);
   if (options.comment) {
     await context.client.createComment(issue.id, buildLintComment(check));
@@ -186,8 +211,20 @@ function specMarkdown(issue: LinearIssue, context: CommandContext): string | nul
   return spec.markdown;
 }
 
+function destinationPath(destination: SpecDestination, issue: LinearIssue): string {
+  switch (destination.kind) {
+    case "out-dir":
+      return join(destination.outDir, `${issue.identifier}.md`);
+    case "specs-dir":
+      return join(destination.specsDir, `${slugOf(issue.title) || issue.identifier}.md`);
+  }
+}
+
 function reportCheck(check: SpecCheck, context: CommandContext): void {
   check.errors.forEach((error) => context.printError(formatDiagnostic("error", error)));
+  if (check.warnings.length > 0) {
+    context.printError(PROJECT_WIDE_WARNING_NOTE);
+  }
   check.warnings.forEach((warning) => context.printError(formatDiagnostic("warning", warning)));
 }
 

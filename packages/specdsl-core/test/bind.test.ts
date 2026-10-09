@@ -11,6 +11,9 @@ describe("binding the invoicing spec", () => {
     expect(ast.scenarios.map((scenario) => scenario.name)).toEqual([
       "Line total updates as quantity changes",
       "Sending a draft invoice marks it sent",
+      "Marking a sent invoice paid",
+      "Voiding a draft invoice",
+      "Invoice list shows every invoice",
     ]);
   });
 
@@ -24,9 +27,14 @@ describe("binding the invoicing spec", () => {
         "sees",
         "enters",
         "sees",
+        "enters",
+        "sees",
         "narrate",
       ],
       ["given-entity", "given-entity", "opens", "clicks", "sees", "has-field", "narrate"],
+      ["given-entity", "given-entity", "opens", "clicks", "sees", "has-field", "narrate"],
+      ["given-entity", "given-entity", "opens", "clicks", "sees", "has-field", "narrate"],
+      ["given-entity", "given-entity", "given-entity", "opens", "sees", "sees", "narrate"],
     ]);
   });
 
@@ -62,10 +70,10 @@ describe("binding the invoicing spec", () => {
   });
 
   it("carries a Narrate item as demo-only narration text", () => {
-    expect(ast.scenarios[0]?.steps[7]).toEqual({
+    expect(ast.scenarios[0]?.steps[9]).toEqual({
       id: "narrate",
       line: lineOf(invoicingSpec, "Narrate: The line total"),
-      text: "The line total updates as the quantity changes.",
+      text: "The line total updates as the quantity and the unit price change.",
       modes: ["demo"],
     });
   });
@@ -309,5 +317,32 @@ describe("surfaces in the AST", () => {
       lv: "login[email]",
       form: "#login-form",
     });
+  });
+});
+
+describe("surfaces declared only by the spec", () => {
+  const source = specWith(
+    "## Surfaces",
+    '- Archive: field "Search", button "Restore"',
+    "",
+    "## Scenario: Restoring",
+    "When Accounts opens Archive",
+    'And Accounts clicks "Restore"',
+  );
+
+  it("includes a surface the spec declares that the dialect does not", () => {
+    const { ast } = bindSuccess(source);
+    expect(ast.surfaces["Archive"]).toEqual({
+      controls: {
+        Search: { kind: "field", locators: {} },
+        Restore: { kind: "button", locators: {} },
+      },
+    });
+  });
+
+  it("binds a scenario that opens the surface and uses its control", () => {
+    const steps = bindSuccess(source).ast.scenarios[0]?.steps;
+    expect(steps?.map((entry) => entry.id)).toEqual(["opens", "clicks"]);
+    expect(steps?.[1]?.args).toEqual({ Actor: "Accounts", Surface: "Archive", Control: "Restore" });
   });
 });

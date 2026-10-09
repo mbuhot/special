@@ -13,6 +13,7 @@ describe("lock file", () => {
       "clicks",
       "selects",
       "sees",
+      "sees-before",
       "no-longer-sees",
       "given-entity",
       "has-field",

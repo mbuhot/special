@@ -57,6 +57,13 @@ export interface WebAppStepArgs {
   clicks: { Actor: string; Control: ResolvedControl; Surface?: ResolvedSurface };
   selects: { Actor: string; Value: string; Control: ResolvedControl; Surface?: ResolvedSurface };
   sees: { Actor: string; Text: string; Control: ResolvedControl; Surface?: ResolvedSurface };
+  "sees-before": {
+    Actor: string;
+    Text: string;
+    Other: string;
+    Control: ResolvedControl;
+    Surface?: ResolvedSurface;
+  };
   "no-longer-sees": {
     Actor: string;
     Text: string;
@@ -184,6 +191,18 @@ export const webAppSteps: StepHandlers<WebAppStepArgs, WebAppServices, WebAppCon
   },
   async sees(args, env) {
     await expect(locate(env, args.Actor, args.Control)).toContainText(args.Text);
+  },
+  async "sees-before"(args, env) {
+    const control = locate(env, args.Actor, args.Control);
+    await expect(control).toContainText(args.Text);
+    await expect(control).toContainText(args.Other);
+    const controlText = await control.innerText();
+    const textIndex = controlText.indexOf(args.Text);
+    const otherIndex = controlText.indexOf(args.Other);
+    expect(
+      textIndex,
+      `expected ${args.Text} before ${args.Other} in ${args.Control.name}, found: ${controlText}`,
+    ).toBeLessThan(otherIndex);
   },
   async "no-longer-sees"(args, env) {
     await expect(locate(env, args.Actor, args.Control)).not.toContainText(args.Text);

@@ -115,6 +115,12 @@ export default dialect({
       uses: ["actor"],
       narrate: ({ Actor, Text, Control }) => `${Actor} sees ${Text} in ${Control}.`,
     }),
+    step('<Actor> sees "<Text>" before "<Other=Text>" in "<Control>"', {
+      id: "sees-before",
+      uses: ["actor"],
+      narrate: ({ Actor, Text, Other, Control }) =>
+        `${Actor} sees ${Text} before ${Other} in ${Control}.`,
+    }),
     step('<Actor> no longer sees "<Text>" in "<Control>"', {
       id: "no-longer-sees",
       uses: ["actor"],

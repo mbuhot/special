@@ -82,6 +82,17 @@ defmodule Invoicing.SpecHandlers do
     ctx
   end
 
+  step "sees-before", %{actor: actor, text: text, other: other, control: control}, ctx do
+    rendered_text = ctx |> Ctx.view(actor) |> element_text(control) |> strip_tags()
+    text_index = index_of(rendered_text, text)
+    other_index = index_of(rendered_text, other)
+
+    assert text_index != nil and other_index != nil and text_index < other_index,
+           "expected #{inspect(text)} before #{inspect(other)} in #{control.name}, found: #{rendered_text}"
+
+    ctx
+  end
+
   step "no-longer-sees", %{actor: actor, text: text, control: control}, ctx do
     refute has_element?(Ctx.view(ctx, actor), control.locators.lv, text),
            "expected #{inspect(text)} to be absent from #{control.name}"
@@ -213,6 +224,16 @@ defmodule Invoicing.SpecHandlers do
 
   defp element_text(view, control) do
     view |> element(control.locators.lv) |> render()
+  end
+
+  defp strip_tags(html),
+    do: html |> String.replace(~r/<[^>]*>/, " ") |> String.replace(~r/\s+/, " ")
+
+  defp index_of(haystack, needle) do
+    case :binary.match(haystack, needle) do
+      {index, _length} -> index
+      :nomatch -> nil
+    end
   end
 
   defp duration_seconds(duration) do

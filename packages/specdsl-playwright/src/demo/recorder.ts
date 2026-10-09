@@ -22,6 +22,7 @@ const CONTROL_STEP_IDS: readonly string[] = [
   "clicks",
   "selects",
   "sees",
+  "sees-before",
   "no-longer-sees",
 ];
 

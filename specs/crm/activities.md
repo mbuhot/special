@@ -9,8 +9,9 @@ Given an Activity "Follow up" with kind email, body Follow-up, occurred at 2026-
 When Accounts opens Contact page for Ada Lovelace
 Then Accounts sees "Ada Lovelace" in "Contact name"
 And Accounts sees "Follow-up" in "Timeline"
+And Accounts sees "Follow-up" before "Intro-call" in "Timeline"
 And Accounts sees "Intro-call" in "Timeline"
-Narrate: The contact page shows the name Ada Lovelace and a timeline listing the follow-up email and the intro call.
+Narrate: The contact page shows the name Ada Lovelace and a timeline listing the newest activity first: the follow-up email, then the intro call.
 
 ## Scenario: Logging a note on a contact
 

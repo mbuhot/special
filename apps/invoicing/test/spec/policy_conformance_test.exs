@@ -75,8 +75,12 @@ defmodule Invoicing.PolicyConformanceTest do
 
     case source_state(resource, action) do
       nil -> Factory.create(entity_name, %{})
-      state -> Factory.create(entity_name, %{"status" => Atom.to_string(state)})
+      state -> Factory.create(entity_name, %{state_attribute(resource) => Atom.to_string(state)})
     end
+  end
+
+  defp state_attribute(resource) do
+    resource |> AshStateMachine.Info.state_machine_state_attribute!() |> Atom.to_string()
   end
 
   defp source_state(resource, action) do

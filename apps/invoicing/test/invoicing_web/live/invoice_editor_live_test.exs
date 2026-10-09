@@ -6,7 +6,11 @@ defmodule InvoicingWeb.InvoiceEditorLiveTest do
   alias Invoicing.{Accounts, Billing, CRM}
 
   setup %{conn: conn} do
-    accountant = Accounts.create_user!(%{email: "accounts@example.com", role: :accountant})
+    accountant =
+      Accounts.create_user!(%{email: "accounts@example.com", role: :accountant},
+        authorize?: false
+      )
+
     company = CRM.create_company!(%{name: "Acme"}, authorize?: false)
 
     invoice =
@@ -21,7 +25,7 @@ defmodule InvoicingWeb.InvoiceEditorLiveTest do
   end
 
   defp sign_in_as_admin(conn) do
-    admin = Accounts.create_user!(%{email: "admin@example.com", role: :admin})
+    admin = Accounts.create_user!(%{email: "admin@example.com", role: :admin}, authorize?: false)
     Accounts.log_in_conn(conn, admin)
   end
 

@@ -27,7 +27,7 @@ defmodule InvoicingWeb.UserAuth do
   defp fetch_user(nil), do: nil
 
   defp fetch_user(user_id) do
-    case Accounts.get_user(user_id, not_found_error?: false) do
+    case Accounts.get_user(user_id, not_found_error?: false, authorize?: false) do
       {:ok, user} -> user
       {:error, _error} -> nil
     end

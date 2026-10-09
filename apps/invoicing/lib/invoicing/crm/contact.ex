@@ -67,6 +67,8 @@ defmodule Invoicing.CRM.Contact do
       allow_nil?: false,
       attribute_writable?: true,
       public?: true
+
+    has_many :deals, Invoicing.Pipeline.Deal
   end
 
   calculations do

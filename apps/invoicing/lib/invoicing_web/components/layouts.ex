@@ -28,6 +28,7 @@ defmodule InvoicingWeb.Layouts do
   attr :flash, :map, required: true, doc: "the map of flash messages"
 
   attr :current_user, :map, default: nil, doc: "the signed-in user"
+  attr :width, :atom, default: :narrow, values: [:narrow, :wide], doc: "the page content width"
 
   slot :inner_block, required: true
 
@@ -38,6 +39,7 @@ defmodule InvoicingWeb.Layouts do
         <.link navigate={~p"/invoices"} class="text-lg font-semibold">Invoicing</.link>
         <.link navigate={~p"/contacts"} class="ml-4">Contacts</.link>
         <.link navigate={~p"/companies"} class="ml-4">Companies</.link>
+        <.link navigate={~p"/pipeline"} class="ml-4">Pipeline</.link>
       </div>
       <div class="flex-none flex items-center gap-4">
         <span :if={@current_user} id="current-user" class="text-sm">{@current_user.email}</span>
@@ -46,7 +48,11 @@ defmodule InvoicingWeb.Layouts do
     </header>
 
     <main class="px-4 py-20 sm:px-6 lg:px-8">
-      <div class="mx-auto max-w-2xl space-y-4">
+      <div class={[
+        "mx-auto space-y-4",
+        @width == :narrow && "max-w-2xl",
+        @width == :wide && "max-w-7xl"
+      ]}>
         {render_slot(@inner_block)}
       </div>
     </main>

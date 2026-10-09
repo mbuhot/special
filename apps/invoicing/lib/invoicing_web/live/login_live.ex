@@ -17,7 +17,7 @@ defmodule InvoicingWeb.LoginLive do
   @impl true
   def handle_event("submit", %{"login" => %{"email" => email} = params}, socket) do
     login_status =
-      case Accounts.get_user_by_email(email, not_found_error?: false) do
+      case Accounts.get_user_by_email(email, not_found_error?: false, authorize?: false) do
         {:ok, %Accounts.User{}} -> :accepted
         _no_user -> :unknown_user
       end

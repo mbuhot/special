@@ -3,7 +3,8 @@ defmodule Invoicing.Accounts.User do
 
   use Ash.Resource,
     domain: Invoicing.Accounts,
-    data_layer: AshPostgres.DataLayer
+    data_layer: AshPostgres.DataLayer,
+    authorizers: [Ash.Policy.Authorizer]
 
   postgres do
     table "users"
@@ -12,6 +13,16 @@ defmodule Invoicing.Accounts.User do
 
   actions do
     defaults [:read, :destroy, create: [:email, :role], update: [:email, :role]]
+  end
+
+  policies do
+    policy action_type(:read) do
+      authorize_if actor_present()
+    end
+
+    policy action_type([:create, :update, :destroy]) do
+      authorize_if actor_attribute_equals(:role, :admin)
+    end
   end
 
   attributes do

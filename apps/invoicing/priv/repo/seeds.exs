@@ -2,8 +2,8 @@ alias Invoicing.Accounts
 alias Invoicing.CRM
 
 seed_user = fn email, role ->
-  case Accounts.get_user_by_email(email, not_found_error?: false) do
-    {:ok, nil} -> Accounts.create_user!(%{email: email, role: role})
+  case Accounts.get_user_by_email(email, not_found_error?: false, authorize?: false) do
+    {:ok, nil} -> Accounts.create_user!(%{email: email, role: role}, authorize?: false)
     {:ok, existing_user} -> existing_user
   end
 end

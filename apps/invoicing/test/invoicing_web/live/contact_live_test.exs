@@ -6,7 +6,11 @@ defmodule InvoicingWeb.ContactLiveTest do
   alias Invoicing.{Accounts, CRM}
 
   setup %{conn: conn} do
-    accountant = Accounts.create_user!(%{email: "accounts@example.com", role: :accountant})
+    accountant =
+      Accounts.create_user!(%{email: "accounts@example.com", role: :accountant},
+        authorize?: false
+      )
+
     acme = CRM.create_company!(%{name: "Acme"}, authorize?: false)
     globex = CRM.create_company!(%{name: "Globex"}, authorize?: false)
 

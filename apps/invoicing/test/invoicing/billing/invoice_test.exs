@@ -4,8 +4,12 @@ defmodule Invoicing.Billing.InvoiceTest do
   alias Invoicing.{Accounts, Billing, CRM}
 
   setup do
-    accountant = Accounts.create_user!(%{email: "accounts@example.com", role: :accountant})
-    admin = Accounts.create_user!(%{email: "admin@example.com", role: :admin})
+    accountant =
+      Accounts.create_user!(%{email: "accounts@example.com", role: :accountant},
+        authorize?: false
+      )
+
+    admin = Accounts.create_user!(%{email: "admin@example.com", role: :admin}, authorize?: false)
     company = CRM.create_company!(%{name: "Acme"}, actor: accountant)
 
     invoice =

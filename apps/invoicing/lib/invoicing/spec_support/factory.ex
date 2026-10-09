@@ -7,10 +7,13 @@ defmodule Invoicing.SpecSupport.Factory do
   alias Invoicing.Billing.{Invoice, LineItem}
   alias Invoicing.CRM
   alias Invoicing.CRM.{Company, Contact}
+  alias Invoicing.Pipeline
+  alias Invoicing.Pipeline.Deal
 
   @resources %{
     "Company" => Company,
     "Contact" => Contact,
+    "Deal" => Deal,
     "Invoice" => Invoice,
     "LineItem" => LineItem,
     "User" => User
@@ -18,11 +21,18 @@ defmodule Invoicing.SpecSupport.Factory do
 
   @calculations %{Contact => [:full_name], Invoice => [:total], LineItem => [:line_total]}
 
-  @relationship_attributes %{"company" => "company_id", "invoice" => "invoice_id"}
+  @relationship_attributes %{
+    "company" => "company_id",
+    "contact" => "contact_id",
+    "invoice" => "invoice_id",
+    "owner" => "owner_id",
+    "user" => "owner_id"
+  }
 
   @natural_keys %{
     Invoice => "number",
     Company => "name",
+    Deal => "name",
     LineItem => "description",
     User => "email"
   }
@@ -90,6 +100,17 @@ defmodule Invoicing.SpecSupport.Factory do
     |> put_status(status)
   end
 
+  defp build(attrs, Deal) do
+    {stage, deal_attrs} = Map.pop(attrs, "stage")
+
+    deal_attrs
+    |> Map.put_new("name", "Deal #{System.unique_integer([:positive])}")
+    |> Map.put_new_lazy("company_id", fn -> create("Company", %{}).id end)
+    |> Map.put_new_lazy("owner_id", fn -> create("User", %{"role" => "accountant"}).id end)
+    |> Pipeline.create_deal!(authorize?: false)
+    |> put_stage(stage)
+  end
+
   defp build(attrs, LineItem) do
     attrs
     |> Map.put_new_lazy("invoice_id", fn -> create("Invoice", %{}).id end)
@@ -101,13 +122,19 @@ defmodule Invoicing.SpecSupport.Factory do
     |> Map.put_new_lazy("email", fn ->
       "user-#{System.unique_integer([:positive])}@example.com"
     end)
-    |> Accounts.create_user!()
+    |> Accounts.create_user!(authorize?: false)
   end
 
   defp put_status(invoice, nil), do: invoice
 
   defp put_status(invoice, status) do
     Ash.Seed.update!(invoice, %{status: String.to_existing_atom(status)})
+  end
+
+  defp put_stage(deal, nil), do: deal
+
+  defp put_stage(deal, stage) do
+    Ash.Seed.update!(deal, %{stage: String.to_existing_atom(stage)})
   end
 
   @doc "Returns the Ash resource module for the spec entity name."

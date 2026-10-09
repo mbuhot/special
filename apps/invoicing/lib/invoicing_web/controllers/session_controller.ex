@@ -6,7 +6,7 @@ defmodule InvoicingWeb.SessionController do
   alias Invoicing.Accounts
 
   def create(conn, %{"login" => %{"email" => email}}) do
-    case Accounts.get_user_by_email(email, not_found_error?: false) do
+    case Accounts.get_user_by_email(email, not_found_error?: false, authorize?: false) do
       {:ok, %Accounts.User{id: user_id}} ->
         conn
         |> configure_session(renew: true)

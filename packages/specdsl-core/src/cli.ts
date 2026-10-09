@@ -1,23 +1,23 @@
 #!/usr/bin/env node
-import { readFileSync, writeFileSync } from "node:fs";
+import { globSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import { bind } from "./bind.js";
+import { bindSpec, type SpecSource } from "./bind.js";
 import type { Dialect } from "./dialect.js";
 import { lint } from "./lint.js";
 import { lockFile } from "./lock.js";
-import { parseMarkdown } from "./markdown.js";
 
 interface Arguments {
   command: string;
   specPath: string | undefined;
+  basePatterns: string[];
   dialectPath: string | undefined;
   outPath: string | undefined;
 }
 
 const USAGE = [
-  "specdsl bind <spec.md> --dialect <path.ts> [--out <file>]",
-  "specdsl lint <spec.md> --dialect <path.ts>",
+  "specdsl bind <spec.md> [--base <path>]... --dialect <path.ts> [--out <file>]",
+  "specdsl lint <spec.md> [--base <path>]... --dialect <path.ts>",
   "specdsl lock --dialect <path.ts> --out <file>",
 ].join("\n");
 
@@ -26,6 +26,7 @@ function parseArguments(argv: string[]): Arguments {
   const parsed: Arguments = {
     command,
     specPath: undefined,
+    basePatterns: [],
     dialectPath: undefined,
     outPath: undefined,
   };
@@ -33,6 +34,8 @@ function parseArguments(argv: string[]): Arguments {
     const argument = rest[index] as string;
     if (argument === "--dialect") {
       parsed.dialectPath = rest[++index];
+    } else if (argument === "--base") {
+      parsed.basePatterns.push(rest[++index] as string);
     } else if (argument === "--out") {
       parsed.outPath = rest[++index];
     } else {
@@ -67,6 +70,13 @@ function isDialect(value: unknown): value is Dialect {
   return typeof value === "object" && value !== null && "stepIds" in value;
 }
 
+function readSources(parsed: Arguments, specPath: string): SpecSource[] {
+  const baseFiles = parsed.basePatterns
+    .flatMap((pattern) => globSync(pattern).sort())
+    .filter((file) => resolve(file) !== resolve(specPath));
+  return [...baseFiles, specPath].map((file) => ({ file, markdown: readFileSync(file, "utf8") }));
+}
+
 function emit(json: unknown, outPath: string | undefined): void {
   const text = `${JSON.stringify(json, null, 2)}\n`;
   outPath === undefined ? process.stdout.write(text) : writeFileSync(outPath, text);
@@ -78,7 +88,7 @@ function runBind(
   specPath: string,
   mode: "bind" | "lint",
 ): number {
-  const result = bind(parseMarkdown(readFileSync(specPath, "utf8")), dialect, { file: specPath });
+  const result = bindSpec(readSources(parsed, specPath), dialect);
   if (!result.ok) {
     result.errors.forEach((error) =>
       console.error(`${error.file}:${error.line}: error: ${error.message}`),

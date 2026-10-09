@@ -8,7 +8,13 @@ import type {
   SurfaceNode,
 } from "./ast.js";
 import type { Dialect, ResolvedRule, ResolvedSection } from "./dialect.js";
-import type { Item, Line, MarkdownTree, Section } from "./markdown.js";
+import {
+  parseMarkdown,
+  type Item,
+  type Line,
+  type MarkdownTree,
+  type Section,
+} from "./markdown.js";
 import { compilePattern, PatternError, type ListValue, type Match } from "./pattern.js";
 import { Registry, scopeKeyOf, type Entry } from "./registry.js";
 import { ScenarioResolver, type Composite } from "./scenario.js";
@@ -17,25 +23,48 @@ export interface BindOptions {
   file: string;
 }
 
+export interface SpecSource {
+  file: string;
+  markdown: string;
+}
+
+interface ParsedSource {
+  file: string;
+  tree: MarkdownTree;
+}
+
 interface ClassifiedSection {
+  file: string;
   section: Section;
   definition: ResolvedSection;
   match: Match;
 }
 
 interface PendingItem {
+  file: string;
   line: number;
   rule: ResolvedRule;
   match: Match;
   entity: string | undefined;
 }
 
+const REDECLARATION_GUARDED = new Set(["Entity", "Actor", "Surface"]);
+
 /**
  * Binds a parsed spec to a dialect: matches sections, declares namespace entries, expands composite steps
  * and resolves scenario steps. Surfaces and controls come from the dialect's `Surface` and `Control` namespaces.
  */
 export function bind(tree: MarkdownTree, dialect: Dialect, options: BindOptions): BindResult {
-  return new Binder(tree, dialect, options.file).run();
+  return new Binder([{ file: options.file, tree }], dialect).run();
+}
+
+/** Binds base sources and a feature source, in order, into one registry; the last source is the feature spec. */
+export function bindSpec(sources: readonly SpecSource[], dialect: Dialect): BindResult {
+  const parsed = sources.map((source) => ({
+    file: source.file,
+    tree: parseMarkdown(source.markdown),
+  }));
+  return new Binder(parsed, dialect).run();
 }
 
 class Binder {
@@ -50,14 +79,15 @@ class Binder {
   private readonly usedSurfaces = new Set<string>();
   private readonly composites: Composite[] = [];
 
+  private readonly scenarioSites = new Map<string, string>();
+
   constructor(
-    private readonly tree: MarkdownTree,
+    private readonly sources: readonly ParsedSource[],
     private readonly dialect: Dialect,
-    private readonly file: string,
   ) {}
 
   run(): BindResult {
-    const sections = this.classifySections();
+    const sections = this.sources.flatMap((source) => this.classifySections(source));
     this.preloadSurfaces();
     const pending = sections
       .filter((classified) => classified.definition.body === undefined)
@@ -66,26 +96,30 @@ class Binder {
     pending.forEach((item) => this.complete(item));
     sections
       .filter((classified) => classified.definition.body === "composites")
-      .forEach((classified) => this.collectComposites(classified.section));
+      .forEach((classified) => this.collectComposites(classified));
     const scenarios = sections
       .filter((classified) => classified.definition.body === "steps")
       .map((classified) => this.bindScenario(classified));
     return this.finish(scenarios);
   }
 
-  private report(line: number, message: string): void {
-    this.errors.push({ file: this.file, line, message });
+  private report(file: string, line: number, message: string): void {
+    this.errors.push({ file, line, message });
   }
 
-  private classifySections(): ClassifiedSection[] {
+  private classifySections(source: ParsedSource): ClassifiedSection[] {
     const classified: ClassifiedSection[] = [];
     const seenOnce = new Set<string>();
-    for (const section of this.tree.sections) {
-      const found = this.matchHeading(section);
+    for (const section of source.tree.sections) {
+      const found = this.matchHeading(source.file, section);
       if (found === null) {
-        this.report(section.line, `Unknown section "${section.heading}"`);
+        this.report(source.file, section.line, `Unknown section "${section.heading}"`);
       } else if (found.definition.occurs === "once" && seenOnce.has(found.definition.name)) {
-        this.report(section.line, `Section "${found.definition.name}" may occur only once`);
+        this.report(
+          source.file,
+          section.line,
+          `Section "${found.definition.name}" may occur only once`,
+        );
       } else {
         seenOnce.add(found.definition.name);
         classified.push(found);
@@ -94,11 +128,11 @@ class Binder {
     return classified;
   }
 
-  private matchHeading(section: Section): ClassifiedSection | null {
+  private matchHeading(file: string, section: Section): ClassifiedSection | null {
     for (const definition of Object.values(this.dialect.sections)) {
       const match = definition.headingMatcher(section.heading);
       if (match !== null) {
-        return { section, definition, match };
+        return { file, section, definition, match };
       }
     }
     return null;
@@ -135,9 +169,19 @@ class Binder {
       for (const sentence of splitSentences(item.text)) {
         const found = bestRule(classified.definition.rules, sentence);
         if (found === null) {
-          this.report(item.line, `Unrecognized ${classified.definition.name} item "${sentence}"`);
+          this.report(
+            classified.file,
+            item.line,
+            `Unrecognized ${classified.definition.name} item "${sentence}"`,
+          );
         } else {
-          pending.push({ line: item.line, rule: found.rule, match: found.match, entity });
+          pending.push({
+            file: classified.file,
+            line: item.line,
+            rule: found.rule,
+            match: found.match,
+            entity,
+          });
           entity = found.rule.declares?.includes("Entity") ? found.match.slots["Entity"] : entity;
         }
       }
@@ -161,7 +205,7 @@ class Binder {
       (ancestor) => item.match.slots[ancestor],
     );
     if ("missing" in scopeKey) {
-      this.report(item.line, `${namespace} "${value}" needs a ${scopeKey.missing}`);
+      this.report(item.file, item.line, `${namespace} "${value}" needs a ${scopeKey.missing}`);
     } else if (namespace === "Control") {
       this.declareControl(
         item,
@@ -170,14 +214,36 @@ class Binder {
         flatten(item.match.lists["Control.kind"] ?? [])[index],
       );
     } else {
+      this.rejectRedeclaration(item, namespace, value, scopeKey.key);
       this.registry.declare({
         namespace,
         name: value,
         scopeKey: scopeKey.key,
         origin: "spec",
+        file: item.file,
         line: item.line,
         data: {},
       });
+    }
+  }
+
+  private rejectRedeclaration(
+    item: PendingItem,
+    namespace: string,
+    value: string,
+    scopeKey: string,
+  ): void {
+    const existing = this.registry.lookup(namespace, value, scopeKey);
+    if (
+      REDECLARATION_GUARDED.has(namespace) &&
+      existing?.file !== undefined &&
+      existing.file !== item.file
+    ) {
+      this.report(
+        item.file,
+        item.line,
+        `${value} is already declared in ${existing.file}:${existing.line}`,
+      );
     }
   }
 
@@ -189,18 +255,19 @@ class Binder {
   ): void {
     const kinds = this.dialect.namespaces["Control"]?.kinds ?? [];
     if (kind === undefined || !kinds.includes(kind.toLowerCase())) {
-      this.report(item.line, `"${kind}" is not a Control kind (${kinds.join(", ")})`);
+      this.report(item.file, item.line, `"${kind}" is not a Control kind (${kinds.join(", ")})`);
       return;
     }
     const existing = this.registry.lookup("Control", name, surfaceName);
     const surface = this.registry.lookup("Surface", surfaceName, "");
     if (existing !== undefined && existing.kind !== kind.toLowerCase()) {
       this.report(
+        item.file,
         item.line,
         `Control "${existing.name}" on ${surfaceName} is a ${existing.kind}, not a ${kind}`,
       );
     } else if (existing === undefined && surface?.origin === "dialect") {
-      this.report(item.line, `Unknown Control "${name}" on ${surfaceName}`);
+      this.report(item.file, item.line, `Unknown Control "${name}" on ${surfaceName}`);
     } else if (existing === undefined) {
       this.registry.declare({
         namespace: "Control",
@@ -208,6 +275,7 @@ class Binder {
         scopeKey: surfaceName,
         kind: kind.toLowerCase(),
         origin: "spec",
+        file: item.file,
         line: item.line,
         data: {},
       });
@@ -238,7 +306,7 @@ class Binder {
       for (const value of valuesOf(item.match, namespace)) {
         const known =
           "key" in scopeKey && this.registry.lookup(namespace, value, scopeKey.key) !== undefined;
-        known || this.report(item.line, `Unknown ${namespace} "${value}"`);
+        known || this.report(item.file, item.line, `Unknown ${namespace} "${value}"`);
       }
     }
   }
@@ -258,6 +326,7 @@ class Binder {
         scopeKey: owner.name,
         kind: "relation",
         origin: "spec",
+        file: item.file,
         line: item.line,
         data: { target: targetEntry.name },
       });
@@ -304,6 +373,7 @@ class Binder {
       this.analysis.declarations.push({
         kind: "Policy",
         key: `${entity}.${role}:${action}`,
+        file: item.file,
         line: item.line,
         data: { Entity: entity, Role: role, Action: action },
       });
@@ -375,6 +445,7 @@ class Binder {
         this.analysis.declarations.push({
           kind: "Transition",
           key: `${entity}.${field}:${from}->${to}`,
+          file: item.file,
           line: item.line,
           data: { Entity: entity, Field: field, From: from, To: to },
         });
@@ -394,40 +465,46 @@ class Binder {
         this.analysis.declarations.push({
           kind: "Control",
           key: `${surface.name}/${control.name}`,
+          file: item.file,
           line: item.line,
           data: { Surface: surface.name, Control: control.name },
         });
     }
   }
 
-  private collectComposites(section: Section): void {
-    for (const item of section.items) {
+  private collectComposites(classified: ClassifiedSection): void {
+    for (const item of classified.section.items) {
       const parsed = /^(.*\S)\s+means$/i.exec(item.text);
       if (parsed === null) {
-        this.report(item.line, `Composite step must end with "means": "${item.text}"`);
+        this.report(
+          classified.file,
+          item.line,
+          `Composite step must end with "means": "${item.text}"`,
+        );
         continue;
       }
-      this.addComposite(parsed[1] as string, item);
+      this.addComposite(classified.file, parsed[1] as string, item);
     }
   }
 
-  private addComposite(header: string, item: Item): void {
+  private addComposite(file: string, header: string, item: Item): void {
     try {
       const children = item.children.map((child) => ({ text: child.text, line: child.line }));
       children.length === 0 &&
-        this.report(item.line, `Composite step "${header}" has no child steps`);
+        this.report(file, item.line, `Composite step "${header}" has no child steps`);
       this.composites.push({ header, matcher: compilePattern(header), children, line: item.line });
     } catch (error) {
       if (!(error instanceof PatternError)) {
         throw error;
       }
-      this.report(item.line, `Invalid composite step pattern: ${error.message}`);
+      this.report(file, item.line, `Invalid composite step pattern: ${error.message}`);
     }
   }
 
   private bindScenario(classified: ClassifiedSection): Scenario {
-    const { section, definition, match } = classified;
+    const { file, section, definition, match } = classified;
     const name = match.slots["Name"] ?? definition.name;
+    this.rejectDuplicateScenario(file, section.line, name);
     const lines = scenarioLines(section);
     const resolver = new ScenarioResolver({
       dialect: this.dialect,
@@ -436,10 +513,19 @@ class Binder {
       analysis: this.analysis,
       usedSurfaces: this.usedSurfaces,
       scenarioName: name,
-      report: (line, message) => this.report(line, message),
+      file,
+      report: (line, message) => this.report(file, line, message),
     });
     const steps = resolver.resolve(lines);
-    return { name, source: { file: this.file, line: section.line }, steps };
+    return { name, source: { file, line: section.line }, steps };
+  }
+
+  private rejectDuplicateScenario(file: string, line: number, name: string): void {
+    const key = name.toLowerCase();
+    const earlier = this.scenarioSites.get(key);
+    earlier === undefined
+      ? this.scenarioSites.set(key, `${file}:${line}`)
+      : this.report(file, line, `Scenario "${name}" is already declared in ${earlier}`);
   }
 
   private surfaceNodes(): Record<string, SurfaceNode> {
@@ -464,8 +550,7 @@ class Binder {
 
   private finish(scenarios: Scenario[]): BindResult {
     if (this.errors.length > 0) {
-      const errors = [...this.errors].sort((first, second) => first.line - second.line);
-      return { ok: false, errors };
+      return { ok: false, errors: this.sortedErrors() };
     }
     const ast: SpecAst = {
       dialect: {
@@ -480,7 +565,16 @@ class Binder {
       policies: this.policies,
       scenarios,
     };
-    return { ok: true, file: this.file, ast, analysis: this.analysis };
+    const feature = this.sources[this.sources.length - 1] as ParsedSource;
+    return { ok: true, file: feature.file, ast, analysis: this.analysis };
+  }
+
+  private sortedErrors(): BindError[] {
+    const order = (error: BindError): number =>
+      this.sources.findIndex((source) => source.file === error.file);
+    return [...this.errors].sort(
+      (first, second) => order(first) - order(second) || first.line - second.line,
+    );
   }
 }
 

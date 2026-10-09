@@ -18,6 +18,7 @@ export interface ScenarioEnvironment {
   analysis: Analysis;
   usedSurfaces: Set<string>;
   scenarioName: string;
+  file: string;
   report(line: number, message: string): void;
 }
 
@@ -329,6 +330,7 @@ export class ScenarioResolver {
     this.environment.analysis.references.push({
       kind: descriptor.namespace,
       key,
+      file: this.environment.file,
       line: scope.line,
     });
     return entry.name;
@@ -401,6 +403,7 @@ export class ScenarioResolver {
     const emission = {
       kind: rule.kind,
       scenario: this.environment.scenarioName,
+      file: this.environment.file,
       line: scope.line,
       data,
     };

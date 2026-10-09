@@ -34,8 +34,8 @@ export type {
   StepMode,
   SurfaceDefinition,
 } from "./dialect.js";
-export { bind } from "./bind.js";
-export type { BindOptions } from "./bind.js";
+export { bind, bindSpec } from "./bind.js";
+export type { BindOptions, SpecSource } from "./bind.js";
 export type {
   Analysis,
   BindError,

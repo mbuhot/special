@@ -8,6 +8,7 @@ export interface Entry {
   scopeKey: string;
   kind?: string;
   origin: EntryOrigin;
+  file?: string;
   line: number;
   data: Record<string, string>;
 }

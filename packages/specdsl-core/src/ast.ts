@@ -60,6 +60,7 @@ export interface SpecAst {
 export interface Declaration {
   kind: string;
   key: string;
+  file: string;
   line: number;
   data: Record<string, string>;
 }
@@ -68,6 +69,7 @@ export interface Emission {
   kind: string;
   key?: string;
   scenario: string;
+  file: string;
   line: number;
   data: Record<string, string>;
 }
@@ -75,6 +77,7 @@ export interface Emission {
 export interface Reference {
   kind: string;
   key: string;
+  file: string;
   line: number;
 }
 

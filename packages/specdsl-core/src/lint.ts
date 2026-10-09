@@ -11,7 +11,7 @@ export interface LintWarning {
 export function lint(result: BindSuccess, dialect: Dialect): LintWarning[] {
   return dialect.checks
     .flatMap((definition) => runCheck(definition, result))
-    .sort((first, second) => first.line - second.line);
+    .sort((first, second) => first.file.localeCompare(second.file) || first.line - second.line);
 }
 
 function runCheck(definition: CheckDefinition, result: BindSuccess): LintWarning[] {
@@ -34,7 +34,7 @@ function coverage(declared: string, usedBy: string, result: BindSuccess): LintWa
   return result.analysis.declarations
     .filter((declaration) => declaration.kind === declared && !used.has(declaration.key))
     .map((declaration) => ({
-      file: result.file,
+      file: declaration.file,
       line: declaration.line,
       message: `${declared} ${declaration.key} is not covered by any ${usedBy}`,
     }));
@@ -51,7 +51,7 @@ function sequence(machine: string, observed: string, result: BindSuccess): LintW
         emission.kind === observed && emission.key !== undefined && !declaredKeys.has(emission.key),
     )
     .map((emission) => ({
-      file: result.file,
+      file: emission.file,
       line: emission.line,
       message: undeclaredMove(emission, transitions),
     }));
@@ -99,7 +99,7 @@ function referenced(declared: string, result: BindSuccess): LintWarning[] {
   return result.analysis.declarations
     .filter((declaration) => declaration.kind === declared && !used.has(declaration.key))
     .map((declaration) => ({
-      file: result.file,
+      file: declaration.file,
       line: declaration.line,
       message: `${declared} ${declaration.key} is not referenced by any step`,
     }));

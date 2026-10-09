@@ -134,6 +134,16 @@ Dialect extension is object spread. A derived dialect adds; it does not remove o
 4. Resolution pass over step lists. Each step parses against the step patterns. Slots resolve against namespaces with kind checks. `Ref` is scenario scoped and must be declared by an earlier step in the same scenario. Slots resolve Ref first, so an `Action` slot resolves in the scope of the Ref's entity.
 5. Emit AST or a list of errors with file and line.
 
+### Base specs
+
+`specdsl bind <spec.md> [--base <path>]... --dialect <path.ts>` binds base files first and the feature spec last into one registry. `--base` repeats and accepts globs; `lint` takes the same flag. A ticket spec holds scenarios; the Model, Surfaces, Actors and Policies live once in base files.
+
+Merging is add-only, like dialect extension:
+
+- Redeclaring an entity, an actor, or a surface an earlier file lists is an error naming both locations.
+- Transition lines and Policies lines extend what earlier files declared.
+- Scenario names are unique across files.
+
 ## Lint checks
 
 | Check      | Rule                                                                                       |

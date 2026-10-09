@@ -48,20 +48,35 @@ defmodule SpecDSL.Scenario do
   defstruct [:name, :source, steps: []]
 end
 
+defmodule SpecDSL.Entity do
+  @moduledoc "A domain entity declared in the spec's Model section."
+
+  @type relation :: %{kind: :belongs_to | :has_many, entity: String.t()}
+  @type machine :: %{states: [String.t()], transitions: [%{from: String.t(), to: String.t()}]}
+  @type t :: %__MODULE__{
+          fields: [String.t()],
+          relations: [relation()],
+          machines: %{String.t() => machine()}
+        }
+
+  defstruct fields: [], relations: [], machines: %{}
+end
+
 defmodule SpecDSL.AST do
   @moduledoc "Loads the AST JSON emitted by the spec compiler into structs."
 
-  alias SpecDSL.{Control, Scenario, Step, Surface}
+  alias SpecDSL.{Control, Entity, Scenario, Step, Surface}
 
   @type t :: %__MODULE__{
           dialect: %{name: String.t(), version: String.t(), step_ids: [String.t()]},
           contexts: %{atom() => %{atom() => term()}},
           actors: %{String.t() => %{atom() => term()}},
           surfaces: %{String.t() => Surface.t()},
+          model: %{String.t() => Entity.t()},
           scenarios: [Scenario.t()]
         }
 
-  defstruct [:dialect, contexts: %{}, actors: %{}, surfaces: %{}, scenarios: []]
+  defstruct [:dialect, contexts: %{}, actors: %{}, surfaces: %{}, model: %{}, scenarios: []]
 
   @control_kinds %{
     "field" => :field,
@@ -77,6 +92,7 @@ defmodule SpecDSL.AST do
     "role" => :role,
     "form" => :form
   }
+  @relation_kinds %{"belongs-to" => :belongs_to, "has-many" => :has_many}
   @step_modes %{"test" => :test, "demo" => :demo}
 
   @doc "Reads and decodes an AST JSON file."
@@ -101,6 +117,7 @@ defmodule SpecDSL.AST do
         |> Map.get("actors", %{})
         |> Map.new(fn {name, config} -> {name, atomize_keys(config)} end),
       surfaces: surfaces,
+      model: raw |> Map.get("model", %{}) |> Map.new(&build_entity/1),
       scenarios: raw |> Map.get("scenarios", []) |> Enum.map(&build_scenario(&1, surfaces))
     }
   end
@@ -120,6 +137,33 @@ defmodule SpecDSL.AST do
       version: Map.get(raw, "version"),
       step_ids: Map.get(raw, "stepIds", [])
     }
+  end
+
+  defp build_entity({name, raw}) do
+    {name,
+     %Entity{
+       fields: Map.get(raw, "fields", []),
+       relations: raw |> Map.get("relations", []) |> Enum.map(&build_relation/1),
+       machines: raw |> Map.get("machines", %{}) |> Map.new(&build_machine/1)
+     }}
+  end
+
+  defp build_relation(raw) do
+    %{
+      kind: fetch_known!(@relation_kinds, Map.fetch!(raw, "kind"), "relation kind"),
+      entity: Map.fetch!(raw, "entity")
+    }
+  end
+
+  defp build_machine({field, raw}) do
+    {field,
+     %{
+       states: Map.get(raw, "states", []),
+       transitions:
+         raw
+         |> Map.get("transitions", [])
+         |> Enum.map(fn transition -> %{from: transition["from"], to: transition["to"]} end)
+     }}
   end
 
   defp build_surface({name, raw}) do

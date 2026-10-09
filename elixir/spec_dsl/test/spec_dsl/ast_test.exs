@@ -1,7 +1,7 @@
 defmodule SpecDSL.ASTTest do
   use ExUnit.Case, async: true
 
-  alias SpecDSL.{AST, Control, Scenario, Step, Surface}
+  alias SpecDSL.{AST, Control, Entity, Scenario, Step, Surface}
 
   setup_all do
     {:ok, ast: AST.load!("test/fixtures/invoicing.ast.json")}
@@ -82,5 +82,42 @@ defmodule SpecDSL.ASTTest do
     %Scenario{steps: [given | _]} = hd(ast.scenarios)
 
     assert given.args == %{entity: "Customer", ref: "Acme", pairs: []}
+  end
+
+  test "reads each Model entity with its relations and state machines" do
+    ast =
+      AST.from_map(%{
+        "model" => %{
+          "Invoice" => %{
+            "fields" => ["number", "status", "total"],
+            "relations" => [
+              %{"kind" => "belongs-to", "entity" => "Customer"},
+              %{"kind" => "has-many", "entity" => "LineItem"}
+            ],
+            "machines" => %{
+              "status" => %{
+                "states" => ["draft", "sent"],
+                "transitions" => [%{"from" => "draft", "to" => "sent"}]
+              }
+            }
+          }
+        }
+      })
+
+    assert ast.model == %{
+             "Invoice" => %Entity{
+               fields: ["number", "status", "total"],
+               relations: [
+                 %{kind: :belongs_to, entity: "Customer"},
+                 %{kind: :has_many, entity: "LineItem"}
+               ],
+               machines: %{
+                 "status" => %{
+                   states: ["draft", "sent"],
+                   transitions: [%{from: "draft", to: "sent"}]
+                 }
+               }
+             }
+           }
   end
 end

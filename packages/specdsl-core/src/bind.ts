@@ -1,4 +1,12 @@
-import type { Analysis, BindError, BindResult, Scenario, SpecAst, SurfaceNode } from "./ast.js";
+import type {
+  Analysis,
+  BindError,
+  BindResult,
+  EntityNode,
+  Scenario,
+  SpecAst,
+  SurfaceNode,
+} from "./ast.js";
 import type { Dialect, ResolvedRule, ResolvedSection } from "./dialect.js";
 import type { Item, Line, MarkdownTree, Section } from "./markdown.js";
 import { compilePattern, PatternError, type ListValue, type Match } from "./pattern.js";
@@ -36,6 +44,7 @@ class Binder {
   private readonly analysis: Analysis = { declarations: [], emissions: [], references: [] };
   private readonly contexts: SpecAst["contexts"] = {};
   private readonly actors: SpecAst["actors"] = {};
+  private readonly model: SpecAst["model"] = {};
   private readonly listedSurfaces = new Set<string>();
   private readonly usedSurfaces = new Set<string>();
   private readonly composites: Composite[] = [];
@@ -141,6 +150,7 @@ class Binder {
         this.declareValue(item, namespace, value, index),
       );
     }
+    this.recordEntity(item);
   }
 
   private declareValue(item: PendingItem, namespace: string, value: string, index: number): void {
@@ -206,6 +216,7 @@ class Binder {
   private complete(item: PendingItem): void {
     this.checkReferences(item);
     this.applyRelation(item);
+    this.recordRelation(item);
     this.recordOutput(item);
     if (item.rule.emits === "Transition") {
       this.declareTransitions(item);
@@ -265,6 +276,53 @@ class Binder {
     }
   }
 
+  private recordEntity(item: PendingItem): void {
+    const name = item.match.slots["Entity"];
+    if (!item.rule.declares?.includes("Entity") || name === undefined) {
+      return;
+    }
+    const entity = this.entityNode(name);
+    for (const field of valuesOf(item.match, "Field")) {
+      entity?.fields.includes(field) || entity?.fields.push(field);
+    }
+  }
+
+  private recordRelation(item: PendingItem): void {
+    const target = item.match.slots["Entity"];
+    const kind = item.rule.relation;
+    if (kind === undefined || item.entity === undefined || target === undefined) {
+      return;
+    }
+    const targetName = this.registry.lookup("Entity", target, "")?.name;
+    targetName !== undefined &&
+      this.entityNode(item.entity)?.relations.push({ kind, entity: targetName });
+  }
+
+  private entityNode(name: string): EntityNode | undefined {
+    const canonicalName = this.registry.lookup("Entity", name, "")?.name;
+    if (canonicalName === undefined) {
+      return undefined;
+    }
+    this.model[canonicalName] ??= { fields: [], relations: [], machines: {} };
+    return this.model[canonicalName];
+  }
+
+  private recordMachine(entity: string, field: string, chains: string[][]): void {
+    const machines = this.entityNode(entity)?.machines;
+    if (machines === undefined) {
+      return;
+    }
+    const machine = (machines[field] ??= { states: [], transitions: [] });
+    for (const chain of chains) {
+      chain.forEach((state) => machine.states.includes(state) || machine.states.push(state));
+      chain.slice(1).forEach((to, index) => {
+        const from = chain[index] as string;
+        machine.transitions.some((seen) => seen.from === from && seen.to === to) ||
+          machine.transitions.push({ from, to });
+      });
+    }
+  }
+
   private declareTransitions(item: PendingItem): void {
     const entity = this.registry.lookup("Entity", item.match.slots["Entity"] ?? "", "")?.name;
     const field = this.registry.lookup(
@@ -275,7 +333,9 @@ class Binder {
     if (entity === undefined || field === undefined) {
       return;
     }
-    for (const chain of chainsOf(item.match.lists["State"] ?? [])) {
+    const chains = chainsOf(item.match.lists["State"] ?? []);
+    this.recordMachine(entity, field, chains);
+    for (const chain of chains) {
       chain.slice(1).forEach((to, index) => {
         const from = chain[index] as string;
         this.analysis.declarations.push({
@@ -382,6 +442,7 @@ class Binder {
       contexts: this.contexts,
       actors: this.actors,
       surfaces: this.surfaceNodes(),
+      model: this.model,
       scenarios,
     };
     return { ok: true, file: this.file, ast, analysis: this.analysis };

@@ -35,11 +35,23 @@ export interface SurfaceNode {
   controls: Record<string, { kind: ControlKind | string; locators: Record<string, string> }>;
 }
 
+export interface StateMachineNode {
+  states: string[];
+  transitions: { from: string; to: string }[];
+}
+
+export interface EntityNode {
+  fields: string[];
+  relations: { kind: "belongs-to" | "has-many"; entity: string }[];
+  machines: Record<string, StateMachineNode>;
+}
+
 export interface SpecAst {
   dialect: { name: string; version: string; stepIds: string[] };
   contexts: Record<string, Record<string, string>>;
   actors: Record<string, Record<string, string | Record<string, string>>>;
   surfaces: Record<string, SurfaceNode>;
+  model: Record<string, EntityNode>;
   scenarios: Scenario[];
 }
 

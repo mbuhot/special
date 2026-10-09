@@ -154,6 +154,25 @@ Dialect extension is object spread. A derived dialect adds; it does not remove o
       }
     }
   },
+  "model": {
+    "Invoice": {
+      "fields": ["number", "status", "total"],
+      "relations": [
+        { "kind": "belongs-to", "entity": "Customer" },
+        { "kind": "has-many", "entity": "LineItem" }
+      ],
+      "machines": {
+        "status": {
+          "states": ["draft", "sent", "paid", "void"],
+          "transitions": [
+            { "from": "draft", "to": "sent" },
+            { "from": "sent", "to": "paid" },
+            { "from": "draft", "to": "void" }
+          ]
+        }
+      }
+    }
+  },
   "scenarios": [
     {
       "name": "Line total updates as quantity changes",

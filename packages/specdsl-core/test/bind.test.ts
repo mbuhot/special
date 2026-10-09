@@ -102,6 +102,38 @@ describe("binding the invoicing spec", () => {
     expect(quantity?.kind).toBe("field");
     expect(Object.keys(quantity?.locators ?? {}).sort()).toEqual(["css", "form", "lv"]);
   });
+
+  it("emits each Model entity with its fields and relations", () => {
+    expect(ast.model["Invoice"]).toMatchObject({
+      fields: ["number", "status", "total"],
+      relations: [
+        { kind: "belongs-to", entity: "Customer" },
+        { kind: "has-many", entity: "LineItem" },
+      ],
+    });
+    expect(ast.model["LineItem"]).toMatchObject({
+      fields: ["description", "quantity", "unit price"],
+      relations: [{ kind: "belongs-to", entity: "Invoice" }],
+    });
+    expect(ast.model["Customer"]).toEqual({
+      fields: ["name", "email"],
+      relations: [],
+      machines: {},
+    });
+  });
+
+  it("emits a state machine per transition line", () => {
+    expect(ast.model["Invoice"]?.machines).toEqual({
+      status: {
+        states: ["draft", "sent", "paid", "void"],
+        transitions: [
+          { from: "draft", to: "sent" },
+          { from: "sent", to: "paid" },
+          { from: "draft", to: "void" },
+        ],
+      },
+    });
+  });
 });
 
 describe("binding errors", () => {

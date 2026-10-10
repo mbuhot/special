@@ -85,3 +85,16 @@ And Sales rep sees "Software" in "Properties"
 Narrate: It shows the industry.
 And Sales rep sees "Ada Lovelace" in "Company contacts"
 Narrate: The contacts table lists Ada Lovelace.
+
+## Scenario: Cancelling a company edit discards it
+
+Story: As the sales rep, I need to leave the company editor without saving, so that a change I started by mistake is not kept.
+Given a Company "Acme" with name Acme, domain acme.example, industry Software
+When Sales rep opens Company editor for Acme
+Narrate: This is the company editor for Acme. Save and Cancel sit below the form.
+And Sales rep enters Software-and-services into "Industry"
+Narrate: The industry is Software-and-services.
+And Sales rep clicks "Cancel"
+Then Sales rep is on Company list
+Narrate: The company list opens.
+And Acme has industry Software

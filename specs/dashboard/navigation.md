@@ -4,7 +4,7 @@
 
 Story: As the sales rep, I need to reach every section from the sidebar, so that I get to my work in one click.
 When Sales rep opens Dashboard
-Narrate: A sidebar runs down the left side of the dashboard. It lists Dashboard, Contacts, Companies, Pipeline and Invoices.
+Narrate: A sidebar runs down the left side of the dashboard. It lists Dashboard, Contacts, Companies, Pipeline, My tasks and Invoices.
 And Sales rep clicks "Contacts"
 Then Sales rep is on Contact list
 Narrate: The contact list opens. The sidebar stays on screen.
@@ -26,8 +26,8 @@ Narrate: The dashboard opens again. Every section was reached with one click on 
 Story: As the sales rep, I need to see who is signed in, so that I know whose account I am using.
 When Sales rep opens Dashboard
 Narrate: The sidebar has a signed-in area at its foot.
-Then Sales rep sees "Sales rep" in "Signed in as"
-Narrate: The signed-in area shows Sales rep. This is the person using the application.
+Then Sales rep sees "Sam Rivera" in "Signed in as"
+Narrate: The signed-in area shows Sam Rivera. This is the person using the application.
 
 ## Scenario: Dashboard cards open their sections
 
@@ -58,3 +58,31 @@ When Sales rep enters sales-rep@example.com into "Email"
 Narrate: The email address is typed into the Email field.
 Then Sales rep sees "Log in" in "Log in"
 Narrate: The Log in button sits below the field.
+
+## Scenario: Tasks are one click from the sidebar and the dashboard card
+
+Story: As the sales rep, I need to open my tasks from the dashboard, so that I act on the overdue count I see.
+Given a Company "Acme"
+Given a Deal "Big deal" with stage lead, company Acme
+Given a Task "Send proposal" with title Send-proposal, due date 2026-01-10, deal Big deal, status open
+When Sales rep opens Dashboard
+Narrate: The sidebar has a My tasks link. The overdue tasks card has a View tasks link.
+And Sales rep clicks "My tasks"
+Then Sales rep is on Task list
+Narrate: The sidebar link opens the task list.
+When Sales rep opens Dashboard
+Narrate: The dashboard is shown again.
+And Sales rep clicks "View tasks"
+Then Sales rep is on Task list
+Narrate: The link on the overdue tasks card opens the task list.
+
+## Scenario: Reaching the task list from the deal page
+
+Story: As the sales rep, I need to reach my tasks from a deal, so that I do not search for them.
+Given a Company "Acme"
+Given a Deal "Big deal" with stage lead, company Acme
+When Sales rep opens Deal page for Big deal
+Narrate: The tasks table on the deal page ends with a View all my tasks link.
+And Sales rep clicks "View all my tasks"
+Then Sales rep is on Task list
+Narrate: The link opens the task list.

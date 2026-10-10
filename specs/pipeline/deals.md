@@ -17,7 +17,7 @@ Given a Company "Acme"
 Given a Deal "Big deal" with stage lead, company Acme
 When Sales rep qualifies Big deal on the board
 Then Sales rep sees "Big deal" in "Qualified column"
-Narrate: Qualify moves Big deal forward. Big deal is now in the Qualified column.
+Narrate: Choosing Qualified moves Big deal forward. Big deal is now in the Qualified column.
 And Sales rep no longer sees "Big deal" in "Lead column"
 Narrate: The Lead column is empty.
 And Big deal has stage qualified
@@ -29,7 +29,7 @@ Given a Company "Acme"
 Given a Deal "Big deal" with stage qualified, company Acme
 When Sales rep proposes Big deal on the board
 Then Sales rep sees "Big deal" in "Proposal column"
-Narrate: Propose moves Big deal forward. Big deal is now in the Proposal column.
+Narrate: Choosing Proposal moves Big deal forward. Big deal is now in the Proposal column.
 And Sales rep no longer sees "Big deal" in "Qualified column"
 Narrate: The Qualified column is empty.
 And Big deal has stage proposal
@@ -41,7 +41,7 @@ Given a Company "Acme"
 Given a Deal "Big deal" with stage proposal, company Acme
 When Sales manager wins Big deal on the board
 Then Sales manager sees "Big deal" in "Won column"
-Narrate: Win closes the deal. Big deal is now in the Won column.
+Narrate: Choosing Won closes the deal. Big deal is now in the Won column.
 And Sales manager no longer sees "Big deal" in "Proposal column"
 Narrate: The Proposal column is empty.
 And Big deal has stage won
@@ -53,7 +53,7 @@ Given a Company "Acme"
 Given a Deal "Big deal" with stage lead, company Acme
 When Sales manager loses Big deal on the board
 Then Sales manager sees "Big deal" in "Lost column"
-Narrate: Lose closes the deal. Big deal is now in the Lost column.
+Narrate: Choosing Lost closes the deal. Big deal is now in the Lost column.
 And Sales manager no longer sees "Big deal" in "Lead column"
 Narrate: The Lead column is empty.
 And Big deal has stage lost
@@ -65,7 +65,7 @@ Given a Company "Acme"
 Given a Deal "Big deal" with stage qualified, company Acme
 When Sales manager loses Big deal on the board
 Then Sales manager sees "Big deal" in "Lost column"
-Narrate: Lose closes the deal. Big deal is now in the Lost column.
+Narrate: Choosing Lost closes the deal. Big deal is now in the Lost column.
 And Sales manager no longer sees "Big deal" in "Qualified column"
 Narrate: The Qualified column is empty.
 And Big deal has stage lost
@@ -77,7 +77,7 @@ Given a Company "Acme"
 Given a Deal "Big deal" with stage proposal, company Acme
 When Sales manager loses Big deal on the board
 Then Sales manager sees "Big deal" in "Lost column"
-Narrate: Lose closes the deal. Big deal is now in the Lost column.
+Narrate: Choosing Lost closes the deal. Big deal is now in the Lost column.
 And Sales manager no longer sees "Big deal" in "Proposal column"
 Narrate: The Proposal column is empty.
 And Big deal has stage lost
@@ -191,3 +191,17 @@ And Sales manager clicks "Lose"
 Then Sales manager sees "Lost" in "Stage"
 Narrate: The stage changes to Lost.
 And Big deal has stage lost
+
+## Scenario: Cancelling a deal edit discards it
+
+Story: As the sales rep, I need to leave the deal editor without saving, so that a change I started by mistake is not kept.
+Given a Company "Acme"
+Given a Deal "Big deal" with name Big-deal, stage lead, company Acme
+When Sales rep opens Deal editor for Big deal
+Narrate: This is the deal editor for Big-deal. Save and Cancel sit below the form.
+And Sales rep enters Renamed-deal into "Name"
+Narrate: The name is Renamed-deal.
+And Sales rep clicks "Cancel"
+Then Sales rep is on Pipeline board
+Narrate: The pipeline board opens.
+And Big deal has name Big-deal

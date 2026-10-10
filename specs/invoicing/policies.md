@@ -10,3 +10,7 @@
 - LineItem: manager may read
 - LineItem: accountant may read, create, update
 - LineItem: admin may read, create, update
+- Business: sales may read
+- Business: manager may read
+- Business: accountant may read
+- Business: admin may read, update

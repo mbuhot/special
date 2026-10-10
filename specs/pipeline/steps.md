@@ -4,20 +4,20 @@
 
 - <Actor> qualifies <Deal=Ref> on the board means
   - <Actor> opens Pipeline board
-  - Narrate: <Deal> is in the Lead column of the pipeline board. It has a Qualify button.
-  - <Actor> clicks "Qualify"
+  - Narrate: <Deal> is in the Lead column of the pipeline board. Its Stage menu offers Qualified.
+  - <Actor> selects Qualified in "Stage"
 - <Actor> proposes <Deal=Ref> on the board means
   - <Actor> opens Pipeline board
-  - Narrate: <Deal> is in the Qualified column of the pipeline board. It has a Propose button.
-  - <Actor> clicks "Propose"
+  - Narrate: <Deal> is in the Qualified column of the pipeline board. Its Stage menu offers Proposal.
+  - <Actor> selects Proposal in "Stage"
 - <Actor> wins <Deal=Ref> on the board means
   - <Actor> opens Pipeline board
-  - Narrate: <Deal> is in the Proposal column of the pipeline board. It has a Win button.
-  - <Actor> clicks "Win"
+  - Narrate: <Deal> is in the Proposal column of the pipeline board. Its Stage menu offers Won.
+  - <Actor> selects Won in "Stage"
 - <Actor> loses <Deal=Ref> on the board means
   - <Actor> opens Pipeline board
-  - Narrate: <Deal> is in a column of the pipeline board. It has a Lose button.
-  - <Actor> clicks "Lose"
+  - Narrate: <Deal> is in a column of the pipeline board. Its Stage menu offers Lost.
+  - <Actor> selects Lost in "Stage"
 - <Actor> creates a deal <Name=Text> for <Company=Ref> [with amount <Amount=Value>] [closing <Close=Value>] [with contact <Contact=Ref>] means
   - <Actor> opens Pipeline board
   - Narrate: The pipeline board has a New deal button above the columns.

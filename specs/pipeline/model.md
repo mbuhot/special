@@ -16,7 +16,8 @@
 - Deal: manager may read, create, update, qualify, propose, win, lose, reassign
 - Deal: accountant may read
 - Deal: admin may read, create, update, qualify, propose, win, lose, reassign
-- Task: sales may read, create, update, complete
-- Task: manager may read, create, update, complete
+- Task: sales may read only mine
+- Task: sales may create, update, complete
+- Task: manager may read, create, update, complete, reassign, see all
 - Task: accountant may read
-- Task: admin may read, create, update, complete
+- Task: admin may read, create, update, complete, reassign, see all

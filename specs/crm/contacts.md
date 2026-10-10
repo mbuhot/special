@@ -98,3 +98,17 @@ When Sales rep opens Contact page for Ada Lovelace
 And Sales rep clicks "Edit contact"
 Then Sales rep is on Contact editor
 Narrate: The Edit contact button opens the contact editor for Ada Lovelace.
+
+## Scenario: Cancelling a contact edit discards it
+
+Story: As the sales rep, I need to leave the contact editor without saving, so that a change I started by mistake is not kept.
+Given a Company "Acme"
+Given a Contact "Ada Lovelace" with first name Ada, last name Lovelace, company Acme
+When Sales rep opens Contact editor for Ada Lovelace
+Narrate: This is the contact editor for Ada Lovelace. Save and Cancel sit below the form.
+And Sales rep enters Grace into "First name"
+Narrate: The first name is Grace.
+And Sales rep clicks "Cancel"
+Then Sales rep is on Contact list
+Narrate: The contact list opens.
+And Ada Lovelace has first name Ada

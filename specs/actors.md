@@ -2,7 +2,7 @@
 
 ## Actors
 
-- Sales rep: role sales
-- Sales manager: role manager
-- Accounts: role accountant
-- Admin: role admin
+- Sales rep: role sales, named Sam Rivera
+- Sales manager: role manager, named Morgan Lee
+- Accounts: role accountant, named Alex Chen
+- Admin: role admin, named Jordan Patel

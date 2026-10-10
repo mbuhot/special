@@ -1,11 +1,5 @@
 import { button, field, link, region, surface, table } from "../packages/specdsl-core/src/index.ts";
 
-const transitionButton = (transition: string) =>
-  button({
-    css: `button[data-transition='${transition}']`,
-    lv: `button[data-transition='${transition}']`,
-  });
-
 export const pipelineSurfaces = {
   "Pipeline board": surface({
     route: "/pipeline",
@@ -15,10 +9,6 @@ export const pipelineSurfaces = {
       "Proposal column": region({ css: "#column-proposal", lv: "#column-proposal" }),
       "Won column": region({ css: "#column-won", lv: "#column-won" }),
       "Lost column": region({ css: "#column-lost", lv: "#column-lost" }),
-      Qualify: transitionButton("qualify"),
-      Propose: transitionButton("propose"),
-      Win: transitionButton("win"),
-      Lose: transitionButton("lose"),
       Stage: field({
         css: "select[data-deal-stage]",
         lv: "deal[stage]",
@@ -58,7 +48,6 @@ export const pipelineSurfaces = {
       "Company link": link({ css: "#deal-company-link", lv: "#deal-company-link" }),
       "Contact link": link({ css: "#deal-contact-link", lv: "#deal-contact-link" }),
       Tasks: table({ css: "#tasks", lv: "#tasks" }),
-      "Overdue tasks": region({ css: "#overdue-tasks", lv: "#overdue-tasks" }),
       "Task title": field({ css: "#task-title", lv: "task[title]", form: "#task-form" }),
       "Task due date": field({
         css: "#task-due-date",

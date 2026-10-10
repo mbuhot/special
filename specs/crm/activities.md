@@ -62,5 +62,5 @@ Then Sales rep sees "Call" in "Timeline"
 Narrate: The activity kind reads Call.
 And Sales rep sees "10 Jan 2026" in "Timeline"
 Narrate: The date reads the tenth of January 2026.
-And Sales rep sees "Sales rep" in "Timeline"
-Narrate: The author reads Sales rep.
+And Sales rep sees "Sam Rivera" in "Timeline"
+Narrate: The author reads Sam Rivera.

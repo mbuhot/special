@@ -18,10 +18,6 @@ And Sales rep may not reassign Lead deal
 Narrate: A sales rep cannot reassign the Lead deal.
 And Sales manager may reassign Lead deal
 Narrate: A sales manager can reassign the Lead deal.
-When Sales rep opens Pipeline board
-Narrate: This is the pipeline board for a sales rep.
-Then Sales rep does not see "Win"
-Narrate: The board has no Win button for a sales rep. Winning a deal is left to the sales manager.
 
 ## Scenario: Who may complete a task
 
@@ -33,3 +29,19 @@ Then Sales rep may complete Send proposal
 Narrate: A sales rep can complete the task Send proposal.
 And Accounts may not complete Send proposal
 Narrate: Accounts cannot complete the task Send proposal.
+
+## Scenario: The stage menu offers only the stages a role may choose
+
+Story: As the sales manager, I need Won offered only to managers, so that sales are confirmed deliberately.
+Given a Company "Acme"
+Given a Deal "Proposal deal" with stage proposal, company Acme
+When Sales rep opens Pipeline board
+Narrate: This is the pipeline board for a sales rep. Proposal deal sits in the Proposal column with a Stage menu.
+Then Sales rep sees "Proposal" in "Stage"
+Narrate: The Stage menu shows Proposal.
+And Sales rep no longer sees "Won" in "Stage"
+Narrate: Won is absent from the menu of a sales rep.
+When Sales manager opens Pipeline board
+Narrate: This is the pipeline board for a sales manager.
+Then Sales manager sees "Won" in "Stage"
+Narrate: The Stage menu offers Won to a sales manager.

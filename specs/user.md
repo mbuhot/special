@@ -2,7 +2,7 @@
 
 ## Model
 
-- User: email (email, required), role (one of sales, manager, accountant, admin, required).
+- User: name (text, required), email (email, required), role (one of sales, manager, accountant, admin, required).
 
 ## Policies
 

@@ -33,6 +33,7 @@ export default dialect({
     "Invoice editor": surface({
       route: "/invoices/{id}/edit",
       controls: {
+        "Invoice title": region({ css: "#invoice-title", lv: "#invoice-title" }),
         "Invoice number": region({ css: "#invoice-number", lv: "#invoice-number" }),
         Status: region({ css: "#invoice-status", lv: "#invoice-status" }),
         Supplier: region({ css: "#invoice-supplier", lv: "#invoice-supplier" }),

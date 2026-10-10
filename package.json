@@ -3,16 +3,23 @@
   "private": true,
   "packageManager": "pnpm@11.9.0",
   "scripts": {
+    "setup": "pnpm install && cd apps/invoicing && mix setup && MIX_ENV=e2e mix ash.setup && MIX_ENV=e2e mix assets.build",
+    "seed:demo": "cd apps/invoicing && mix run priv/repo/demo_seeds.exs",
+    "server": "cd apps/invoicing && mix phx.server",
     "build": "pnpm -r build",
-    "test": "pnpm -r test",
-    "format": "prettier --write .",
     "bind": "pnpm --filter @special/specdsl-core build && pnpm --filter @special/specdsl-core exec specdsl bind-all ../../specs",
     "lock": "pnpm --filter @special/specdsl-core build && pnpm --filter @special/specdsl-core exec specdsl lock --dialect ../../dialects/invoicing.ts --out ../../dialects/invoicing.lock.json",
+    "test": "pnpm bind && pnpm lock && pnpm test:core && pnpm test:render && pnpm test:spec-dsl && pnpm test:app && pnpm e2e",
+    "test:core": "pnpm --filter @special/specdsl-core test",
+    "test:render": "pnpm --filter @special/specdsl-playwright test:render",
+    "test:spec-dsl": "cd elixir/spec_dsl && mix test",
+    "test:app": "cd apps/invoicing && mix test",
     "e2e": "pnpm --filter @special/specdsl-playwright test",
+    "design": "pnpm --filter @special/specdsl-playwright design",
+    "design:lint": "pnpm --filter @special/specdsl-core build && pnpm --filter @special/specdsl-core exec specdsl design-lint ../../specs",
     "demo": "pnpm --filter @special/specdsl-playwright demo",
     "demo:reel": "pnpm --filter @special/specdsl-playwright demo:reel",
-    "design": "pnpm --filter @special/specdsl-playwright design",
-    "design:lint": "pnpm --filter @special/specdsl-core build && pnpm --filter @special/specdsl-core exec specdsl design-lint ../../specs"
+    "format": "prettier --write . && cd elixir/spec_dsl && mix format && cd ../../apps/invoicing && mix format"
   },
   "devDependencies": {
     "prettier": "3.6.2",

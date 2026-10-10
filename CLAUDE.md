@@ -17,6 +17,6 @@
 
 # Gates
 
-- Core: `pnpm --filter @special/specdsl-core test`. App: `cd apps/invoicing && mix test`. Browser: `pnpm e2e`. Video: `pnpm demo`, then `pnpm demo:reel`.
+- All suites: `pnpm test` (bind, core, renderer, spec runtime, app, browser). Single suites: `pnpm test:core`, `pnpm test:render`, `pnpm test:spec-dsl`, `pnpm test:app`, `pnpm e2e`. Designs: `pnpm design`. Video: `pnpm demo`, then `pnpm demo:reel`.
 - Never commit `*.ast.json`, `*.lock.json`, `demo-output/`, `test-results/`. Stage with explicit `git add <files>`.
 - If asdf shims complain: `ASDF_PNPM_VERSION=11.9.0 ASDF_ELIXIR_VERSION=1.20.2`.

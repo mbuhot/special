@@ -110,25 +110,29 @@ Conventions: `designs/README.md`.
 
 ## Commands
 
-| Task                                  | Command                                                                                                                                                |
-| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Install                               | `pnpm install`                                                                                                                                         |
-| Set up the app                        | `cd apps/invoicing && mix setup`                                                                                                                       |
-| Load demo data                        | `cd apps/invoicing && mix run priv/repo/demo_seeds.exs`                                                                                                |
-| Run the app                           | `cd apps/invoicing && mix phx.server`, then http://localhost:4000 as sales@example.com, manager@example.com, accounts@example.com or admin@example.com |
-| Bind and lint specs and designs       | `pnpm bind`                                                                                                                                            |
-| Spec language tests                   | `pnpm --filter @special/specdsl-core test`                                                                                                             |
-| Scenarios and conformance, in-process | `cd apps/invoicing && mix test`                                                                                                                        |
-| Scenarios in a browser                | `pnpm e2e`                                                                                                                                             |
-| Design walkthrough                    | `pnpm design [-- --scenario "<name>"]`                                                                                                                 |
-| App demo videos                       | `pnpm demo`, then `pnpm demo:reel`                                                                                                                     |
-| Sync the canvas                       | `/design-sync` in Claude Code                                                                                                                          |
+Every task runs from the repository root.
 
-Run `pnpm bind` before the others: the bound AST files are generated, not committed.
+| Task                                   | Command                                                                                                                        |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Install and set up everything          | `pnpm setup`                                                                                                                   |
+| Load demo data                         | `pnpm seed:demo`                                                                                                               |
+| Run the app                            | `pnpm server`, then http://localhost:4000 as sales@example.com, manager@example.com, accounts@example.com or admin@example.com |
+| Bind and lint specs and designs        | `pnpm bind`                                                                                                                    |
+| Every test suite                       | `pnpm test`                                                                                                                    |
+| Spec language tests                    | `pnpm test:core`                                                                                                               |
+| Design renderer tests                  | `pnpm test:render`                                                                                                             |
+| Elixir spec runtime tests              | `pnpm test:spec-dsl`                                                                                                           |
+| Scenarios and conformance, in-process  | `pnpm test:app`                                                                                                                |
+| Scenarios in a browser                 | `pnpm e2e`                                                                                                                     |
+| Design walkthrough                     | `pnpm design [-- --scenario "<name>"]`                                                                                         |
+| App demo videos                        | `pnpm demo`, then `pnpm demo:reel`                                                                                             |
+| Format TypeScript, Markdown and Elixir | `pnpm format`                                                                                                                  |
+| Sync the canvas                        | `/design-sync` in Claude Code                                                                                                  |
+
+`pnpm test` binds the specs first, then runs core, renderer, spec runtime, app and browser suites in that order and stops at the first failure.
 
 ## Prerequisites
 
 - Node 26, pnpm 11, Elixir 1.20, Erlang 29 (see `.tool-versions`)
 - Postgres on localhost:5432, user `postgres`, password `postgres`
 - `ffmpeg`, `ffprobe` and `pocket-tts` on PATH for the demo and design videos
-- `cd apps/invoicing && mix setup && MIX_ENV=e2e mix ash.setup && MIX_ENV=e2e mix assets.build`

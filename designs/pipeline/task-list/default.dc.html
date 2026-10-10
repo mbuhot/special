@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>My tasks</title>
+    <script src="./support.js"></script>
+  </head>
+  <body>
+    <x-dc>
+      <helmet>
+        <style>
+          input, select, button {
+            box-sizing: border-box;
+            height: 36px;
+            margin: 0;
+            font-family: inherit;
+            font-size: 14px;
+            line-height: 20px;
+            vertical-align: middle;
+          }
+          select, input[type="date"] {
+            -webkit-appearance: none;
+            appearance: none;
+          }
+          select {
+            padding-right: 28px !important;
+            background-image: linear-gradient(45deg, transparent 50%, #64748b 50%), linear-gradient(135deg, #64748b 50%, transparent 50%) !important;
+            background-position: calc(100% - 15px) 50%, calc(100% - 10px) 50% !important;
+            background-size: 5px 5px, 5px 5px !important;
+            background-repeat: no-repeat !important;
+          }
+          input[type="date"]::-webkit-date-and-time-value {
+            text-align: left;
+          }
+          input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            margin: 0;
+          }
+          td input, td select, td button, [role="menu"] button, [role="dialog"] select, [role="dialog"] button {
+            height: 32px;
+            font-size: 13px;
+          }
+          [role="menu"] button, [role="menu"] a {
+            box-sizing: border-box;
+            display: flex !important;
+            align-items: center;
+            height: 36px;
+            padding: 0 14px !important;
+            font-size: 14px;
+            line-height: 20px;
+          }
+          body {
+            margin: 0;
+            font-family:
+              system-ui,
+              -apple-system,
+              "Segoe UI",
+              sans-serif;
+            color: #0f172a;
+          }
+          a {
+            color: #1d4ed8;
+          }
+          a:hover {
+            color: #1e40af;
+          }
+        </style>
+      </helmet>
+      <div
+        style="
+          width: 1280px;
+          height: 800px;
+          display: flex;
+          background: #ffffff;
+          color: #0f172a;
+          font-family:
+            system-ui,
+            -apple-system,
+            &quot;Segoe UI&quot;,
+            sans-serif;
+          overflow: hidden;
+        "
+      >
+        <nav
+          data-surface="Sidebar"
+          style="
+            width: 240px;
+            height: 800px;
+            box-sizing: border-box;
+            flex: none;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            padding: 20px 16px;
+            background: #ffffff;
+            border-right: 1px solid #e2e8f0;
+          "
+        >
+          <div style="padding: 4px 12px; font-size: 18px; font-weight: 700; color: #0f172a">
+            Ledger CRM
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 4px">
+            <a
+              href="../../dashboard/dashboard/default.dc.html"
+              data-control="Dashboard"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 10px 12px;
+                border-radius: 8px;
+                color: #334155;
+                font-size: 14px;
+                font-weight: 500;
+                text-decoration: none;
+              "
+            >
+              <svg
+                aria-hidden="true"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                style="flex: none"
+              >
+                <rect x="3" y="3" width="7" height="9" rx="1" />
+                <rect x="14" y="3" width="7" height="5" rx="1" />
+                <rect x="14" y="12" width="7" height="9" rx="1" />
+                <rect x="3" y="16" width="7" height="5" rx="1" />
+              </svg>
+              <span>Dashboard</span>
+            </a>
+            <a
+              href="../../crm/contact-list/default.dc.html"
+              data-control="Contacts"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 10px 12px;
+                border-radius: 8px;
+                color: #334155;
+                font-size: 14px;
+                font-weight: 500;
+                text-decoration: none;
+              "
+            >
+              <svg
+                aria-hidden="true"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                style="flex: none"
+              >
+                <circle cx="12" cy="8" r="4" />
+                <path d="M4 21c0-4 3.6-7 8-7s8 3 8 7" />
+              </svg>
+              <span>Contacts</span>
+            </a>
+            <a
+              href="../../crm/company-list/default.dc.html"
+              data-control="Companies"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 10px 12px;
+                border-radius: 8px;
+                color: #334155;
+                font-size: 14px;
+                font-weight: 500;
+                text-decoration: none;
+              "
+            >
+              <svg
+                aria-hidden="true"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                style="flex: none"
+              >
+                <path d="M4 21V5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v16" />
+                <path d="M14 10h5a1 1 0 0 1 1 1v10" />
+                <path d="M8 8h2M8 12h2M8 16h2M2 21h20" />
+              </svg>
+              <span>Companies</span>
+            </a>
+            <a
+              href="../../pipeline/pipeline-board/default.dc.html"
+              data-control="Pipeline"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 10px 12px;
+                border-radius: 8px;
+                color: #334155;
+                font-size: 14px;
+                font-weight: 500;
+                text-decoration: none;
+              "
+            >
+              <svg
+                aria-hidden="true"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                style="flex: none"
+              >
+                <path d="M3 4h18l-7 8v7l-4 2v-9z" />
+              </svg>
+              <span>Pipeline</span>
+            </a>
+            <a
+              href="../../pipeline/task-list/default.dc.html"
+              data-control="My tasks"
+              aria-current="page"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 10px 12px;
+                border-radius: 8px;
+                background: #eff6ff;
+                color: #1d4ed8;
+                font-size: 14px;
+                font-weight: 600;
+                text-decoration: none;
+              "
+            >
+              <svg
+                aria-hidden="true"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                style="flex: none"
+              >
+                <rect x="4" y="4" width="16" height="16" rx="2" />
+                <path d="m8 12 3 3 5-6" />
+              </svg>
+              <span>My tasks</span>
+            </a>
+            <a
+              href="../../invoicing/invoice-list/default.dc.html"
+              data-control="Invoices"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 10px 12px;
+                border-radius: 8px;
+                color: #334155;
+                font-size: 14px;
+                font-weight: 500;
+                text-decoration: none;
+              "
+            >
+              <svg
+                aria-hidden="true"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                style="flex: none"
+              >
+                <path d="M6 3h9l4 4v14H6z" />
+                <path d="M14 3v5h5" />
+                <path d="M9 13h7M9 17h7" />
+              </svg>
+              <span>Invoices</span>
+            </a>
+          </div>
+          <div style="flex: 1"></div>
+          <div
+            data-control="Signed in as"
+            style="
+              display: flex;
+              flex-direction: column;
+              gap: 2px;
+              padding: 12px;
+              border-top: 1px solid #e2e8f0;
+            "
+          >
+            <div style="font-size: 12px; color: #64748b">Signed in as</div>
+            <div style="font-size: 14px; font-weight: 600; color: #0f172a">{{ user.name }}</div>
+            <div style="font-size: 12px; color: #64748b">sales-rep@example.com</div>
+          </div>
+          <a
+            href="../../shell/login/default.dc.html"
+            data-control="Sign out"
+            style="
+              margin-top: -12px;
+              padding: 8px 12px;
+              border: 1px solid #cbd5e1;
+              border-radius: 8px;
+              background: #ffffff;
+              color: #334155;
+              font-size: 14px;
+              font-weight: 600;
+              cursor: pointer;
+              text-align: center;
+              text-decoration: none;
+            "
+          >
+            Sign out
+          </a>
+        </nav>
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column">
+          <header style="display: flex; align-items: center; justify-content: space-between; gap: 16px; height: 72px; box-sizing: border-box; flex: none; padding: 0 32px; border-bottom: 1px solid #e2e8f0;">
+            <h1 style="margin: 0; font-size: 24px; font-weight: 600; color: #0f172a">My tasks</h1>
+          </header>
+          <main data-surface="Task list" style="flex: 1; display: flex; flex-direction: column; gap: 20px; padding: 32px; background: #ffffff;">
+            <sc-if value="{{ canCreateTask }}" hint-placeholder-val="{{ true }}">
+            <section style="display: flex; align-items: flex-end; gap: 12px; box-sizing: border-box; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px; background: #ffffff;">
+              <div style="display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0">
+                <label for="new-task-title" style="font-size: 12px; color: #64748b">Title</label>
+                <input id="new-task-title" type="text" data-control="New task title" data-field="title" placeholder="What needs doing?" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; font-size: 14px; font-family: inherit; box-sizing: border-box;" />
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 4px">
+                <label for="new-task-due-date" style="font-size: 12px; color: #64748b">Due date</label>
+                <input id="new-task-due-date" type="date" data-control="New task due date" data-field="dueDate" style="width: 150px; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; font-size: 14px; font-family: inherit; box-sizing: border-box;" />
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 4px">
+                <label for="new-task-deal" style="font-size: 12px; color: #64748b">Deal</label>
+                <select id="new-task-deal" data-control="New task deal" data-field="deal" style="width: 180px; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; font-size: 14px; font-family: inherit; box-sizing: border-box;">
+                  <sc-for list="{{ allDeals }}" as="option" hint-placeholder-count="2">
+                    <option>{{ option.name }}</option>
+                  </sc-for>
+                </select>
+              </div>
+              <sc-if value="{{ canSeeAllTasks }}" hint-placeholder-val="{{ true }}">
+              <div style="display: flex; flex-direction: column; gap: 4px">
+                <label for="new-task-assignee" style="font-size: 12px; color: #64748b">Assignee</label>
+                <select id="new-task-assignee" data-control="New task assignee" data-field="assignee" style="width: 180px; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; font-size: 14px; font-family: inherit; box-sizing: border-box;">
+                  <sc-for list="{{ allUsers }}" as="option" hint-placeholder-count="2">
+                    <option>{{ option.name }}</option>
+                  </sc-for>
+                </select>
+              </div>
+              </sc-if>
+              <button type="button" data-control="Add task" data-creates="tasks" style="padding: 8px 16px; border: 0; border-radius: 8px; background: #1d4ed8; color: #ffffff; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer;">Add task</button>
+            </section>
+            </sc-if>
+            <div style="display: flex; flex-direction: column; gap: 4px; width: 240px">
+              <label for="task-filter" style="font-size: 12px; color: #64748b">Show</label>
+              <select id="task-filter" data-control="Task filter" data-filters="tasks" data-filter-flag style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; font-size: 14px; font-family: inherit; box-sizing: border-box;">
+                <option value="" selected>All open</option>
+                <option value="overdue">Overdue</option>
+                <option value="dueThisWeek">Due this week</option>
+              </select>
+            </div>
+            <section style="display: flex; flex-direction: column; box-sizing: border-box; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px; background: #ffffff;">
+              <sc-if value="{{ anySelected }}" hint-placeholder-val="{{ true }}">
+                <div data-control="Bulk actions" style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px; padding: 8px 12px; border: 1px solid #bfdbfe; border-radius: 8px; background: #eff6ff;">
+                  <span style="font-size: 14px; font-weight: 600; color: #1e3a8a">{{ selectedCount }} selected</span>
+                  <sc-if value="{{ canSeeAllTasks }}" hint-placeholder-val="{{ true }}">
+                    <label for="bulk-assignee" style="font-size: 13px; color: #334155">Reassign to</label>
+                    <select id="bulk-assignee" data-control="Bulk assignee" data-field="assignee" data-selection="tasks" style="width: 180px; padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a;">
+                      <sc-for list="{{ allUsers }}" as="option" hint-placeholder-count="3">
+                        <sc-if value="{{ option.assignable }}" hint-placeholder-val="{{ true }}">
+                          <option>{{ option.name }}</option>
+                        </sc-if>
+                      </sc-for>
+                    </select>
+                    <button type="button" data-control="Reassign selected" data-saves data-selection="tasks" style="padding: 4px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #334155; font-weight: 600; cursor: pointer;">Reassign</button>
+                  </sc-if>
+                  <button type="button" data-control="Complete selected" data-next-state="done" data-selection="tasks" style="padding: 4px 12px; border: 0; border-radius: 8px; background: #1d4ed8; color: #ffffff; font-weight: 600; cursor: pointer;">Complete</button>
+                  <button type="button" data-control="Clear selection" data-clears="selected" data-selection="tasks" style="margin-left: auto; padding: 4px 12px; border: 0; background: transparent; color: #1d4ed8; font-weight: 600; cursor: pointer;">Clear selection</button>
+                </div>
+              </sc-if>
+
+              <table data-control="My tasks" style="width: 100%; border-collapse: collapse; font-size: 14px">
+                <thead>
+                  <tr>
+                    <th style="width: 32px; padding: 8px 8px 8px 0;"><input type="checkbox" data-control="Select all tasks" data-toggles-all="selected" data-selection="tasks" aria-label="Select all tasks"></th>
+                    <th style="text-align: left; padding: 8px 12px 8px 0; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: #64748b;">Title</th>
+                    <th style="text-align: left; padding: 8px 12px 8px 0; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: #64748b;">Due</th>
+                    <th style="text-align: left; padding: 8px 12px 8px 0; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: #64748b;">Deal</th>
+                    <sc-if value="{{ canSeeAllTasks }}" hint-placeholder-val="{{ true }}">
+                    <th style="text-align: left; padding: 8px 12px 8px 0; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: #64748b;">Assignee</th>
+                    </sc-if>
+                    <th style="text-align: right; padding: 8px 0 8px 12px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: #64748b;">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <sc-if value="{{ hasNoOpenTasks }}" hint-placeholder-val="{{ false }}">
+                    <tr>
+                      <td colspan="6" style="padding: 16px 0; border-top: 1px solid #e2e8f0; color: #64748b">No open tasks</td>
+                    </tr>
+                  </sc-if>
+                  <sc-for list="{{ tasks }}" as="task" hint-placeholder-count="4">
+                    <sc-if value="{{ task.isOpen }}" hint-placeholder-val="{{ true }}">
+                    <sc-if value="{{ task.matches }}" hint-placeholder-val="{{ true }}">
+                    <tr>
+                      <td style="width: 32px; padding: 8px 8px 8px 0; border-top: 1px solid #e2e8f0;"><sc-if value="{{ task.selected }}" hint-placeholder-val="{{ false }}"><input type="checkbox" checked data-control="Select task" data-toggles="selected" data-record="{{ task.name }}" aria-label="Select {{ task.title }}"></sc-if><sc-if value="{{ task.notSelected }}" hint-placeholder-val="{{ true }}"><input type="checkbox" data-control="Select task" data-toggles="selected" data-record="{{ task.name }}" aria-label="Select {{ task.title }}"></sc-if></td>
+                      <td style="padding: 8px 12px 8px 0; border-top: 1px solid #e2e8f0; color: #0f172a;">{{ task.title }}</td>
+                      <td style="padding: 8px 12px 8px 0; border-top: 1px solid #e2e8f0; color: #334155;">
+                        <span>{{ task.dueDate }}</span>
+                        <sc-if value="{{ task.overdue }}" hint-placeholder-val="{{ false }}">
+                          <span style="margin-left: 8px; padding: 2px 10px; border-radius: 9999px; background: #fee2e2; color: #b91c1c; font-size: 12px; font-weight: 600;">Overdue</span>
+                        </sc-if>
+                      </td>
+                      <td style="padding: 8px 12px 8px 0; border-top: 1px solid #e2e8f0;">
+                        <a href="../deal-page/default.dc.html" data-control="Deal link" data-record="{{ task.deal }}" style="font-size: 14px; text-decoration: none">{{ task.deal }}</a>
+                      </td>
+                      <sc-if value="{{ canSeeAllTasks }}" hint-placeholder-val="{{ true }}">
+                      <td style="padding: 8px 12px 8px 0; border-top: 1px solid #e2e8f0; color: #334155;">{{ task.assignee }}</td>
+                      </sc-if>
+                      <td style="padding: 8px 0 8px 12px; border-top: 1px solid #e2e8f0; text-align: right;">
+                        <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px; position: relative">
+                          <sc-if value="{{ task.canComplete }}" hint-placeholder-val="{{ true }}">
+                            <button type="button" data-control="Complete task" data-record="{{ task.name }}" data-next-state="done" style="padding: 4px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #334155; font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer;">Complete</button>
+                          </sc-if>
+                          <sc-if value="{{ task.canReassign }}" hint-placeholder-val="{{ true }}">
+                            <button type="button" data-control="Task actions" data-toggles="menuOpen" data-record="{{ task.name }}" aria-label="More actions" style="width: 32px; height: 28px; padding: 0; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #334155; font-size: 16px; line-height: 1; font-family: inherit; cursor: pointer;">&#8943;</button>
+                            <sc-if value="{{ task.menuOpen }}" hint-placeholder-val="{{ false }}">
+                              <div role="menu" aria-label="Task actions" style="position: absolute; top: 32px; right: 0; z-index: 10; display: flex; flex-direction: column; min-width: 180px; padding: 4px 0; border: 1px solid #e2e8f0; border-radius: 8px; background: #ffffff; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12); text-align: left;">
+                                <a role="menuitem" href="../deal-page/default.dc.html" data-control="Open deal" data-record="{{ task.deal }}" style="display: block; padding: 8px 14px; color: #0f172a; font-size: 14px; text-decoration: none;">Open deal</a>
+                                <button type="button" role="menuitem" data-control="Reassign task" data-toggles="reassignOpen" data-record="{{ task.name }}" style="display: block; width: 100%; padding: 8px 14px; border: 0; background: transparent; color: #0f172a; font-size: 14px; font-family: inherit; text-align: left; cursor: pointer;">Reassign…</button>
+                              </div>
+                            </sc-if>
+                            <sc-if value="{{ task.reassignOpen }}" hint-placeholder-val="{{ false }}">
+                              <div role="dialog" aria-label="Reassign task" style="position: absolute; top: 32px; right: 0; z-index: 11; display: flex; flex-direction: column; gap: 8px; width: 240px; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; background: #ffffff; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12); text-align: left;">
+                                <label style="font-size: 12px; font-weight: 600; color: #64748b">Reassign {{ task.title }} to</label>
+                                <select data-control="Assignee" data-field="assignee" data-record="{{ task.name }}" style="width: 100%; padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; font-size: 13px; font-family: inherit; box-sizing: border-box;">
+                                  <sc-for list="{{ allUsers }}" as="option" hint-placeholder-count="3">
+                                    <sc-if value="{{ option.assignable }}" hint-placeholder-val="{{ true }}">
+                                      <option>{{ option.name }}</option>
+                                    </sc-if>
+                                  </sc-for>
+                                </select>
+                                <div style="display: flex; justify-content: flex-end; gap: 8px">
+                                  <button type="button" data-control="Cancel reassign" data-toggles="reassignOpen" data-record="{{ task.name }}" style="padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #334155; font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer;">Cancel</button>
+                                  <button type="button" data-control="Reassign" data-saves data-record="{{ task.name }}" style="padding: 6px 12px; border: 0; border-radius: 8px; background: #1d4ed8; color: #ffffff; font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer;">Reassign</button>
+                                </div>
+                              </div>
+                            </sc-if>
+                          </sc-if>
+                        </div>
+                      </td>
+                    </tr>
+                    </sc-if>
+                    </sc-if>
+                  </sc-for>
+                </tbody>
+              </table>
+            </section>
+          </main>
+        </div>
+      </div>
+    </x-dc>
+    <script type="text/x-dc" data-dc-script data-props='{"user":{"editor":null,"default":{"name":"Morgan Lee"}},"canSeeAllTasks":{"editor":"boolean","default":true},"canCreateTask":{"editor":"boolean","default":true},"hasNoOpenTasks":{"editor":"boolean","default":false},"anySelected":{"editor":"boolean","default":true},"selectedCount":{"editor":"int","default":2},"tasks":{"editor":null,"default":[{"name":"Confirm decision maker","title":"Confirm decision maker","dueDate":"2 Oct 2026","status":"open","deal":"Big deal","assignee":"Sam Rivera","isOpen":true,"overdue":true,"dueThisWeek":false,"canComplete":true,"canReassign":true,"menuOpen":true,"reassignOpen":false,"selected":true,"notSelected":false,"matches":true},{"name":"Send proposal draft","title":"Send proposal draft","dueDate":"14 Oct 2026","status":"open","deal":"Big deal","assignee":"Sam Rivera","isOpen":true,"overdue":false,"dueThisWeek":true,"canComplete":true,"canReassign":true,"selected":true,"notSelected":false,"matches":true},{"name":"Book onboarding call","title":"Book onboarding call","dueDate":"12 Oct 2026","status":"open","deal":"Globex renewal","assignee":"Morgan Lee","isOpen":true,"overdue":false,"dueThisWeek":true,"canComplete":true,"canReassign":true,"selected":false,"notSelected":true,"matches":true},{"name":"Review contract terms","title":"Review contract terms","dueDate":"30 Oct 2026","status":"open","deal":"Globex renewal","assignee":"Morgan Lee","isOpen":true,"overdue":false,"dueThisWeek":false,"canComplete":true,"canReassign":true,"selected":false,"notSelected":true,"matches":true},{"name":"Qualify budget","title":"Qualify budget","dueDate":"20 Sep 2026","status":"done","deal":"Big deal","assignee":"Sam Rivera","isOpen":false,"overdue":false,"dueThisWeek":false,"canComplete":false,"canReassign":false,"matches":true}]},"allDeals":{"editor":null,"default":[{"name":"Big deal"},{"name":"Globex renewal"}]},"allUsers":{"editor":null,"default":[{"name":"Sam Rivera","assignable":true},{"name":"Morgan Lee","assignable":true},{"name":"Alex Chen","assignable":false},{"name":"Jordan Patel","assignable":true}]},"$preview":{"width":1280,"height":800}}'>
+      class Component extends DCLogic {
+      renderVals() {
+      return { ...this.props };
+      }
+      }
+    </script>
+  </body>
+</html>

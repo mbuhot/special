@@ -9,6 +9,36 @@
     <x-dc>
       <helmet>
         <style>
+          input:not([type="checkbox"]):not([type="radio"]), select, button {
+            box-sizing: border-box;
+            height: 36px;
+            margin: 0;
+            font-family: inherit;
+            font-size: 14px;
+            line-height: 20px;
+            vertical-align: middle;
+          }
+          select, input[type="date"] {
+            -webkit-appearance: none;
+            appearance: none;
+          }
+          select {
+            padding-right: 28px !important;
+            background-image: linear-gradient(45deg, transparent 50%, #64748b 50%), linear-gradient(135deg, #64748b 50%, transparent 50%) !important;
+            background-position: calc(100% - 15px) 50%, calc(100% - 10px) 50% !important;
+            background-size: 5px 5px, 5px 5px !important;
+            background-repeat: no-repeat !important;
+          }
+          td input:not([type="checkbox"]), td select, td button {
+            height: 32px;
+            font-size: 13px;
+          }
+          a[data-control][style*="border-radius: 8px"][style*="padding: 8px 16px"] {
+            box-sizing: border-box;
+            display: inline-flex;
+            align-items: center;
+            height: 36px;
+          }
           body {
             margin: 0;
             font-family:
@@ -191,6 +221,38 @@
               <span>Pipeline</span>
             </a>
             <a
+              href="../../pipeline/task-list/default.dc.html"
+              data-control="My tasks"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 10px 12px;
+                border-radius: 8px;
+                color: #334155;
+                font-size: 14px;
+                font-weight: 500;
+                text-decoration: none;
+              "
+            >
+              <svg
+                aria-hidden="true"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                style="flex: none"
+              >
+                <rect x="4" y="4" width="16" height="16" rx="2" />
+                <path d="m8 12 3 3 5-6" />
+              </svg>
+              <span>My tasks</span>
+            </a>
+            <a
               href="../../invoicing/invoice-list/default.dc.html"
               data-control="Invoices"
               aria-current="page"
@@ -238,7 +300,7 @@
             "
           >
             <div style="font-size: 12px; color: #64748b">Signed in as</div>
-            <div style="font-size: 14px; font-weight: 600; color: #0f172a">Sales rep</div>
+            <div style="font-size: 14px; font-weight: 600; color: #0f172a">{{ user.name }}</div>
             <div style="font-size: 12px; color: #64748b">sales-rep@example.com</div>
           </div>
           <a
@@ -264,7 +326,7 @@
         <div style="flex: 1; min-width: 0; display: flex; flex-direction: column">
           <header style="display: flex; align-items: center; justify-content: space-between; gap: 16px; height: 72px; box-sizing: border-box; flex: none; padding: 0 32px; border-bottom: 1px solid #e2e8f0;">
             <div style="display: flex; align-items: center; gap: 12px">
-              <h1 data-control="Invoice number" style="margin: 0; font-size: 24px; font-weight: 600; color: #0f172a">{{ invoice.number }}</h1>
+              <h1 style="margin: 0; font-size: 24px; font-weight: 600; color: #0f172a"><sc-if value="{{ isTaxInvoice }}" hint-placeholder-val="{{ true }}"><span>Tax invoice </span></sc-if><sc-if value="{{ notIsTaxInvoice }}" hint-placeholder-val="{{ false }}"><span>Invoice </span></sc-if><span data-control="Invoice number">{{ invoice.number }}</span></h1>
               <sc-if value="{{ isDraft }}" hint-placeholder-val="{{ true }}">
                 <span data-control="Status" style="padding: 2px 10px; border-radius: 9999px; font-size: 12px; font-weight: 600; background: #f1f5f9; color: #475569;">{{ invoice.status }}</span>
               </sc-if>
@@ -297,10 +359,15 @@
           <main data-surface="Invoice editor" style="flex: 1; display: grid; grid-template-columns: 360px minmax(0, 1fr); gap: 24px; align-items: start; padding: 32px; background: #ffffff;">
             <section style="display: flex; flex-direction: column; box-sizing: border-box; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px; background: #ffffff; gap: 16px;">
               <h2 style="margin: 0; font-size: 16px; font-weight: 600; color: #0f172a">Details</h2>
+              <div data-control="Supplier" style="display: flex; flex-direction: column; gap: 2px; padding-bottom: 12px; border-bottom: 1px solid #e2e8f0;">
+                <span style="font-size: 12px; color: #64748b">Supplier</span>
+                <span style="font-size: 14px; font-weight: 600; color: #0f172a">{{ business.name }}</span>
+                <span style="font-size: 13px; color: #334155">ABN {{ business.abn }}</span>
+              </div>
               <sc-if value="{{ isDraft }}" hint-placeholder-val="{{ true }}">
                 <div style="display: flex; flex-direction: column; gap: 4px">
                   <div style="display: flex; align-items: center; justify-content: space-between">
-                    <label for="invoice-company" style="font-size: 12px; color: #64748b">Company</label>
+                  <label for="invoice-company" style="font-size: 12px; color: #64748b">Company</label>
                     <a href="../../crm/company-page/default.dc.html" data-record="{{ invoice.company }}" data-control="Company link" style="font-size: 12px; font-weight: 600; text-decoration: none">{{ invoice.company }}</a>
                   </div>
                   <select id="invoice-company" data-control="Company" data-field="company" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; font-size: 14px; font-family: inherit; box-sizing: border-box;">
@@ -318,8 +385,19 @@
                   <input id="invoice-due-date" type="date" value="{{ invoice.dueDateValue }}" data-control="Due date" data-field="dueDate" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; font-size: 14px; font-family: inherit; box-sizing: border-box;" />
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 4px">
+                  <label for="invoice-gst-rate" style="font-size: 12px; color: #64748b">GST rate</label>
+                  <input id="invoice-gst-rate" type="text" value="{{ invoice.gstRate }}" data-control="GST rate" data-field="gstRate" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; font-size: 14px; font-family: inherit; box-sizing: border-box;" />
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 4px">
+                  <label for="invoice-prices" style="font-size: 12px; color: #64748b">Prices</label>
+                  <select id="invoice-prices" data-control="Prices" data-field="pricesIncludeGst" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; font-size: 14px; font-family: inherit; box-sizing: border-box;">
+                    <option>Exclude GST</option>
+                    <option>Include GST</option>
+                  </select>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 4px">
                   <label for="invoice-notes" style="font-size: 12px; color: #64748b">Notes</label>
-                  <textarea id="invoice-notes" rows="4" data-control="Notes" data-field="notes" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; font-size: 14px; font-family: inherit; box-sizing: border-box; resize: none;">{{ invoice.notes }}</textarea>
+                  <textarea id="invoice-notes" rows="4" data-control="Notes" data-field="notes" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; font-size: 14px; font-family: inherit; box-sizing: border-box; resize: none;" value="{{ invoice.notes }}"></textarea>
                 </div>
               </sc-if>
               <sc-if value="{{ isSent }}" hint-placeholder-val="{{ false }}">
@@ -339,6 +417,14 @@
                   <span data-control="Due date" style="font-size: 14px; color: #0f172a">{{ invoice.dueDate }}</span>
                 </div>
                 <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 0; border-top: 1px solid #e2e8f0;">
+                  <span style="font-size: 13px; color: #64748b">GST rate</span>
+                  <span data-control="GST rate" style="font-size: 14px; color: #0f172a">{{ invoice.gstRate }}</span>
+                </div>
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 0; border-top: 1px solid #e2e8f0;">
+                  <span style="font-size: 13px; color: #64748b">Prices</span>
+                  <span data-control="Prices" style="font-size: 14px; color: #0f172a">{{ invoice.pricesIncludeGst }}</span>
+                </div>
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 0; border-top: 1px solid #e2e8f0;">
                   <span style="font-size: 13px; color: #64748b">Notes</span>
                   <span data-control="Notes" style="font-size: 14px; color: #0f172a">{{ invoice.notes }}</span>
                 </div>
@@ -352,6 +438,7 @@
                     <th style="text-align: left; padding: 8px 12px 8px 0; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: #64748b;">Description</th>
                     <th style="width: 72px; text-align: left; padding: 8px 12px 8px 0; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: #64748b;">Qty</th>
                     <th style="width: 112px; text-align: left; padding: 8px 12px 8px 0; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: #64748b;">Unit price</th>
+                    <th style="width: 112px; text-align: left; padding: 8px 12px 8px 0; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: #64748b;">Tax</th>
                     <th style="width: 96px; text-align: right; padding: 8px 0 8px 12px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: #64748b;">Line total</th>
                     <th style="width: 48px; padding: 8px 0"><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0);">Remove</span></th>
                   </tr>
@@ -362,6 +449,7 @@
                       <td style="padding: 8px 12px 8px 0; border-top: 1px solid #e2e8f0;"><sc-if value="{{ isDraft }}" hint-placeholder-val="{{ true }}"><input type="text" value="{{ line.name }}" aria-label="Description" data-control="Description" data-field="description" data-record="{{ line.name }}" style="width: 100%; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; font-size: 14px; font-family: inherit; box-sizing: border-box;" /></sc-if><sc-if value="{{ isSent }}" hint-placeholder-val="{{ false }}"><span style="color: #0f172a;">{{ line.name }}</span></sc-if></td>
                       <td style="padding: 8px 12px 8px 0; border-top: 1px solid #e2e8f0;"><sc-if value="{{ isDraft }}" hint-placeholder-val="{{ true }}"><input type="number" value="{{ line.quantity }}" aria-label="Quantity" data-control="Quantity" data-field="quantity" data-record="{{ line.name }}" style="width: 100%; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; font-size: 14px; font-family: inherit; box-sizing: border-box;" /></sc-if><sc-if value="{{ isSent }}" hint-placeholder-val="{{ false }}"><span style="color: #334155;">{{ line.quantity }}</span></sc-if></td>
                       <td style="padding: 8px 12px 8px 0; border-top: 1px solid #e2e8f0;"><sc-if value="{{ isDraft }}" hint-placeholder-val="{{ true }}"><input type="text" value="{{ line.unitPrice }}" aria-label="Unit price" data-control="Unit price" data-field="unitPrice" data-record="{{ line.name }}" style="width: 100%; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; font-size: 14px; font-family: inherit; box-sizing: border-box;" /></sc-if><sc-if value="{{ isSent }}" hint-placeholder-val="{{ false }}"><span style="color: #334155;">{{ line.unitPrice }}</span></sc-if></td>
+                      <td style="padding: 8px 12px 8px 0; border-top: 1px solid #e2e8f0;"><sc-if value="{{ isDraft }}" hint-placeholder-val="{{ true }}"><select aria-label="Tax code" data-control="Tax code" data-field="taxCode" data-record="{{ line.name }}" style="width: 100%; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; font-size: 14px; font-family: inherit; box-sizing: border-box;"><option>GST</option><option>GST-free</option><option>Exempt</option></select></sc-if><sc-if value="{{ isSent }}" hint-placeholder-val="{{ false }}"><span data-control="Tax code" style="color: #334155;">{{ line.taxCode }}</span></sc-if></td>
                       <td data-control="Line total" style="padding: 8px 0 8px 12px; border-top: 1px solid #e2e8f0; text-align: right; color: #0f172a;">{{ line.total }}</td>
                       <td style="padding: 8px 0 8px 12px; border-top: 1px solid #e2e8f0; text-align: right;">
                           <sc-if value="{{ isDraft }}" hint-placeholder-val="{{ true }}">
@@ -384,15 +472,16 @@
                 </div>
               </sc-if>
               <div data-control="Totals" style="align-self: flex-end; width: 240px; display: flex; flex-direction: column; gap: 8px; padding-top: 12px; border-top: 1px solid #e2e8f0; font-size: 14px;">
-                <div style="display: flex; justify-content: space-between; color: #334155"><span>Subtotal</span><span>{{ invoice.total }}</span></div>
-                <div style="display: flex; justify-content: space-between; color: #0f172a; font-weight: 700;"><span>Total</span><span>{{ invoice.total }}</span></div>
+                <div data-control="Subtotal" style="display: flex; justify-content: space-between; color: #334155"><span>Subtotal (ex GST)</span><span>{{ invoice.subtotal }}</span></div>
+                <div data-control="GST" style="display: flex; justify-content: space-between; color: #334155"><span>GST</span><span>{{ invoice.gst }}</span></div>
+                <div style="display: flex; justify-content: space-between; color: #0f172a; font-weight: 700;"><span>Total (inc GST)</span><span>{{ invoice.total }}</span></div>
               </div>
             </section>
           </main>
         </div>
       </div>
     </x-dc>
-    <script type="text/x-dc" data-dc-script data-props='{"isDraft":{"editor":"boolean","default":true},"isSent":{"editor":"boolean","default":false},"isPaid":{"editor":"boolean","default":false},"isVoid":{"editor":"boolean","default":false},"invoice":{"editor":null,"default":{"name":"INV-001","number":"INV-001","status":"draft","company":"Acme","issueDate":"15 Jan 2026","issueDateValue":"2026-01-15","dueDate":"14 Feb 2026","dueDateValue":"2026-02-14","notes":"Thanks for your business","total":"$320.00","canSend":true,"canVoid":true,"canMarkPaid":true,"canUpdate":true}},"allCompanies":{"editor":null,"default":[{"name":"Acme"},{"name":"Globex"},{"name":"Initech"}]},"lineItems":{"editor":null,"default":[{"name":"Consulting","quantity":"2","unitPrice":"$100.00","total":"$200.00"},{"name":"Support","quantity":"3","unitPrice":"$40.00","total":"$120.00"}]},"$preview":{"width":1280,"height":800}}'>
+    <script type="text/x-dc" data-dc-script data-props='{"user":{"editor":null,"default":{"name":"Sam Rivera"}},"isDraft":{"editor":"boolean","default":true},"isSent":{"editor":"boolean","default":false},"isPaid":{"editor":"boolean","default":false},"isVoid":{"editor":"boolean","default":false},"isTaxInvoice":{"editor":"boolean","default":true},"notIsTaxInvoice":{"editor":"boolean","default":false},"business":{"editor":null,"default":{"name":"Ledger Studio Pty Ltd","abn":"51 824 753 556"}},"invoice":{"editor":null,"default":{"name":"INV-001","number":"INV-001","status":"draft","company":"Acme","issueDate":"15 Jan 2026","issueDateValue":"2026-01-15","dueDate":"14 Feb 2026","dueDateValue":"2026-02-14","notes":"Thanks for your business","gstRate":"10%","pricesIncludeGst":"Exclude GST","subtotal":"$320.00","gst":"$20.00","total":"$340.00","canSend":true,"canVoid":true,"canMarkPaid":true,"canUpdate":true}},"allCompanies":{"editor":null,"default":[{"name":"Acme"},{"name":"Globex"},{"name":"Initech"}]},"lineItems":{"editor":null,"default":[{"name":"Consulting","quantity":"2","unitPrice":"$100.00","taxCode":"GST","total":"$200.00"},{"name":"Training materials","quantity":"1","unitPrice":"$120.00","taxCode":"GST-free","total":"$120.00"}]},"$preview":{"width":1280,"height":800}}'>
       class Component extends DCLogic {
       renderVals() {
       return { ...this.props };

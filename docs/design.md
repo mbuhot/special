@@ -149,6 +149,18 @@ Dialect extension is object spread. A derived dialect adds; it does not remove o
 4. Resolution pass over step lists. Each step parses against the step patterns. Slots resolve against namespaces with kind checks. `Ref` is scenario scoped and must be declared by an earlier step in the same scenario. Slots resolve Ref first, so an `Action` slot resolves in the scope of the Ref's entity.
 5. Emit AST or a list of errors with file and line.
 
+### Composite steps
+
+`## Steps` holds `- <header pattern> means` items with nested child steps. The header uses the pattern mini-language; `[ ... ]` groups are optional.
+
+| Rule                  | Behaviour                                                                                                                    |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Slots                 | `<Slot>` in a child is replaced by the text the scenario line gave the header slot                                           |
+| Omitted optional slot | every child (step or `Narrate:`) that mentions the slot is dropped                                                           |
+| Narration             | a `Narrate:` after the composite follows its last child; a `Narrate:` child is spoken in place                               |
+| AST                   | children are ordinary steps and narration nodes; runtimes and lint see only the expansion                                    |
+| Errors                | a header matching a primitive step; recursion; a failing child, reported at the scenario line and the composite's definition |
+
 ### Base specs
 
 A specs tree root holds `specdsl.json` (`{ "dialect": "../dialects/invoicing.ts" }`, relative to that file). A `.md` file with no `## Scenario` section is a base file; one with scenarios is a feature file.
@@ -284,6 +296,23 @@ One ExUnit test per scenario, tagged with spec file and line.
 4. Emit mp4 and per-step screenshots.
 
 Narration comes from `Narrate:` and `Caption:` lines and is present tense, describing what is on screen.
+
+## Designs
+
+Each surface line may name its artboards: `- Deal page: design pipeline/deal-page, region "Deal name", ...`. The path is relative to the directory the root `specdsl.json` names with `"designs"`. The directory holds one `<state>.dc.html` per state; the AST surface node carries `design`.
+
+| Tool                                 | Does                                                                                                                                                                                                                                   |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `specdsl design-lint <root>`         | Warns on controls declared but absent from every artboard, `data-control` values not declared on the surface or a shared surface, a `data-surface` that differs from the surface name, and a missing directory. `bind-all` runs it too |
+| `pnpm design -- --scenario "<name>"` | Playwright project `design`: runs the scenario over the static artboards with the demo recorder, writes `design-output/<slug>/design.mp4` and `report.json`                                                                            |
+
+Step semantics in design mode:
+
+- `opens` loads the artboard named by the machine field the `Given` lines set on the Ref's entity, then `default`, then the first file.
+- `clicks` highlights the `data-control` element, then follows an `<a href="*.dc.html">` or loads the `data-next-state` artboard of the same surface.
+- `sees`, `no longer sees`, `does not see` and `is on` compare against the artboard; mismatches go to `report.json` and do not fail the run.
+- A missing artboard or control fails the run.
+- `Given`, `has`, `may`, `may not` and `time advances` do nothing; `Story`, `Narrate` and `Caption` behave as in demo mode.
 
 ## Build order
 

@@ -2,7 +2,9 @@
 import { globSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
+import type { BindSuccess } from "./ast.js";
 import { bindSpec, type SpecSource } from "./bind.js";
+import { designLint } from "./design.js";
 import type { Dialect } from "./dialect.js";
 import { lint } from "./lint.js";
 import { lockFile } from "./lock.js";
@@ -20,6 +22,7 @@ const USAGE = [
   "specdsl bind <spec.md> [--base <path>]... [--dialect <path.ts>] [--out <file>]",
   "specdsl lint <spec.md> [--base <path>]... [--dialect <path.ts>]",
   "specdsl bind-all <root> [--dialect <path.ts>]",
+  "specdsl design-lint <root> [--dialect <path.ts>]",
   "specdsl lock --dialect <path.ts> --out <file>",
 ].join("\n");
 
@@ -142,19 +145,45 @@ function uniqueByFile(sources: SpecSource[]): SpecSource[] {
   return [...new Map(sources.map((source) => [source.file, source])).values()];
 }
 
-function runBindAll(root: string, dialect: Dialect): number {
-  const featurePaths = featureFiles(root);
-  const featureSources = featurePaths.map((path) => treeSourceOf(root, path));
+function bindWhole(
+  root: string,
+  featurePaths: string[],
+  featureSources: SpecSource[],
+  dialect: Dialect,
+) {
   const baseSources = uniqueByFile([
     ...baseSourcesFor(root),
     ...featurePaths.flatMap((path) => baseSourcesFor(path)),
   ]);
-  const whole = bindSpec([...baseSources, ...featureSources], dialect);
+  return bindSpec([...baseSources, ...featureSources], dialect);
+}
+
+function designWarnings(root: string, whole: BindSuccess): Diagnostic[] {
+  const { designsPath } = treeConfig(root);
+  return designsPath === undefined ? [] : designLint(whole, designsPath);
+}
+
+function runDesignLint(root: string, dialect: Dialect): number {
+  const featurePaths = featureFiles(root);
+  const featureSources = featurePaths.map((path) => treeSourceOf(root, path));
+  const whole = bindWhole(root, featurePaths, featureSources, dialect);
   if (!whole.ok) {
     printErrors(whole.errors);
     return 1;
   }
-  printWarnings(lint(whole, dialect));
+  printWarnings(designWarnings(root, whole));
+  return 0;
+}
+
+function runBindAll(root: string, dialect: Dialect): number {
+  const featurePaths = featureFiles(root);
+  const featureSources = featurePaths.map((path) => treeSourceOf(root, path));
+  const whole = bindWhole(root, featurePaths, featureSources, dialect);
+  if (!whole.ok) {
+    printErrors(whole.errors);
+    return 1;
+  }
+  printWarnings([...lint(whole, dialect), ...designWarnings(root, whole)]);
   let status = 0;
   featurePaths.forEach((path, index) => {
     const result = bindSpec(
@@ -173,14 +202,16 @@ function runBindAll(root: string, dialect: Dialect): number {
 
 function defaultDialectPath(command: string, specPath: string): string | undefined {
   const root =
-    command === "bind-all" ? resolve(specPath) : locateTreeRoot(dirname(resolve(specPath)));
+    command === "bind-all" || command === "design-lint"
+      ? resolve(specPath)
+      : locateTreeRoot(dirname(resolve(specPath)));
   return root === undefined ? undefined : treeConfig(root).dialectPath;
 }
 
 async function main(): Promise<number> {
   const parsed = parseArguments(process.argv.slice(2));
   const { command, specPath, outPath } = parsed;
-  if (!["bind", "bind-all", "lint", "lock"].includes(command)) {
+  if (!["bind", "bind-all", "design-lint", "lint", "lock"].includes(command)) {
     console.error(USAGE);
     return 2;
   }
@@ -202,6 +233,9 @@ async function main(): Promise<number> {
   const dialect = await loadDialect(dialectPath);
   if (command === "bind-all") {
     return runBindAll(resolve(specPath), dialect);
+  }
+  if (command === "design-lint") {
+    return runDesignLint(resolve(specPath), dialect);
   }
   return runBind(parsed, dialect, specPath, command as "bind" | "lint");
 }

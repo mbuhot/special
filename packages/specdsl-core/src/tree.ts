@@ -9,6 +9,7 @@ export type SpecFileKind = "base" | "feature";
 
 export interface TreeConfig {
   dialectPath: string;
+  designsPath?: string;
 }
 
 /** Says whether Markdown is a base file (no scenarios) or a feature file. */
@@ -33,15 +34,21 @@ export function findTreeRoot(startDir: string): string {
   return root;
 }
 
-/** Reads the root's specdsl.json, resolving the dialect path against the root. */
+/** Reads the root's specdsl.json, resolving the dialect and designs paths against the root. */
 export function treeConfig(root: string): TreeConfig {
   const configPath = join(root, CONFIG_FILE);
   const config: unknown = JSON.parse(readFileSync(configPath, "utf8"));
-  const dialect = (config as { dialect?: unknown } | null)?.dialect;
+  const { dialect, designs } = (config ?? {}) as { dialect?: unknown; designs?: unknown };
   if (typeof dialect !== "string") {
     throw new Error(`${configPath} must hold { "dialect": "<path>" }`);
   }
-  return { dialectPath: resolve(root, dialect) };
+  if (designs !== undefined && typeof designs !== "string") {
+    throw new Error(`${configPath} "designs" must be a path`);
+  }
+  return {
+    dialectPath: resolve(root, dialect),
+    ...(designs === undefined ? {} : { designsPath: resolve(root, designs) }),
+  };
 }
 
 /** Base files of the root, then each project directory's used projects and own files, in cascade order. */

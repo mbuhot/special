@@ -20,7 +20,13 @@ import {
   type Section,
 } from "./markdown.js";
 import { resolveInvariant } from "./invariants.js";
-import { compilePattern, PatternError, type ListValue, type Match } from "./pattern.js";
+import {
+  compilePattern,
+  PatternError,
+  type ListValue,
+  type Match,
+  type Matcher,
+} from "./pattern.js";
 import { Registry, scopeKeyOf, type Entry } from "./registry.js";
 import { ScenarioResolver, type Composite } from "./scenario.js";
 
@@ -93,6 +99,7 @@ class Binder {
   private readonly policies: SpecAst["policies"] = {};
   private readonly invariants: InvariantNode[] = [];
   private readonly listedSurfaces = new Set<string>();
+  private readonly surfaceDesigns = new Map<string, string>();
   private readonly usedSurfaces = new Set<string>();
   private readonly composites: Composite[] = [];
 
@@ -572,6 +579,8 @@ class Binder {
       return;
     }
     this.listedSurfaces.add(surface.name);
+    const design = item.match.slots["Design"];
+    design !== undefined && this.surfaceDesigns.set(surface.name, design);
     for (const name of valuesOf(item.match, "Control")) {
       const control = this.registry.lookup("Control", name, surface.name);
       control !== undefined &&
@@ -605,13 +614,29 @@ class Binder {
       const children = item.children.map((child) => ({ text: child.text, line: child.line }));
       children.length === 0 &&
         this.report(file, item.line, `Composite step "${header}" has no child steps`);
-      this.composites.push({ header, matcher: compilePattern(header), children, line: item.line });
+      const matcher = compilePattern(header);
+      this.rejectPrimitiveCollision(file, header, matcher, item.line);
+      this.composites.push({ header, matcher, children, line: item.line, file });
     } catch (error) {
       if (!(error instanceof PatternError)) {
         throw error;
       }
       this.report(file, item.line, `Invalid composite step pattern: ${error.message}`);
     }
+  }
+
+  private rejectPrimitiveCollision(
+    file: string,
+    header: string,
+    matcher: Matcher,
+    line: number,
+  ): void {
+    const lexicon = { names: (namespace: string) => this.registry.names(namespace) };
+    const collision = this.dialect.steps.find(
+      (step) => step.matcher(matcher.sample, lexicon) !== null,
+    );
+    collision !== undefined &&
+      this.report(file, line, `Composite step "${header}" collides with step "${collision.id}"`);
   }
 
   private bindScenario(classified: ClassifiedSection): Scenario {
@@ -659,7 +684,9 @@ class Binder {
       .inScope("Control", name)
       .map((entry) => [entry.name, controlNode(entry, definition)]);
     const shared = this.registry.lookup("Surface", name, "")?.shared === true;
+    const design = this.surfaceDesigns.get(name);
     const node: SurfaceNode = {
+      ...(design === undefined ? {} : { design }),
       ...(shared ? { shared: true as const } : {}),
       controls: Object.fromEntries(controls),
     };

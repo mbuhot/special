@@ -15,6 +15,7 @@ export default dialect({
     Actor: ns(),
     Ref: ns({ scope: "scenario" }),
     Name: freeText,
+    Design: freeText,
     Type: freeText,
     Value: freeText,
     Text: freeText,
@@ -79,6 +80,11 @@ export default dialect({
       items: [
         {
           pattern: '<Surface>[ (shared)]: <Control.kind> "<Control>", ...',
+          declares: ["Surface", "Control"],
+          emits: "Control",
+        },
+        {
+          pattern: '<Surface>[ (shared)]: design <Design>, <Control.kind> "<Control>", ...',
           declares: ["Surface", "Control"],
           emits: "Control",
         },

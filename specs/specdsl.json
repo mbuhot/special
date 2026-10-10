@@ -1,1 +1,1 @@
-{ "dialect": "../dialects/invoicing.ts" }
+{ "dialect": "../dialects/invoicing.ts", "designs": "../designs" }

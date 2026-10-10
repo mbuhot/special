@@ -16,12 +16,20 @@ export default defineConfig({
       timeout: 180_000,
       use: { ...devices["Desktop Chrome"], viewport: { width: 1280, height: 800 } },
     },
+    {
+      name: "design",
+      testMatch: "design.ts",
+      timeout: 180_000,
+      use: { ...devices["Desktop Chrome"], viewport: { width: 1280, height: 800 } },
+    },
   ],
-  webServer: {
-    command: "PORT=4012 MIX_ENV=e2e mix phx.server",
-    cwd: "../../apps/invoicing",
-    url: `${baseURL}/login`,
-    reuseExistingServer: true,
-    timeout: 120_000,
-  },
+  webServer: process.env["SPECDSL_STATIC_ONLY"]
+    ? undefined
+    : {
+        command: "PORT=4012 MIX_ENV=e2e mix phx.server",
+        cwd: "../../apps/invoicing",
+        url: `${baseURL}/login`,
+        reuseExistingServer: true,
+        timeout: 120_000,
+      },
 });

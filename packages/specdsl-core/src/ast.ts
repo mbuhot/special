@@ -33,6 +33,7 @@ export interface Scenario {
 
 export interface SurfaceNode {
   route?: string;
+  design?: string;
   shared?: true;
   controls: Record<string, { kind: ControlKind | string; locators: Record<string, string> }>;
 }

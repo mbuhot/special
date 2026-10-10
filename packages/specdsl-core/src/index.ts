@@ -73,3 +73,5 @@ export {
   treeSourceOf,
 } from "./tree.js";
 export type { SpecFileKind, TreeConfig } from "./tree.js";
+export { artboardStates, designLint, parseArtboard, readArtboards } from "./design.js";
+export type { Artboard } from "./design.js";

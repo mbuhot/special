@@ -17,6 +17,7 @@ export interface ResolvedControl {
 export interface ResolvedSurface {
   name: string;
   route?: string;
+  design?: string;
   shared?: true;
   controls: Readonly<Record<string, ResolvedControl>>;
 }
@@ -361,7 +362,7 @@ function surfaceFrom(name: string, node: SurfaceNode): ResolvedSurface {
       { name: controlName, kind: control.kind, locators: control.locators },
     ]),
   );
-  return { name, route: node.route, shared: node.shared, controls };
+  return { name, route: node.route, design: node.design, shared: node.shared, controls };
 }
 
 function resolveControl(

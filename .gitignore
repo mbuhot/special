@@ -4,6 +4,7 @@ dist/
 *.lock.json
 .tts-cache/
 demo-output/
+design-output/
 apps/*/_build/
 apps/*/deps/
 apps/*/.elixir_ls/

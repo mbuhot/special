@@ -1,6 +1,6 @@
 # Design to implementation workflow
 
-One loop, five stops. The canvas is where design is discussed; the repository is what everything checks.
+One loop, six stops. The canvas is where design is discussed; the repository is what everything checks.
 
 ```
 claude.ai canvas  ──/design-sync──►  designs/  ──►  specs/  ──►  tests  ──►  implementation
@@ -8,14 +8,14 @@ claude.ai canvas  ──/design-sync──►  designs/  ──►  specs/  ─�
   └── designer and product ◄──────────── design walkthrough video (pnpm design)
 ```
 
-| Stop           | Who                         | What happens                                                                                                                                                                          | Command                                   |
-| -------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
-| 1. Design      | Designer and product        | Edit artboards on the canvas, one per surface state. Leave comments on elements; a comment sent to Claude asks for a change, and Claude edits the artboard and replies in the thread. | canvas comments                           |
-| 2. Sync        | Claude                      | Pull every artboard into `designs/<project>/<surface-slug>/<state>.dc.html`.                                                                                                          | `/design-sync`                            |
-| 3. Specs       | Claude, reviewed by product | Make the specs agree with the designs: new controls declared on surfaces and given scenarios, removals confirmed with the user.                                                       | `pnpm bind` until no design-lint warnings |
-| 4. Walkthrough | Claude                      | Play every scenario over the static artboards; narrated video for review, report of text mismatches.                                                                                  | `pnpm design`                             |
-| 5. Gaps        | Claude                      | Run the scenarios against the app. Failures are the implementation work the design implies.                                                                                           | `pnpm e2e`, `mix test`                    |
-| 6. Build       | Claude                      | Implement until the failing scenarios pass, then re-record the app demo.                                                                                                              | `pnpm demo`                               |
+| Stop           | Who                         | What happens                                                                                                                                                                                                     | Command                                   |
+| -------------- | --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
+| 1. Design      | Designer and product        | Edit artboards on the canvas, one per surface state. Leave comments on elements; a comment sent to Claude reaches a Claude Code session watching the canvas, which edits the artboard and replies in the thread. | canvas comments                           |
+| 2. Sync        | Claude                      | Pull every artboard into `designs/<project>/<surface-slug>/<state>.dc.html`.                                                                                                                                     | `/design-sync`                            |
+| 3. Specs       | Claude, reviewed by product | Make the specs agree with the designs: new controls declared on surfaces and given scenarios, removals confirmed with the user.                                                                                  | `pnpm bind` until no design-lint warnings |
+| 4. Walkthrough | Claude                      | Play every scenario over the static artboards; narrated video for review, report of text mismatches.                                                                                                             | `pnpm design`                             |
+| 5. Gaps        | Claude                      | Run the scenarios against the app. Failures are the implementation work the design implies.                                                                                                                      | `pnpm e2e`, `mix test`                    |
+| 6. Build       | Claude                      | Implement until the failing scenarios pass, then re-record the app demo.                                                                                                                                         | `pnpm demo`                               |
 
 ## Conventions that make the loop work
 

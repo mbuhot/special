@@ -5,7 +5,7 @@ defmodule Invoicing.SpecAdapter do
 
   @behaviour SpecDSL.Adapter
 
-  alias Invoicing.{Billing, Pipeline}
+  alias Invoicing.{Accounts, Billing, Pipeline}
   alias Invoicing.SpecSupport.Factory
 
   @ash_kinds %{
@@ -126,11 +126,27 @@ defmodule Invoicing.SpecAdapter do
   def app_count("Task", "overdue", today),
     do: Pipeline.count_overdue_tasks(today, admin_user())
 
+  def app_count("Task", "due this week", today),
+    do: Pipeline.count_tasks_due_this_week(today, admin_user())
+
+  def app_count("User", "assignable", _today),
+    do: Accounts.count_assignable_users(admin_user())
+
   def app_count("Deal", "open", _today),
     do:
       admin_user() |> Pipeline.count_open_deals_by_stage() |> Enum.map(&elem(&1, 1)) |> Enum.sum()
 
   def app_count("Invoice", "unpaid", _today), do: Billing.count_unpaid_invoices(admin_user())
+
+  @impl true
+  def read_as(entity_name, _role, actor_user) do
+    actor = Factory.fetch("User", actor_user.id)
+
+    entity_name
+    |> Factory.resource_for!()
+    |> Ash.read!(actor: actor)
+    |> Enum.map(&Factory.reload(entity_name, &1.id))
+  end
 
   defp admin_user, do: Factory.create("User", %{"role" => "admin"})
 

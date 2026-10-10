@@ -74,4 +74,44 @@ defmodule Invoicing.Pipeline.TaskTest do
 
     assert :ok = Ash.destroy(task, actor: admin)
   end
+
+  test "a task is reassigned to a sales manager", %{
+    sales_rep: sales_rep,
+    admin: admin,
+    deal: deal
+  } do
+    manager =
+      Accounts.create_user!(
+        %{name: "Manager User", email: "manager@example.com", role: :manager},
+        authorize?: false
+      )
+
+    task = create_task(sales_rep, deal)
+
+    assert Pipeline.reassign_task!(task, manager.id, actor: admin).assignee_id == manager.id
+  end
+
+  test "a task cannot be reassigned to an accountant", %{
+    sales_rep: sales_rep,
+    admin: admin,
+    deal: deal
+  } do
+    accountant =
+      Accounts.create_user!(
+        %{name: "Accounts User", email: "accounts@example.com", role: :accountant},
+        authorize?: false
+      )
+
+    task = create_task(sales_rep, deal)
+
+    assert {:error, %Ash.Error.Invalid{}} =
+             Pipeline.reassign_task(task, accountant.id, actor: admin)
+  end
+
+  test "a sales rep cannot reassign a task", %{sales_rep: sales_rep, deal: deal} do
+    task = create_task(sales_rep, deal)
+
+    assert {:error, %Ash.Error.Forbidden{}} =
+             Pipeline.reassign_task(task, sales_rep.id, actor: sales_rep)
+  end
 end

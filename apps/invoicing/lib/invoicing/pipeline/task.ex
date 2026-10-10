@@ -8,7 +8,7 @@ defmodule Invoicing.Pipeline.Task do
     primary_read_warning?: false,
     extensions: [AshStateMachine]
 
-  alias Invoicing.Pipeline.Task.AssignAssignee
+  alias Invoicing.Pipeline.Task.{AssignAssignee, AssigneeIsAssignable}
 
   require Ash.Query
 
@@ -48,6 +48,16 @@ defmodule Invoicing.Pipeline.Task do
       accept [:title, :due_date, :assignee_id]
     end
 
+    read :see_all do
+      prepare build(sort: [due_date: :asc, inserted_at: :asc])
+    end
+
+    update :reassign do
+      require_atomic? false
+      accept [:assignee_id]
+      validate AssigneeIsAssignable
+    end
+
     update :complete do
       accept []
       change transition_state(:done)
@@ -55,8 +65,16 @@ defmodule Invoicing.Pipeline.Task do
   end
 
   policies do
-    policy action_type(:read) do
-      authorize_if actor_present()
+    policy action(:read) do
+      authorize_if actor_attribute_equals(:role, :manager)
+      authorize_if actor_attribute_equals(:role, :admin)
+      authorize_if actor_attribute_equals(:role, :accountant)
+      authorize_if expr(assignee_id == ^actor(:id))
+    end
+
+    policy action([:see_all, :reassign]) do
+      authorize_if actor_attribute_equals(:role, :manager)
+      authorize_if actor_attribute_equals(:role, :admin)
     end
 
     policy action([:create, :update, :complete]) do

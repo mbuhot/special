@@ -10,6 +10,7 @@ defmodule Invoicing.Pipeline do
   require Ash.Query
 
   @open_stages [:lead, :qualified, :proposal]
+  @due_this_week_days 7
 
   resources do
     resource Invoicing.Pipeline.Deal do
@@ -29,6 +30,8 @@ defmodule Invoicing.Pipeline do
       define :list_tasks, action: :read, args: [:deal_id]
       define :complete_task, action: :complete
       define :get_task, action: :read, get_by: [:id]
+      define :reassign_task, action: :reassign, args: [:assignee_id]
+      define :see_all_tasks, action: :see_all
     end
   end
 
@@ -58,6 +61,28 @@ defmodule Invoicing.Pipeline do
   def can_transition_deal?(actor, deal, :win), do: can_win_deal?(actor, deal)
   def can_transition_deal?(actor, deal, :lose), do: can_lose_deal?(actor, deal)
 
+  @doc "Returns the transitions the actor may run on the deal from its stage."
+  def permitted_deal_transitions(actor, deal) do
+    deal.stage
+    |> deal_transitions_from()
+    |> Enum.filter(&can_transition_deal?(actor, deal, &1))
+  end
+
+  @doc "Returns the stage the transition leads to."
+  def deal_transition_target(transition) do
+    Invoicing.Pipeline.Deal
+    |> AshStateMachine.Info.state_machine_transitions()
+    |> Enum.find(&(&1.action == transition))
+    |> Map.fetch!(:to)
+    |> List.wrap()
+    |> hd()
+  end
+
+  @doc "Returns the transition from the deal's stage to the target stage."
+  def deal_transition_to(deal, target_stage) do
+    Enum.find(deal_transitions_from(deal.stage), &(deal_transition_target(&1) == target_stage))
+  end
+
   @doc "Returns the transitions available from a stage."
   def deal_transitions_from(stage) do
     Invoicing.Pipeline.Deal
@@ -81,6 +106,34 @@ defmodule Invoicing.Pipeline do
       {stage,
        Invoicing.Pipeline.Deal |> Ash.Query.filter(stage == ^stage) |> Ash.count!(actor: actor)}
     end)
+  end
+
+  @doc "Lists the open tasks the actor may read that fall in the window: :all, :overdue or :due_this_week."
+  def list_open_tasks(window, today, actor) do
+    Invoicing.Pipeline.Task
+    |> Ash.Query.filter(status == :open)
+    |> within_window(window, today)
+    |> Ash.Query.load([:deal, :assignee])
+    |> Ash.Query.sort(due_date: :asc, inserted_at: :asc)
+    |> Ash.read!(actor: actor)
+  end
+
+  defp within_window(query, :all, _today), do: query
+
+  defp within_window(query, :overdue, today),
+    do: Ash.Query.filter(query, due_date < ^today)
+
+  defp within_window(query, :due_this_week, today) do
+    week_end = Date.add(today, @due_this_week_days)
+    Ash.Query.filter(query, due_date >= ^today and due_date <= ^week_end)
+  end
+
+  @doc "Returns the number of open tasks due from the given date through the following seven days."
+  def count_tasks_due_this_week(today, actor) do
+    Invoicing.Pipeline.Task
+    |> Ash.Query.filter(status == :open)
+    |> within_window(:due_this_week, today)
+    |> Ash.count!(actor: actor)
   end
 
   @doc "Returns the number of open tasks due before the given date."

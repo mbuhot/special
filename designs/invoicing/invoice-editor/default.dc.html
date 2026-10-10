@@ -326,7 +326,7 @@
         <div style="flex: 1; min-width: 0; display: flex; flex-direction: column">
           <header style="display: flex; align-items: center; justify-content: space-between; gap: 16px; height: 72px; box-sizing: border-box; flex: none; padding: 0 32px; border-bottom: 1px solid #e2e8f0;">
             <div style="display: flex; align-items: center; gap: 12px">
-              <h1 style="margin: 0; font-size: 24px; font-weight: 600; color: #0f172a"><sc-if value="{{ isTaxInvoice }}" hint-placeholder-val="{{ true }}"><span>Tax invoice </span></sc-if><sc-if value="{{ notIsTaxInvoice }}" hint-placeholder-val="{{ false }}"><span>Invoice </span></sc-if><span data-control="Invoice number">{{ invoice.number }}</span></h1>
+              <h1 data-control="Invoice title" style="margin: 0; font-size: 24px; font-weight: 600; color: #0f172a"><sc-if value="{{ taxInvoice }}" hint-placeholder-val="{{ true }}"><span>Tax invoice </span></sc-if><sc-if value="{{ notTaxInvoice }}" hint-placeholder-val="{{ false }}"><span>Invoice </span></sc-if><span data-control="Invoice number">{{ invoice.number }}</span></h1>
               <sc-if value="{{ isDraft }}" hint-placeholder-val="{{ true }}">
                 <span data-control="Status" style="padding: 2px 10px; border-radius: 9999px; font-size: 12px; font-weight: 600; background: #f1f5f9; color: #475569;">{{ invoice.status }}</span>
               </sc-if>
@@ -361,8 +361,8 @@
               <h2 style="margin: 0; font-size: 16px; font-weight: 600; color: #0f172a">Details</h2>
               <div data-control="Supplier" style="display: flex; flex-direction: column; gap: 2px; padding-bottom: 12px; border-bottom: 1px solid #e2e8f0;">
                 <span style="font-size: 12px; color: #64748b">Supplier</span>
-                <span style="font-size: 14px; font-weight: 600; color: #0f172a">{{ business.name }}</span>
-                <span style="font-size: 13px; color: #334155">ABN {{ business.abn }}</span>
+                <span style="font-size: 14px; font-weight: 600; color: #0f172a">{{ invoice.supplierRecord.name }}</span>
+                <span style="font-size: 13px; color: #334155">ABN {{ invoice.supplierRecord.abn }}</span>
               </div>
               <sc-if value="{{ isDraft }}" hint-placeholder-val="{{ true }}">
                 <div style="display: flex; flex-direction: column; gap: 4px">
@@ -390,9 +390,9 @@
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 4px">
                   <label for="invoice-prices" style="font-size: 12px; color: #64748b">Prices</label>
-                  <select id="invoice-prices" data-control="Prices" data-field="pricesIncludeGst" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; font-size: 14px; font-family: inherit; box-sizing: border-box;">
-                    <option>Exclude GST</option>
-                    <option>Include GST</option>
+                  <select id="invoice-prices" data-control="Prices" data-field="prices" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; font-size: 14px; font-family: inherit; box-sizing: border-box;">
+                    <option value="exclude gst">Exclude GST</option>
+                    <option value="include gst">Include GST</option>
                   </select>
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 4px">
@@ -422,7 +422,7 @@
                 </div>
                 <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 0; border-top: 1px solid #e2e8f0;">
                   <span style="font-size: 13px; color: #64748b">Prices</span>
-                  <span data-control="Prices" style="font-size: 14px; color: #0f172a">{{ invoice.pricesIncludeGst }}</span>
+                  <span data-control="Prices" style="font-size: 14px; color: #0f172a">{{ invoice.prices }}</span>
                 </div>
                 <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 0; border-top: 1px solid #e2e8f0;">
                   <span style="font-size: 13px; color: #64748b">Notes</span>
@@ -481,7 +481,7 @@
         </div>
       </div>
     </x-dc>
-    <script type="text/x-dc" data-dc-script data-props='{"user":{"editor":null,"default":{"name":"Sam Rivera"}},"isDraft":{"editor":"boolean","default":true},"isSent":{"editor":"boolean","default":false},"isPaid":{"editor":"boolean","default":false},"isVoid":{"editor":"boolean","default":false},"isTaxInvoice":{"editor":"boolean","default":true},"notIsTaxInvoice":{"editor":"boolean","default":false},"business":{"editor":null,"default":{"name":"Ledger Studio Pty Ltd","abn":"51 824 753 556"}},"invoice":{"editor":null,"default":{"name":"INV-001","number":"INV-001","status":"draft","company":"Acme","issueDate":"15 Jan 2026","issueDateValue":"2026-01-15","dueDate":"14 Feb 2026","dueDateValue":"2026-02-14","notes":"Thanks for your business","gstRate":"10%","pricesIncludeGst":"Exclude GST","subtotal":"$320.00","gst":"$20.00","total":"$340.00","canSend":true,"canVoid":true,"canMarkPaid":true,"canUpdate":true}},"allCompanies":{"editor":null,"default":[{"name":"Acme"},{"name":"Globex"},{"name":"Initech"}]},"lineItems":{"editor":null,"default":[{"name":"Consulting","quantity":"2","unitPrice":"$100.00","taxCode":"GST","total":"$200.00"},{"name":"Training materials","quantity":"1","unitPrice":"$120.00","taxCode":"GST-free","total":"$120.00"}]},"$preview":{"width":1280,"height":800}}'>
+    <script type="text/x-dc" data-dc-script data-props='{"user":{"editor":null,"default":{"name":"Sam Rivera"}},"isDraft":{"editor":"boolean","default":true},"isSent":{"editor":"boolean","default":false},"isPaid":{"editor":"boolean","default":false},"isVoid":{"editor":"boolean","default":false},"taxInvoice":{"editor":"boolean","default":true},"notTaxInvoice":{"editor":"boolean","default":false},"invoice":{"editor":null,"default":{"name":"INV-001","number":"INV-001","status":"draft","company":"Acme","issueDate":"15 Jan 2026","issueDateValue":"2026-01-15","dueDate":"14 Feb 2026","dueDateValue":"2026-02-14","notes":"Thanks for your business","gstRate":"10%","prices":"Exclude GST","supplierRecord":{"name":"Ledger Studio Pty Ltd","abn":"51 824 753 556"},"subtotal":"$320.00","gst":"$20.00","total":"$340.00","canSend":true,"canVoid":true,"canMarkPaid":true,"canUpdate":true}},"allCompanies":{"editor":null,"default":[{"name":"Acme"},{"name":"Globex"},{"name":"Initech"}]},"lineItems":{"editor":null,"default":[{"name":"Consulting","quantity":"2","unitPrice":"$100.00","taxCode":"GST","total":"$200.00"},{"name":"Training materials","quantity":"1","unitPrice":"$120.00","taxCode":"GST-free","total":"$120.00"}]},"$preview":{"width":1280,"height":800}}'>
       class Component extends DCLogic {
       renderVals() {
       return { ...this.props };

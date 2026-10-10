@@ -357,7 +357,7 @@
                   </sc-for>
                 </select>
               </div>
-              <sc-if value="{{ canSeeAllTasks }}" hint-placeholder-val="{{ true }}">
+              <sc-if value="{{ canSeeAll }}" hint-placeholder-val="{{ true }}">
               <div style="display: flex; flex-direction: column; gap: 4px">
                 <label for="new-task-assignee" style="font-size: 12px; color: #64748b">Assignee</label>
                 <select id="new-task-assignee" data-control="New task assignee" data-field="assignee" style="width: 180px; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; font-size: 14px; font-family: inherit; box-sizing: border-box;">
@@ -382,7 +382,7 @@
               <sc-if value="{{ anySelected }}" hint-placeholder-val="{{ true }}">
                 <div data-control="Bulk actions" style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px; padding: 8px 12px; border: 1px solid #bfdbfe; border-radius: 8px; background: #eff6ff;">
                   <span style="font-size: 14px; font-weight: 600; color: #1e3a8a">{{ selectedCount }} selected</span>
-                  <sc-if value="{{ canSeeAllTasks }}" hint-placeholder-val="{{ true }}">
+                  <sc-if value="{{ canSeeAll }}" hint-placeholder-val="{{ true }}">
                     <label for="bulk-assignee" style="font-size: 13px; color: #334155">Reassign to</label>
                     <select id="bulk-assignee" data-control="Bulk assignee" data-field="assignee" data-selection="tasks" style="width: 180px; padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a;">
                       <sc-for list="{{ allUsers }}" as="option" hint-placeholder-count="3">
@@ -405,7 +405,7 @@
                     <th style="text-align: left; padding: 8px 12px 8px 0; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: #64748b;">Title</th>
                     <th style="text-align: left; padding: 8px 12px 8px 0; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: #64748b;">Due</th>
                     <th style="text-align: left; padding: 8px 12px 8px 0; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: #64748b;">Deal</th>
-                    <sc-if value="{{ canSeeAllTasks }}" hint-placeholder-val="{{ true }}">
+                    <sc-if value="{{ canSeeAll }}" hint-placeholder-val="{{ true }}">
                     <th style="text-align: left; padding: 8px 12px 8px 0; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: #64748b;">Assignee</th>
                     </sc-if>
                     <th style="text-align: right; padding: 8px 0 8px 12px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: #64748b;">Action</th>
@@ -432,7 +432,7 @@
                       <td style="padding: 8px 12px 8px 0; border-top: 1px solid #e2e8f0;">
                         <a href="../deal-page/default.dc.html" data-control="Deal link" data-record="{{ task.deal }}" style="font-size: 14px; text-decoration: none">{{ task.deal }}</a>
                       </td>
-                      <sc-if value="{{ canSeeAllTasks }}" hint-placeholder-val="{{ true }}">
+                      <sc-if value="{{ canSeeAll }}" hint-placeholder-val="{{ true }}">
                       <td style="padding: 8px 12px 8px 0; border-top: 1px solid #e2e8f0; color: #334155;">{{ task.assignee }}</td>
                       </sc-if>
                       <td style="padding: 8px 0 8px 12px; border-top: 1px solid #e2e8f0; text-align: right;">
@@ -478,7 +478,7 @@
         </div>
       </div>
     </x-dc>
-    <script type="text/x-dc" data-dc-script data-props='{"user":{"editor":null,"default":{"name":"Morgan Lee"}},"canSeeAllTasks":{"editor":"boolean","default":true},"canCreateTask":{"editor":"boolean","default":true},"hasNoOpenTasks":{"editor":"boolean","default":false},"anySelected":{"editor":"boolean","default":true},"selectedCount":{"editor":"int","default":2},"tasks":{"editor":null,"default":[{"name":"Confirm decision maker","title":"Confirm decision maker","dueDate":"2 Oct 2026","status":"open","deal":"Big deal","assignee":"Sam Rivera","isOpen":true,"overdue":true,"dueThisWeek":false,"canComplete":true,"canReassign":true,"menuOpen":true,"reassignOpen":false,"selected":true,"notSelected":false,"matches":true},{"name":"Send proposal draft","title":"Send proposal draft","dueDate":"14 Oct 2026","status":"open","deal":"Big deal","assignee":"Sam Rivera","isOpen":true,"overdue":false,"dueThisWeek":true,"canComplete":true,"canReassign":true,"selected":true,"notSelected":false,"matches":true},{"name":"Book onboarding call","title":"Book onboarding call","dueDate":"12 Oct 2026","status":"open","deal":"Globex renewal","assignee":"Morgan Lee","isOpen":true,"overdue":false,"dueThisWeek":true,"canComplete":true,"canReassign":true,"selected":false,"notSelected":true,"matches":true},{"name":"Review contract terms","title":"Review contract terms","dueDate":"30 Oct 2026","status":"open","deal":"Globex renewal","assignee":"Morgan Lee","isOpen":true,"overdue":false,"dueThisWeek":false,"canComplete":true,"canReassign":true,"selected":false,"notSelected":true,"matches":true},{"name":"Qualify budget","title":"Qualify budget","dueDate":"20 Sep 2026","status":"done","deal":"Big deal","assignee":"Sam Rivera","isOpen":false,"overdue":false,"dueThisWeek":false,"canComplete":false,"canReassign":false,"matches":true}]},"allDeals":{"editor":null,"default":[{"name":"Big deal"},{"name":"Globex renewal"}]},"allUsers":{"editor":null,"default":[{"name":"Sam Rivera","assignable":true},{"name":"Morgan Lee","assignable":true},{"name":"Alex Chen","assignable":false},{"name":"Jordan Patel","assignable":true}]},"$preview":{"width":1280,"height":800}}'>
+    <script type="text/x-dc" data-dc-script data-props='{"user":{"editor":null,"default":{"name":"Morgan Lee"}},"canSeeAll":{"editor":"boolean","default":true},"canCreateTask":{"editor":"boolean","default":true},"hasNoOpenTasks":{"editor":"boolean","default":false},"anySelected":{"editor":"boolean","default":true},"selectedCount":{"editor":"int","default":2},"tasks":{"editor":null,"default":[{"name":"Confirm decision maker","title":"Confirm decision maker","dueDate":"2 Oct 2026","status":"open","deal":"Big deal","assignee":"Sam Rivera","isOpen":true,"overdue":true,"dueThisWeek":false,"canComplete":true,"canReassign":true,"menuOpen":true,"reassignOpen":false,"selected":true,"notSelected":false,"matches":true},{"name":"Send proposal draft","title":"Send proposal draft","dueDate":"14 Oct 2026","status":"open","deal":"Big deal","assignee":"Sam Rivera","isOpen":true,"overdue":false,"dueThisWeek":true,"canComplete":true,"canReassign":true,"selected":true,"notSelected":false,"matches":true},{"name":"Book onboarding call","title":"Book onboarding call","dueDate":"12 Oct 2026","status":"open","deal":"Globex renewal","assignee":"Morgan Lee","isOpen":true,"overdue":false,"dueThisWeek":true,"canComplete":true,"canReassign":true,"selected":false,"notSelected":true,"matches":true},{"name":"Review contract terms","title":"Review contract terms","dueDate":"30 Oct 2026","status":"open","deal":"Globex renewal","assignee":"Morgan Lee","isOpen":true,"overdue":false,"dueThisWeek":false,"canComplete":true,"canReassign":true,"selected":false,"notSelected":true,"matches":true},{"name":"Qualify budget","title":"Qualify budget","dueDate":"20 Sep 2026","status":"done","deal":"Big deal","assignee":"Sam Rivera","isOpen":false,"overdue":false,"dueThisWeek":false,"canComplete":false,"canReassign":false,"matches":true}]},"allDeals":{"editor":null,"default":[{"name":"Big deal"},{"name":"Globex renewal"}]},"allUsers":{"editor":null,"default":[{"name":"Sam Rivera","assignable":true},{"name":"Morgan Lee","assignable":true},{"name":"Alex Chen","assignable":false},{"name":"Jordan Patel","assignable":false}]},"$preview":{"width":1280,"height":800}}'>
       class Component extends DCLogic {
       renderVals() {
       return { ...this.props };

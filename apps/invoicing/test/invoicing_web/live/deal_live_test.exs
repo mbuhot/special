@@ -7,12 +7,14 @@ defmodule InvoicingWeb.DealLiveTest do
 
   setup %{conn: conn} do
     manager =
-      Accounts.create_user!(%{email: "manager@example.com", role: :manager},
+      Accounts.create_user!(%{name: "Manager User", email: "manager@example.com", role: :manager},
         authorize?: false
       )
 
     sales_rep =
-      Accounts.create_user!(%{email: "sales@example.com", role: :sales}, authorize?: false)
+      Accounts.create_user!(%{name: "Sales User", email: "sales@example.com", role: :sales},
+        authorize?: false
+      )
 
     acme = CRM.create_company!(%{name: "Acme"}, authorize?: false)
 

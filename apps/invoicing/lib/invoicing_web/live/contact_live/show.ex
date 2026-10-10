@@ -172,7 +172,7 @@ defmodule InvoicingWeb.ContactLive.Show do
                 <div class="flex flex-col gap-0.5">
                   <span>{activity.body}</span>
                   <div class="flex gap-3 text-[13px] text-base-content/60">
-                    <span>by {Format.role_label(activity.author.role)}</span>
+                    <span>by {activity.author.name}</span>
                     <time datetime={DateTime.to_iso8601(activity.occurred_at)}>
                       {Format.datetime(activity.occurred_at)}
                     </time>

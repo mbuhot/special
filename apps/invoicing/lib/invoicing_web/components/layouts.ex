@@ -78,7 +78,8 @@ defmodule InvoicingWeb.Layouts do
       <div class="flex-1"></div>
 
       <div id="signed-in-as" class="flex flex-col gap-0.5 border-t border-base-300 px-3 pt-3">
-        <div class="text-sm font-semibold">{InvoicingWeb.Format.role_label(@current_user.role)}</div>
+        <div class="text-xs text-base-content/60">Signed in as</div>
+        <div class="text-sm font-semibold">{@current_user.name}</div>
         <div class="truncate text-xs text-base-content/60">{@current_user.email}</div>
       </div>
 

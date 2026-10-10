@@ -5,11 +5,16 @@ defmodule Invoicing.Billing.InvoiceTest do
 
   setup do
     accountant =
-      Accounts.create_user!(%{email: "accounts@example.com", role: :accountant},
+      Accounts.create_user!(
+        %{name: "Accounts User", email: "accounts@example.com", role: :accountant},
         authorize?: false
       )
 
-    admin = Accounts.create_user!(%{email: "admin@example.com", role: :admin}, authorize?: false)
+    admin =
+      Accounts.create_user!(%{name: "Admin User", email: "admin@example.com", role: :admin},
+        authorize?: false
+      )
+
     company = CRM.create_company!(%{name: "Acme"}, actor: accountant)
 
     invoice =
@@ -141,7 +146,8 @@ defmodule Invoicing.Billing.SentInvoiceEditingTest do
 
   setup do
     accountant =
-      Accounts.create_user!(%{email: "accounts@example.com", role: :accountant},
+      Accounts.create_user!(
+        %{name: "Accounts User", email: "accounts@example.com", role: :accountant},
         authorize?: false
       )
 

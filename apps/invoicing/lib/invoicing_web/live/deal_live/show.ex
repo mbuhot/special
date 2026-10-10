@@ -160,7 +160,7 @@ defmodule InvoicingWeb.DealLive.Show do
               {@deal.contact.full_name}
             </.link>
           </.property>
-          <.property label="Owner">{Format.role_label(@deal.owner.role)}</.property>
+          <.property label="Owner">{@deal.owner.name}</.property>
         </.card>
 
         <div class="flex min-w-0 flex-col gap-5">

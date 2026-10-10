@@ -211,7 +211,8 @@ defmodule Invoicing.SpecHandlers do
     %{user: user, conn: Accounts.log_in_conn(build_conn(), user)}
   end
 
-  defp actor_email(actor_name), do: String.downcase(actor_name) <> "@example.com"
+  defp actor_email(actor_name),
+    do: (actor_name |> String.downcase() |> String.replace(~r/\s+/, "-")) <> "@example.com"
 
   defp predicate_holds?(ctx, ref_name, predicate_name) do
     %{entity: entity, id: id} = Ctx.ref(ctx, ref_name)

@@ -4,15 +4,21 @@ defmodule Invoicing.Pipeline.DealTest do
   alias Invoicing.{Accounts, CRM, Pipeline}
 
   setup do
-    admin = Accounts.create_user!(%{email: "admin@example.com", role: :admin}, authorize?: false)
+    admin =
+      Accounts.create_user!(%{name: "Admin User", email: "admin@example.com", role: :admin},
+        authorize?: false
+      )
 
     manager =
-      Accounts.create_user!(%{email: "manager@example.com", role: :manager},
+      Accounts.create_user!(%{name: "Manager User", email: "manager@example.com", role: :manager},
         authorize?: false
       )
 
     new_owner =
-      Accounts.create_user!(%{email: "new-owner@example.com", role: :sales}, authorize?: false)
+      Accounts.create_user!(
+        %{name: "New-owner User", email: "new-owner@example.com", role: :sales},
+        authorize?: false
+      )
 
     company = CRM.create_company!(%{name: "Acme"}, actor: manager)
 

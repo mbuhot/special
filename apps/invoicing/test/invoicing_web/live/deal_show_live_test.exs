@@ -7,7 +7,7 @@ defmodule InvoicingWeb.DealShowLiveTest do
 
   setup %{conn: conn} do
     sales_rep =
-      Accounts.create_user!(%{email: "sales@example.com", role: :sales},
+      Accounts.create_user!(%{name: "Sales User", email: "sales@example.com", role: :sales},
         authorize?: false
       )
 

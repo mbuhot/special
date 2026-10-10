@@ -4,10 +4,13 @@ defmodule Invoicing.Pipeline.TaskTest do
   alias Invoicing.{Accounts, CRM, Pipeline}
 
   setup do
-    admin = Accounts.create_user!(%{email: "admin@example.com", role: :admin}, authorize?: false)
+    admin =
+      Accounts.create_user!(%{name: "Admin User", email: "admin@example.com", role: :admin},
+        authorize?: false
+      )
 
     sales_rep =
-      Accounts.create_user!(%{email: "sales@example.com", role: :sales},
+      Accounts.create_user!(%{name: "Sales User", email: "sales@example.com", role: :sales},
         authorize?: false
       )
 

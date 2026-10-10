@@ -37,7 +37,7 @@ defmodule Invoicing.SpecSupport.Factory do
 
   @resource_relationship_attributes %{
     Deal => %{"user" => "owner_id"},
-    Task => %{"user" => "assignee_id"}
+    Task => %{"user" => "assignee_id", "assignee" => "assignee_id"}
   }
 
   @natural_keys %{
@@ -48,6 +48,14 @@ defmodule Invoicing.SpecSupport.Factory do
     Task => "title",
     User => "email"
   }
+
+  @people %{
+    "Sales rep" => %{role: "sales", name: "Sam Rivera"},
+    "Sales manager" => %{role: "manager", name: "Morgan Lee"},
+    "Accounts" => %{role: "accountant", name: "Alex Chen"},
+    "Admin" => %{role: "admin", name: "Jordan Patel"}
+  }
+  @people_by_role Map.new(@people, fn {_ref, person} -> {person.role, person} end)
 
   @doc "Creates a record of the named entity from spec-spelled attributes."
   def create(entity_name, attrs), do: create(entity_name, attrs, nil)
@@ -128,7 +136,7 @@ defmodule Invoicing.SpecSupport.Factory do
     deal_attrs
     |> Map.put_new("name", "Deal #{System.unique_integer([:positive])}")
     |> Map.put_new_lazy("company_id", fn -> create("Company", %{}).id end)
-    |> Map.put_new_lazy("owner_id", fn -> create("User", %{"role" => "sales"}).id end)
+    |> Map.put_new_lazy("owner_id", fn -> default_sales_rep().id end)
     |> Pipeline.create_deal!(authorize?: false)
     |> put_stage(stage)
   end
@@ -149,17 +157,38 @@ defmodule Invoicing.SpecSupport.Factory do
     |> Map.put_new("title", "Task #{System.unique_integer([:positive])}")
     |> Map.put_new("due_date", "2026-02-01")
     |> Map.put_new_lazy("deal_id", fn -> create("Deal", %{}).id end)
-    |> Map.put_new_lazy("assignee_id", fn -> create("User", %{"role" => "sales"}).id end)
+    |> Map.put_new_lazy("assignee_id", fn -> default_sales_rep().id end)
     |> Pipeline.create_task!(authorize?: false)
     |> put_status(status)
   end
 
   defp build(attrs, User) do
-    attrs
-    |> Map.put_new_lazy("email", fn ->
-      "user-#{System.unique_integer([:positive])}@example.com"
-    end)
-    |> Accounts.create_user!(authorize?: false)
+    user_attrs =
+      attrs
+      |> Map.put_new_lazy("email", fn ->
+        "user-#{System.unique_integer([:positive])}@example.com"
+      end)
+      |> Map.put_new_lazy("name", fn -> default_person_name(attrs["role"]) end)
+
+    case Accounts.get_user_by_email(user_attrs["email"],
+           not_found_error?: false,
+           authorize?: false
+         ) do
+      {:ok, nil} -> Accounts.create_user!(user_attrs, authorize?: false)
+      {:ok, existing_user} -> Accounts.update_user!(existing_user, user_attrs, authorize?: false)
+    end
+  end
+
+  defp person_email(ref),
+    do: (ref |> String.downcase() |> String.replace(~r/\s+/, "-")) <> "@example.com"
+
+  defp default_sales_rep, do: create("User", %{}, "Sales rep")
+
+  defp default_person_name(role) do
+    case Map.fetch(@people_by_role, to_string(role)) do
+      {:ok, person} -> person.name
+      :error -> "Person #{System.unique_integer([:positive])}"
+    end
   end
 
   defp cast_attributes(attrs, resource) do
@@ -191,6 +220,16 @@ defmodule Invoicing.SpecSupport.Factory do
   end
 
   defp put_natural_key(attrs, _resource, nil), do: attrs
+
+  defp put_natural_key(attrs, User, ref) do
+    person = Map.get(@people, ref, %{})
+
+    attrs
+    |> Map.put_new("email", person_email(ref))
+    |> Map.put_new("role", Map.get(person, :role))
+    |> Map.put_new("name", Map.get(person, :name))
+    |> Map.reject(fn {_field, value} -> is_nil(value) end)
+  end
 
   defp put_natural_key(attrs, resource, ref) do
     case Map.fetch(@natural_keys, resource) do

@@ -1,5 +1,5 @@
 defmodule InvoicingWeb.Format do
-  @moduledoc "Display formats for amounts, dates, enum labels and user roles."
+  @moduledoc "Display formats for amounts, dates, enum labels."
 
   @currency_symbol "$"
 
@@ -22,12 +22,6 @@ defmodule InvoicingWeb.Format do
 
   @doc "Returns an atom as a capitalised word."
   def label(value), do: value |> to_string() |> String.capitalize()
-
-  @doc "Returns the label shown for a user's role."
-  def role_label(:sales), do: "Sales rep"
-  def role_label(:manager), do: "Sales manager"
-  def role_label(:accountant), do: "Accounts"
-  def role_label(:admin), do: "Admin"
 
   defp sign_and_digits("-" <> digits), do: {"-", digits}
   defp sign_and_digits(digits), do: {"", digits}

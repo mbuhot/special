@@ -12,7 +12,7 @@ defmodule Invoicing.Accounts.User do
   end
 
   actions do
-    defaults [:read, :destroy, create: [:email, :role], update: [:email, :role]]
+    defaults [:read, :destroy, create: [:name, :email, :role], update: [:name, :email, :role]]
   end
 
   policies do
@@ -27,6 +27,7 @@ defmodule Invoicing.Accounts.User do
 
   attributes do
     uuid_primary_key :id
+    attribute :name, :string, allow_nil?: false, public?: true
     attribute :email, :string, allow_nil?: false, public?: true
 
     attribute :role, :atom,

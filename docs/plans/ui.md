@@ -67,7 +67,7 @@ Interleaved with UI iterations. The specs must capture the critical behaviour an
 docs/reviews/2026-10-10-iteration-1.md: FAIL. Blocking: invoice editor, contact/deal/company record pages, login; invoice line editing, new-invoice company, racy numbering, email-only auth.
 
 | 2 | Record pages for contact, company and deal: properties panel with every model field, associations as links, stage and status controls, timeline with author and formatted dates; DSL gains typed fields, enums and named relations (D4) | Reviewer's top recommendation; closes UX 2, 3, 4, 6 and spec 2, 3, 7 | in progress |
-| 3 | Invoice editor: customer selection, dates, per-line totals, read-only outside draft, persisted-or-error edits, safe numbering; DSL gains invariants (D9) | Blocking UX 1 and code 1, 2, 3 | queued |
+| 3 | Invoice editor: customer selection, dates, per-line totals, read-only outside draft, persisted-or-error edits, safe numbering; DSL gains invariants (D9) | Blocking UX 1 and code 1, 2, 3 | done 9f33c54 |
 | 4 | Authentication: password login, logout, no stock landing page | Blocking UX 5 and code 4 | queued |
 
 ### Iteration 2, record pages
@@ -76,3 +76,18 @@ docs/reviews/2026-10-10-iteration-1.md: FAIL. Blocking: invoice editor, contact/
 - Hindered: a Company-page scenario that mentions a Deal cannot live in specs/crm (the project does not see Deal); it moved to the pipeline project. Project boundaries in the specs tree shape where a cross-cutting scenario lives.
 - Caught: the ash_boundary worker's first attempt added a `for_company` read action; the policy conformance test rejected it as unspecified, so the query became a plain domain function over the primary read.
 - Caught: making every module async exposed sandbox deadlocks on natural keys; the fix is key ordering (users first) in the spec runtime, which the spec's `Given` order already follows for everything else.
+
+### Iteration 2 review
+
+docs/reviews/2026-10-10-iteration-2.md: FAIL. Record pages closed UX 3, 4 and spec 2, 7, 8. Twelve blockers remain, shortest first: labels and dates, one money formatter, sign out, invoice numbering, user names, create accepts and editor authorization, editor flow, dashboard money, timelines on deal and company, invoice editor, password login, delete.
+
+### Iteration 3, invoice editor (in progress)
+
+- Spec first: model gains issue date, due date, notes, LineItem.total; surfaces gain company, dates, notes, lines table, per-line total, add and remove line, company link; five scenarios (per-line totals and remove, add line, details saved, sent invoice read only, sales rep cannot edit).
+- DSL: `## Invariants` section (D9) with product, sum, unique, frozen-except, same-parent and sequence shapes; an ExUnit property suite is generated from them.
+- Blockers 1 to 4 run as one polish pass alongside (capitalised labels and formatted dates, `$1,234.00` money everywhere, Sign out and root redirect, INV-001 numbering).
+- Helped: invariants written before the build found a bug no earlier test covered (a deal accepted a contact from another company); the generated property failed, the fix landed with the editor.
+- Helped: five editor scenarios bound with no vocabulary change; the existing steps (`has issue date`, `does not see "Add line"`, `may not update`) expressed persistence, read-only state and authorization.
+- Hindered: the Model section cannot hold a free sentence, so the numbering rule waited for the Invariants section to land.
+- Hindered: `sees` matches element text, so the line description became a textarea to make its value visible to the assertion; the vocabulary has no "field has value" check.
+- Open from this iteration: "New invoice" still preselects the first company (the scenario never chooses one); the deal editor lists every contact, so a mismatched pick now errors instead of being filtered.

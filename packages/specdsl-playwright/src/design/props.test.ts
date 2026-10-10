@@ -464,3 +464,17 @@ test("a derived count has a boolean flag", () => {
   expect(props["hasOverdueTasks"]).toBe(true);
   expect(props["hasLeadDeals"]).toBe(true);
 });
+
+test("flag filter keeps rows whose named flag is true, and an empty flag keeps every row", () => {
+  const props = { tasks: [{ overdue: true }, { overdue: false }] };
+  const overdue = applyRowFilters(props, [{ prop: "tasks", kind: "flag", flag: "overdue" }]);
+  expect((overdue["tasks"] as Record<string, unknown>[]).map((row) => row["matches"])).toEqual([
+    true,
+    false,
+  ]);
+  const all = applyRowFilters(props, [{ prop: "tasks", kind: "flag", flag: "" }]);
+  expect((all["tasks"] as Record<string, unknown>[]).map((row) => row["matches"])).toEqual([
+    true,
+    true,
+  ]);
+});

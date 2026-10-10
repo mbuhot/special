@@ -225,6 +225,7 @@ export const designSteps: StepHandlers<WebAppStepArgs, DesignServices, WebAppCon
     );
     await applyEdit(env, args.Actor, control, selectorOf(args.Control), "select", args.Value, {
       emptyOption: optionValue === "",
+      optionValue,
     });
   },
   async sees(args, env) {
@@ -537,7 +538,7 @@ async function applyEdit(
   selector: string,
   action: "fill" | "select",
   value: string,
-  options: { emptyOption?: boolean } = {},
+  options: { emptyOption?: boolean; optionValue?: string } = {},
 ): Promise<void> {
   const page = pageOf(env, actorName);
   const attributes = await control.evaluate((element) => ({
@@ -545,11 +546,13 @@ async function applyEdit(
     record: element.getAttribute("data-record") ?? "",
     filters: element.getAttribute("data-filters"),
     filterField: element.getAttribute("data-filter-field"),
+    filterFlag: element.hasAttribute("data-filter-flag"),
   }));
   const session = sessionOf(page);
   if (attributes.filters !== null) {
-    const filter: RowFilter =
-      attributes.filterField === null
+    const filter: RowFilter = attributes.filterFlag
+      ? { prop: attributes.filters, kind: "flag", flag: options.optionValue ?? value }
+      : attributes.filterField === null
         ? { prop: attributes.filters, kind: "text", text: value }
         : {
             prop: attributes.filters,

@@ -54,7 +54,8 @@ export function buildNewProps(
 
 export type RowFilter =
   | { prop: string; kind: "text"; text: string }
-  | { prop: string; kind: "field"; field: string; value: string };
+  | { prop: string; kind: "field"; field: string; value: string }
+  | { prop: string; kind: "flag"; flag: string };
 
 /** Sets `matches` on every row of each filtered prop: true when the row satisfies all filters of that prop. */
 export function applyRowFilters(props: Props, filters: readonly RowFilter[]): Props {
@@ -75,6 +76,9 @@ export function applyRowFilters(props: Props, filters: readonly RowFilter[]): Pr
 }
 
 function rowMatches(row: Props, filter: RowFilter): boolean {
+  if (filter.kind === "flag") {
+    return filter.flag === "" || row[camelCase(filter.flag)] === true;
+  }
   if (filter.kind === "field") {
     return filter.value === "" || row[camelCase(filter.field)] === filter.value;
   }

@@ -22,6 +22,11 @@ defmodule SpecDSL.DerivedTest do
               "line" => 3
             },
             %{
+              "entity" => "Task",
+              "name" => "soon",
+              "condition" => %{"op" => "within", "field" => "due date", "days" => 7}
+            },
+            %{
               "entity" => "Deal",
               "name" => "live",
               "condition" => %{
@@ -41,7 +46,7 @@ defmodule SpecDSL.DerivedTest do
   end
 
   test "reads predicates and counts into structs", %{derived: derived} do
-    assert [%SpecDSL.Predicate{entity: "Task", name: "overdue", line: 3}, _live] =
+    assert [%SpecDSL.Predicate{entity: "Task", name: "overdue", line: 3}, _soon, _live] =
              derived.predicates
 
     assert [%SpecDSL.Count{name: "Overdue tasks", entity: "Task", predicate: "overdue"}] =
@@ -72,5 +77,33 @@ defmodule SpecDSL.DerivedTest do
     assert Derived.holds?(predicates["live"], %{stage: :lead, close_date: nil}, @today)
     refute Derived.holds?(predicates["live"], %{stage: :won, close_date: ~D[2026-02-01]}, @today)
     assert Derived.holds?(predicates["live"], %{stage: :won, close_date: ~D[2026-02-02]}, @today)
+  end
+
+  describe "within 7 days of today" do
+    test "holds today and on the last day of the window", %{predicates: predicates} do
+      assert Derived.holds?(predicates["soon"], %{due_date: @today}, @today)
+      assert Derived.holds?(predicates["soon"], %{due_date: Date.add(@today, 7)}, @today)
+    end
+
+    test "fails the day after the window and yesterday", %{predicates: predicates} do
+      refute Derived.holds?(predicates["soon"], %{due_date: Date.add(@today, 8)}, @today)
+      refute Derived.holds?(predicates["soon"], %{due_date: Date.add(@today, -1)}, @today)
+    end
+
+    test "fails when the date is missing", %{predicates: predicates} do
+      refute Derived.holds?(predicates["soon"], %{due_date: nil}, @today)
+    end
+
+    test "reads the date part of a datetime", %{predicates: predicates} do
+      assert Derived.holds?(
+               predicates["soon"],
+               %{due_date: ~U[2026-01-22 23:00:00Z]},
+               @today
+             )
+    end
+
+    test "reads the field it constrains", %{predicates: predicates} do
+      assert Derived.fields(predicates["soon"]) == [:due_date]
+    end
   end
 end

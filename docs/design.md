@@ -59,6 +59,9 @@ Markdown. `#` is the feature. Each `##` is a section whose kind the dialect defi
 ## Actors
 
 - Accounts: role accountant
+- Sales rep: role sales, named Sam Rivera
+
+An actor line is `<Actor>: role <Role>[, named <Name>]`. A declared name is the display name of the actor's user record in every runtime (AST `actors.<Actor>.Name`).
 
 ## Policies
 
@@ -191,6 +194,8 @@ A `## Derived` section in a base file declares named predicates and counts over 
 | `<Name> counts <Entity> that are <Predicate>` | `Overdue tasks counts Task that are overdue`                       |
 
 A condition is comparisons joined by `and` / `or` (no parentheses; `and` binds tighter). A comparison is `<Field> is <Value>`, `<Field> is not <Value>`, `<Field> is before <Value>` or `<Field> is after <Value>`. Enum fields compare against their states or `one of` values; `before` and `after` apply to date fields, whose value is `today` or `YYYY-MM-DD`. Fields and values that the model does not declare are bind errors with the line.
+
+A date field also compares as `<Field> is within <N> days of today` (`N` a positive integer): true when the date is today or later and at most `N` days after today. AST `{ "op": "within", "field": "due date", "days": 7 }`; a non-date field or non-integer `N` is a bind error.
 
 A scenario step `<Ref> is <Predicate>` or `<Ref> is not <Predicate>` asserts a predicate on a record. It runs in domain mode only. The invariant shapes `Entity.field = left * right` and `= sum of Target.field` remain in `## Invariants`.
 

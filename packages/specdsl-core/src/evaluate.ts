@@ -3,6 +3,7 @@ import type { ConditionNode, PredicateNode } from "./ast.js";
 export type FieldRecord = Readonly<Record<string, string | null | undefined>>;
 
 const ISO_DATE_PREFIX = /^(\d{4}-\d{2}-\d{2})(?:$|T)/;
+const ISO_DATE_LENGTH = 10;
 const TODAY = "today";
 
 /** Whether the record, keyed by field name, satisfies the predicate or condition on the ISO date `today`. */
@@ -25,7 +26,22 @@ export function holds(
       return compareDates(record[condition.field], condition.value, today) < 0;
     case "after":
       return compareDates(record[condition.field], condition.value, today) > 0;
+    case "within":
+      return withinDays(record[condition.field], condition.days, today);
   }
+}
+
+function withinDays(actual: string | null | undefined, days: number, today: string): boolean {
+  const actualDate = dateOf(actual);
+  if (actualDate === undefined) return false;
+  const start = dateOf(today) ?? today;
+  return actualDate >= start && actualDate <= addDays(start, days);
+}
+
+function addDays(isoDate: string, days: number): string {
+  const shifted = new Date(`${isoDate}T00:00:00Z`);
+  shifted.setUTCDate(shifted.getUTCDate() + days);
+  return shifted.toISOString().slice(0, ISO_DATE_LENGTH);
 }
 
 function equal(actual: string | null | undefined, value: string, today: string): boolean {

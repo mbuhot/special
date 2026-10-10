@@ -25,6 +25,8 @@ export interface DerivedContext {
 }
 
 const COMPARISON = /^(.+?)\s+is\s+(?:(not|before|after)\s+)?(\S.*)$/i;
+const WITHIN = /^(.+?)\s+is\s+within\s+(\S+)\s+days?\s+of\s+today$/i;
+const POSITIVE_INTEGER = /^[1-9]\d*$/;
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 const DATE_TYPES = new Set(["date", "datetime"]);
 
@@ -91,6 +93,29 @@ class ConditionParser {
   }
 
   private comparison(text: string): ConditionNode | undefined {
+    const within = WITHIN.exec(text.trim());
+    return within === null ? this.valueComparison(text) : this.withinToday(within);
+  }
+
+  private withinToday(parsed: RegExpExecArray): ConditionNode | undefined {
+    const field = this.field(parsed[1] as string);
+    const count = parsed[2] as string;
+    const label = `${this.entity}.${field?.name ?? (parsed[1] as string).trim()}`;
+    const dated = field === undefined || this.isDate(field, label);
+    const valid = POSITIVE_INTEGER.test(count);
+    valid || this.context.report(`"${count}" is not a positive whole number of days`);
+    return field === undefined || !dated || !valid
+      ? undefined
+      : { op: "within", field: field.name, days: Number(count) };
+  }
+
+  private isDate(field: FieldNode, label: string): boolean {
+    const dated = field.type !== undefined && DATE_TYPES.has(field.type);
+    dated || this.context.report(`${label} is not a date and cannot be compared with within`);
+    return dated;
+  }
+
+  private valueComparison(text: string): ConditionNode | undefined {
     const parsed = COMPARISON.exec(text.trim());
     if (parsed === null) {
       this.context.report(

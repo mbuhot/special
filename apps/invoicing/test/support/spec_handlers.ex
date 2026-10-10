@@ -192,10 +192,19 @@ defmodule Invoicing.SpecHandlers do
     |> Enum.map(fn actor_name -> {actor_email(actor_name), actor_name} end)
     |> Enum.sort()
     |> Map.new(fn {email, actor_name} ->
-      role = ast.actors |> Map.fetch!(actor_name) |> Map.fetch!(:role)
-      {actor_name, Factory.create("User", %{email: email, role: Map.fetch!(@roles, role)})}
+      declaration = Map.fetch!(ast.actors, actor_name)
+      attributes = %{email: email, role: Map.fetch!(@roles, declaration.role)}
+      {actor_name, Factory.create("User", Map.merge(attributes, display_name(ast, declaration)))}
     end)
   end
+
+  defp display_name(ast, %{name: display_name}) do
+    if Enum.any?(ast.model["User"].fields, &(&1.name == "name")),
+      do: %{name: display_name},
+      else: %{}
+  end
+
+  defp display_name(_ast, _declaration), do: %{}
 
   defp sign_in_actor(declaration, ctx) do
     user = Map.fetch!(Ctx.context(ctx, :data).users, declaration.name)

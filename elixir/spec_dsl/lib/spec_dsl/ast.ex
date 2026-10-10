@@ -191,6 +191,7 @@ defmodule SpecDSL.Predicate do
   @type condition ::
           %{op: :and | :or, left: condition(), right: condition()}
           | %{op: :is | :is_not | :before | :after, field: atom(), value: String.t()}
+          | %{op: :within, field: atom(), days: pos_integer()}
   @type t :: %__MODULE__{
           entity: String.t(),
           name: String.t(),
@@ -248,6 +249,9 @@ defmodule SpecDSL.Derived do
   def holds?(%{op: :after, field: field, value: value}, record, today),
     do: compare_dates(Map.get(record, field), value, today) == :gt
 
+  def holds?(%{op: :within, field: field, days: days}, record, today),
+    do: within_days?(Map.get(record, field), days, today)
+
   @doc "The field atoms a predicate or condition reads, without repeats."
   @spec fields(Predicate.t() | Predicate.condition()) :: [atom()]
   def fields(%Predicate{condition: condition}), do: fields(condition)
@@ -261,6 +265,14 @@ defmodule SpecDSL.Derived do
     do: equal?(DateTime.to_date(actual), value, today)
 
   defp equal?(actual, value, _today), do: normalise(actual) == normalise(value)
+
+  defp within_days?(nil, _days, _today), do: false
+
+  defp within_days?(%DateTime{} = actual, days, today),
+    do: within_days?(DateTime.to_date(actual), days, today)
+
+  defp within_days?(%Date{} = actual, days, today),
+    do: Date.compare(actual, today) != :lt and Date.compare(actual, Date.add(today, days)) != :gt
 
   defp compare_dates(nil, _value, _today), do: nil
 
@@ -508,6 +520,9 @@ defmodule SpecDSL.AST do
       left: build_condition(left),
       right: build_condition(right)
     }
+
+  defp build_condition(%{"op" => "within", "field" => field, "days" => days}),
+    do: %{op: :within, field: snake_atom(field), days: days}
 
   defp build_condition(%{"op" => op, "field" => field, "value" => value}),
     do: %{

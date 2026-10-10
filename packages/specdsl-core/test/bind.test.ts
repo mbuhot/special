@@ -522,3 +522,18 @@ describe("binding a Story line", () => {
     ]);
   });
 });
+
+describe("actor names", () => {
+  const withActors = (...lines: string[]) =>
+    ["# Test", "", "## Model", "- Customer: name", "", "## Actors", ...lines, ""].join("\n");
+
+  it("records an actor's declared name beside its role", () => {
+    const result = bindSuccess(
+      withActors("- Sales rep: role sales, named Sam Rivera", "- Accounts: role accountant"),
+    );
+    expect(result.ast.actors).toEqual({
+      "Sales rep": { Role: "sales", Name: "Sam Rivera", extra: {} },
+      Accounts: { Role: "accountant", extra: {} },
+    });
+  });
+});

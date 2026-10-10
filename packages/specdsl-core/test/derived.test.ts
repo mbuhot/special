@@ -65,6 +65,42 @@ describe("derived", () => {
     expect(predicate?.condition).toEqual({ op: "is not", field: "stage", value: "won" });
   });
 
+  it("records a within-days comparison on a date field", () => {
+    const [predicate] = derivedOf(
+      "- Task is soon when status is open and due date is within 7 days of today",
+    ).predicates;
+    expect(predicate?.condition).toEqual({
+      op: "and",
+      left: { op: "is", field: "status", value: "open" },
+      right: { op: "within", field: "due date", days: 7 },
+    });
+  });
+
+  it("accepts a single day", () => {
+    const [predicate] = derivedOf(
+      "- Task is soon when due date is within 1 day of today",
+    ).predicates;
+    expect(predicate?.condition).toEqual({ op: "within", field: "due date", days: 1 });
+  });
+
+  it("rejects within on a field that is not a date", () => {
+    expect(errorsOf("- Task is soon when title is within 7 days of today")).toEqual([
+      "11: Task.title is not a date and cannot be compared with within",
+    ]);
+  });
+
+  it("rejects a day count that is not a positive integer", () => {
+    expect(errorsOf("- Task is soon when due date is within many days of today")).toEqual([
+      '11: "many" is not a positive whole number of days',
+    ]);
+    expect(errorsOf("- Task is soon when due date is within 0 days of today")).toEqual([
+      '11: "0" is not a positive whole number of days',
+    ]);
+    expect(errorsOf("- Task is soon when due date is within 2.5 days of today")).toEqual([
+      '11: "2.5" is not a positive whole number of days',
+    ]);
+  });
+
   it("records a count over a declared predicate", () => {
     const derived = derivedOf(
       "- Task is overdue when status is open and due date is before today",

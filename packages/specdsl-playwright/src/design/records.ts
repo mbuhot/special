@@ -16,6 +16,12 @@ export function roleOfActor(spec: SpecAst, actorName: string): string | undefine
   return typeof entry?.[1] === "string" ? entry[1] : undefined;
 }
 
+/** The display name declared for the named actor, when its `Name` field is present. */
+export function nameOfActor(spec: SpecAst, actorName: string): string | undefined {
+  const name = spec.actors[actorName]?.["Name"];
+  return typeof name === "string" ? name : undefined;
+}
+
 /** The entity an editor surface edits: the surface name's first word matched against model entities. */
 export function editorEntity(spec: SpecAst, surfaceName: string): string | undefined {
   const firstWord = surfaceName.trim().split(/\s+/)[0]?.toLowerCase() ?? "";
@@ -74,12 +80,8 @@ export function ensureActorUser(
   actorName: string,
 ): string | undefined {
   if (spec.model["User"] === undefined) return undefined;
-  const role = roleOfActor(spec, actorName);
   records.has(actorName) ||
-    records.set(actorName, {
-      entity: "User",
-      fields: new Map(role === undefined ? [] : [["role", role]]),
-    });
+    records.set(actorName, { entity: "User", fields: new Map(userFields(spec, actorName)) });
   return actorName;
 }
 
@@ -198,4 +200,14 @@ function uniqueRef(records: Records, wanted: string): string {
   let candidate = wanted;
   for (let suffix = 2; records.has(candidate); suffix += 1) candidate = `${wanted} ${suffix}`;
   return candidate;
+}
+
+function userFields(spec: SpecAst, actorName: string): [string, string][] {
+  const role = roleOfActor(spec, actorName);
+  const name = nameOfActor(spec, actorName);
+  const hasName = spec.model["User"]?.fields.some((field) => field.name === "name") === true;
+  return [
+    ...(role === undefined ? [] : [["role", role] as [string, string]]),
+    ...(name === undefined || !hasName ? [] : [["name", name] as [string, string]]),
+  ];
 }

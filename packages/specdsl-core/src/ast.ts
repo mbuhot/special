@@ -137,7 +137,8 @@ export type ComparisonOp = "is" | "is not" | "before" | "after";
 
 export type ConditionNode =
   | { op: "and" | "or"; left: ConditionNode; right: ConditionNode }
-  | { op: ComparisonOp; field: string; value: string };
+  | { op: ComparisonOp; field: string; value: string }
+  | { op: "within"; field: string; days: number };
 
 export interface PredicateNode {
   entity: string;

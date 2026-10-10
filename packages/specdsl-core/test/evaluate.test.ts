@@ -71,6 +71,20 @@ describe("holds", () => {
     expect(holds(after, { "close date": "2026-03-01" }, "2026-01-18")).toBe(false);
   });
 
+  describe("within 7 days of today", () => {
+    const soon: PredicateNode["condition"] = { op: "within", field: "due date", days: 7 };
+    const on = (date: string) => holds(soon, { "due date": date }, "2026-01-18");
+
+    it("holds today", () => expect(on("2026-01-18")).toBe(true));
+    it("holds on the last day of the window", () => expect(on("2026-01-25")).toBe(true));
+    it("fails the day after the window", () => expect(on("2026-01-26")).toBe(false));
+    it("fails yesterday", () => expect(on("2026-01-17")).toBe(false));
+    it("fails when the date is missing", () => expect(holds(soon, {}, "2026-01-18")).toBe(false));
+    it("reads the date part of a datetime", () => expect(on("2026-01-25T23:00:00Z")).toBe(true));
+    it("crosses a month boundary", () =>
+      expect(holds(soon, { "due date": "2026-02-03" }, "2026-01-27")).toBe(true));
+  });
+
   it("matches a date field against today with is", () => {
     const dueToday: PredicateNode["condition"] = { op: "is", field: "due date", value: "today" };
     expect(holds(dueToday, { "due date": "2026-01-18" }, "2026-01-18")).toBe(true);

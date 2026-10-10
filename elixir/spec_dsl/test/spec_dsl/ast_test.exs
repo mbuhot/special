@@ -18,6 +18,15 @@ defmodule SpecDSL.ASTTest do
     assert ast.actors == %{"Accounts" => %{role: "accountant", extra: %{}}}
   end
 
+  test "reads an actor's declared name beside its role" do
+    ast =
+      AST.from_map(%{
+        "actors" => %{"Sales rep" => %{"Role" => "sales", "Name" => "Sam Rivera", "extra" => %{}}}
+      })
+
+    assert ast.actors == %{"Sales rep" => %{role: "sales", name: "Sam Rivera", extra: %{}}}
+  end
+
   test "reads each scenario with its Markdown source position", %{ast: ast} do
     assert Enum.map(ast.scenarios, &{&1.name, &1.source}) == [
              {"Line total updates as quantity changes", %{file: "specs/invoicing.md", line: 20}},

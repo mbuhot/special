@@ -99,7 +99,9 @@ export default dialect({
     }),
     Actors: section({
       occurs: "once",
-      items: [{ pattern: "<Actor>: role <Role>", declares: ["Actor"], output: "actors" }],
+      items: [
+        { pattern: "<Actor>: role <Role>[, named <Name>]", declares: ["Actor"], output: "actors" },
+      ],
     }),
     Policies: section({
       occurs: "once",

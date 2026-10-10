@@ -9,6 +9,7 @@ import {
 } from "./props.js";
 import type { GivenEntity } from "./props.js";
 import { createRecord, editorEntity, ensureActorUser, roleOfActor, saveRecord } from "./records.js";
+import type { Records } from "./records.js";
 import { assignDefaultUsers, withNaturalKey } from "./rules.js";
 
 const spec = {
@@ -402,6 +403,24 @@ test("a Given record without a required text field takes its Ref as the natural 
   expect(
     withNaturalKey(model, "Consulting", new Map([["description", "Advice"]])).get("description"),
   ).toBe("Advice");
+});
+
+test("an actor's user record carries the declared name when the model's User has a name field", () => {
+  const user = billing.model["User"] as SpecAst["model"][string];
+  const named: SpecAst = {
+    ...billing,
+    actors: { "Sales rep": { Role: "sales", Name: "Sam Rivera", extra: {} } },
+    model: {
+      ...billing.model,
+      User: { ...user, fields: [...user.fields, { name: "name", type: "text" }] },
+    },
+  };
+  const records: Records = new Map();
+  ensureActorUser(named, records, "Sales rep");
+  expect(records.get("Sales rep")?.fields.get("name")).toBe("Sam Rivera");
+  const unnamed: Records = new Map();
+  ensureActorUser(billing, unnamed, "Sales rep");
+  expect(unnamed.get("Sales rep")?.fields.has("name")).toBe(false);
 });
 
 test("unset user relations point at the first actor's user", () => {

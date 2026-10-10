@@ -49,9 +49,11 @@ Base files declare structure once and cascade from `specs/` down into each proje
 |                 | `- Activity is listed by occurred at newest first`                                                                              |
 | `## Surfaces`   | `- Deal page: design pipeline/deal-page, region "Deal name", region "Stage", button "Qualify", table "Tasks"`                   |
 | `## Actors`     | `- Sales rep: role sales`                                                                                                       |
+|                 | `- Sales rep: role sales, named Sam Rivera`                                                                                     |
 | `## Policies`   | `- Deal: sales may read, create, update, qualify, propose`                                                                      |
 | `## Invariants` | `- Invoice.total = sum of LineItem.total`                                                                                       |
 | `## Derived`    | `- Task is overdue when status is open and due date is before today`                                                            |
+|                 | `- Task is due soon when status is open and due date is within 7 days of today`                                                 |
 | `## Effects`    | `- When Invoice mark paid: create Activity for the first Contact of its company with kind "note", body "Invoice {number} paid"` |
 | `## Steps`      | Composite steps with optional data slots, expanded before binding                                                               |
 | `## Scenario`   | `Story:`, `Given` / `When` / `Then` steps, `Narrate:` lines                                                                     |

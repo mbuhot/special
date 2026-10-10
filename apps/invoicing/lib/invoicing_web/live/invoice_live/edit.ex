@@ -5,8 +5,10 @@ defmodule InvoicingWeb.InvoiceLive.Edit do
 
   alias Invoicing.{Billing, CRM}
 
-  @invoice_fields ~w(company_id issue_date due_date notes)
-  @line_fields ~w(description quantity unit_price)
+  @invoice_fields ~w(company_id issue_date due_date notes gst_rate prices)
+  @prices [:"exclude gst", :"include gst"]
+  @tax_codes [:gst, :"gst-free", :exempt]
+  @line_fields ~w(description quantity unit_price tax_code)
 
   @impl true
   def mount(%{"id" => id}, _session, socket) do
@@ -133,10 +135,13 @@ defmodule InvoicingWeb.InvoiceLive.Edit do
     |> Map.new()
   end
 
-  defp same_value?("unit_price", submitted, stored_text) do
+  defp same_value?(field, submitted, stored_text) when field in ["unit_price", "gst_rate"] do
     case {Decimal.parse(submitted), Decimal.parse(stored_text)} do
-      {{submitted_price, ""}, {stored_price, ""}} -> Decimal.equal?(submitted_price, stored_price)
-      _unparsable -> submitted == stored_text
+      {{submitted_number, ""}, {stored_number, ""}} ->
+        Decimal.equal?(submitted_number, stored_number)
+
+      _unparsable ->
+        submitted == stored_text
     end
   end
 
@@ -146,10 +151,13 @@ defmodule InvoicingWeb.InvoiceLive.Edit do
   defp stored_invoice_text(invoice, "issue_date"), do: date_text(invoice.issue_date)
   defp stored_invoice_text(invoice, "due_date"), do: date_text(invoice.due_date)
   defp stored_invoice_text(invoice, "notes"), do: to_string(invoice.notes)
+  defp stored_invoice_text(invoice, "gst_rate"), do: Decimal.to_string(invoice.gst_rate, :normal)
+  defp stored_invoice_text(invoice, "prices"), do: Atom.to_string(invoice.prices)
 
   defp stored_line_text(line_item, "description"), do: line_item.description
   defp stored_line_text(line_item, "quantity"), do: Integer.to_string(line_item.quantity)
   defp stored_line_text(line_item, "unit_price"), do: price_text(line_item.unit_price)
+  defp stored_line_text(line_item, "tax_code"), do: Atom.to_string(line_item.tax_code)
 
   defp find_line(invoice, line_id), do: Enum.find(invoice.line_items, &(&1.id == line_id))
 
@@ -161,7 +169,7 @@ defmodule InvoicingWeb.InvoiceLive.Edit do
   defp load_invoice(id, actor) do
     Billing.get_invoice!(id,
       actor: actor,
-      load: [:total, :company, line_items: [:total]]
+      load: [:subtotal, :gst, :total, :company, :supplier, line_items: [:total]]
     )
   end
 
@@ -174,6 +182,7 @@ defmodule InvoicingWeb.InvoiceLive.Edit do
 
     assign(socket,
       invoice: invoice,
+      tax_invoice: Decimal.gt?(invoice.gst, 0),
       can_edit: invoice.status == :draft and Billing.can_update_invoice?(current_user, invoice),
       can_send: Billing.can_send_invoice?(current_user, invoice),
       can_mark_paid: Billing.can_mark_invoice_paid?(current_user, invoice),
@@ -191,7 +200,9 @@ defmodule InvoicingWeb.InvoiceLive.Edit do
       width={:wide}
     >
       <.header>
-        <span id="invoice-number">{@invoice.number}</span>
+        <span id="invoice-title">
+          <span :if={@tax_invoice}>Tax invoice </span><span :if={!@tax_invoice}>Invoice </span><span id="invoice-number">{@invoice.number}</span>
+        </span>
         <:subtitle>
           <span id="invoice-status" class="capitalize">
             <.badge value={@invoice.status}>{@invoice.status}</.badge>
@@ -239,9 +250,12 @@ defmodule InvoicingWeb.InvoiceLive.Edit do
   attr :company_options, :list, required: true
 
   defp details_card(assigns) do
+    assigns = assign(assigns, :prices_options, Enum.map(@prices, &{prices_label(&1), &1}))
+
     ~H"""
     <.card title="Details">
       <div class="flex flex-col gap-4">
+        <.supplier_block supplier={@invoice.supplier} />
         <div class="flex flex-col gap-1">
           <div class="flex items-center justify-between">
             <label for="invoice-company" class="text-xs text-base-content/60">Company</label>
@@ -276,6 +290,23 @@ defmodule InvoicingWeb.InvoiceLive.Edit do
           />
         </div>
         <div class="flex flex-col gap-1">
+          <label for="invoice-gst-rate" class="text-xs text-base-content/60">GST rate</label>
+          <input
+            id="invoice-gst-rate"
+            type="text"
+            inputmode="decimal"
+            name="invoice[gst_rate]"
+            value={Decimal.to_string(@invoice.gst_rate, :normal)}
+            class="w-full input"
+          />
+        </div>
+        <div class="flex flex-col gap-1">
+          <label for="invoice-prices" class="text-xs text-base-content/60">Prices</label>
+          <select id="invoice-prices" name="invoice[prices]" class="w-full select">
+            {Phoenix.HTML.Form.options_for_select(@prices_options, @invoice.prices)}
+          </select>
+        </div>
+        <div class="flex flex-col gap-1">
           <label for="invoice-notes" class="text-xs text-base-content/60">Notes</label>
           <textarea id="invoice-notes" name="invoice[notes]" rows="4" class="w-full textarea">{@invoice.notes}</textarea>
         </div>
@@ -289,6 +320,7 @@ defmodule InvoicingWeb.InvoiceLive.Edit do
   defp details_summary(assigns) do
     ~H"""
     <.card title="Details">
+      <.supplier_block supplier={@invoice.supplier} />
       <.property label="Company">
         <span class="flex items-center gap-3">
           <span id="invoice-company">{@invoice.company.name}</span>
@@ -301,10 +333,28 @@ defmodule InvoicingWeb.InvoiceLive.Edit do
       <.property label="Due date">
         <span id="invoice-due-date">{Format.date(@invoice.due_date)}</span>
       </.property>
+      <.property label="GST rate">
+        <span id="invoice-gst-rate" name="invoice[gst_rate]">{gst_rate_text(@invoice.gst_rate)}</span>
+      </.property>
+      <.property label="Prices">
+        <span id="invoice-prices" name="invoice[prices]">{prices_label(@invoice.prices)}</span>
+      </.property>
       <.property label="Notes">
         <span id="invoice-notes">{@invoice.notes}</span>
       </.property>
     </.card>
+    """
+  end
+
+  attr :supplier, :map, default: nil
+
+  defp supplier_block(assigns) do
+    ~H"""
+    <div id="invoice-supplier" class="flex flex-col gap-0.5 pb-3">
+      <span class="text-xs text-base-content/60">Supplier</span>
+      <span :if={@supplier} class="text-sm font-semibold">{@supplier.name}</span>
+      <span :if={@supplier} class="text-[13px]">ABN {@supplier.abn}</span>
+    </div>
     """
   end
 
@@ -326,6 +376,8 @@ defmodule InvoicingWeb.InvoiceLive.Edit do
   attr :can_edit, :boolean, required: true
 
   defp lines_card(assigns) do
+    assigns = assign(assigns, :tax_code_options, Enum.map(@tax_codes, &{tax_code_label(&1), &1}))
+
     ~H"""
     <.card title="Lines">
       <table id="lines" class="w-full border-collapse text-sm">
@@ -334,12 +386,13 @@ defmodule InvoicingWeb.InvoiceLive.Edit do
             <th class="py-2 pr-3">Description</th>
             <th class="w-20 py-2 pr-3">Qty</th>
             <th class="w-28 py-2 pr-3">Unit price</th>
+            <th class="w-28 py-2 pr-3">Tax</th>
             <th class="w-24 py-2 pl-3 text-right">Line total</th>
             <th :if={@can_edit} class="w-12 py-2"><span class="sr-only">Remove</span></th>
           </tr>
         </thead>
         <tbody>
-          <.empty_row :if={@invoice.line_items == []} colspan={5}>No lines yet</.empty_row>
+          <.empty_row :if={@invoice.line_items == []} colspan={6}>No lines yet</.empty_row>
           <tr
             :for={{line_item, index} <- Enum.with_index(@invoice.line_items)}
             id={"line-#{index}"}
@@ -378,9 +431,24 @@ defmodule InvoicingWeb.InvoiceLive.Edit do
                 class="w-full input input-sm"
               />
             </td>
+            <td :if={@can_edit} class="py-2 pr-3">
+              <select
+                id={"line-#{index}-tax-code"}
+                name={"invoice[lines][#{index}][tax_code]"}
+                aria-label="Tax code"
+                class="w-full select select-sm"
+              >
+                {Phoenix.HTML.Form.options_for_select(@tax_code_options, line_item.tax_code)}
+              </select>
+            </td>
             <td :if={!@can_edit} class="py-3 pr-3">{line_item.description}</td>
             <td :if={!@can_edit} class="py-3 pr-3">{line_item.quantity}</td>
             <td :if={!@can_edit} class="py-3 pr-3">{Format.money(line_item.unit_price)}</td>
+            <td :if={!@can_edit} class="py-3 pr-3">
+              <span id={"line-#{index}-tax-code"} name={"invoice[lines][#{index}][tax_code]"}>
+                {tax_code_label(line_item.tax_code)}
+              </span>
+            </td>
             <td id={"line-#{index}-total"} class="py-2 pl-3 text-right">
               {Format.money(line_item.total)}
             </td>
@@ -408,16 +476,28 @@ defmodule InvoicingWeb.InvoiceLive.Edit do
         id="totals"
         class="flex w-60 flex-col gap-2 self-end border-t border-base-300 pt-3 text-sm"
       >
-        <div class="flex justify-between">
-          <span>Subtotal</span><span>{Format.money(@invoice.total)}</span>
+        <div id="invoice-subtotal" class="flex justify-between">
+          <span>Subtotal (ex GST)</span><span>{Format.money(@invoice.subtotal)}</span>
+        </div>
+        <div id="invoice-gst" class="flex justify-between">
+          <span>GST</span><span>{Format.money(@invoice.gst)}</span>
         </div>
         <div class="flex justify-between font-bold">
-          <span>Total</span><span>{Format.money(@invoice.total)}</span>
+          <span>Total (inc GST)</span><span>{Format.money(@invoice.total)}</span>
         </div>
       </div>
     </.card>
     """
   end
+
+  defp prices_label(:"exclude gst"), do: "Exclude GST"
+  defp prices_label(:"include gst"), do: "Include GST"
+
+  defp tax_code_label(:gst), do: "GST"
+  defp tax_code_label(:"gst-free"), do: "GST-free"
+  defp tax_code_label(:exempt), do: "Exempt"
+
+  defp gst_rate_text(rate), do: Decimal.to_string(Decimal.normalize(rate), :normal) <> "%"
 
   defp date_value(nil), do: ""
   defp date_value(date), do: Date.to_iso8601(date)

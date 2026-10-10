@@ -34,6 +34,14 @@ defmodule SpecDSL.Union do
     end)
   end
 
+  @doc "The predicate each scoped role reads only, by entity and role, merged across all ASTs."
+  @spec scopes([AST.t()]) :: %{String.t() => %{String.t() => String.t()}}
+  def scopes(asts) do
+    Enum.reduce(asts, %{}, fn ast, merged ->
+      Map.merge(merged, ast.scopes, fn _entity, left, right -> Map.merge(left, right) end)
+    end)
+  end
+
   @doc "Every role named by a policy or an actor, sorted."
   @spec roles([AST.t()]) :: [String.t()]
   def roles(asts) do

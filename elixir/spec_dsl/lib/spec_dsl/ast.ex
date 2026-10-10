@@ -111,7 +111,18 @@ end
 defmodule SpecDSL.Invariant do
   @moduledoc "A declarative rule from the Invariants section; entities keep their spec spelling, fields, relations and actions are snake_case atoms."
 
-  @type kind :: :product | :sum | :unique | :frozen_except | :same_parent | :sequence
+  @type expression ::
+          %{op: :number, value: number()}
+          | %{op: :field, field: atom()}
+          | %{
+              op: :sum,
+              relation: atom(),
+              target: String.t(),
+              field: atom(),
+              where: SpecDSL.Predicate.condition() | nil
+            }
+          | %{op: :add | :sub | :mul | :div, left: expression(), right: expression()}
+  @type kind :: :product | :sum | :formula | :unique | :frozen_except | :same_parent | :sequence
   @type t :: %__MODULE__{
           kind: kind(),
           entity: String.t(),
@@ -122,6 +133,8 @@ defmodule SpecDSL.Invariant do
           target: String.t() | nil,
           target_field: atom() | nil,
           actions: [atom()],
+          expression: expression() | nil,
+          condition: SpecDSL.Predicate.condition() | nil,
           prefix: String.t() | nil,
           width: pos_integer() | nil,
           parent: atom() | nil,
@@ -145,6 +158,8 @@ defmodule SpecDSL.Invariant do
     :parent,
     :relation_entity,
     :relation_parent,
+    :expression,
+    :condition,
     :file,
     :line,
     actions: []
@@ -192,6 +207,8 @@ defmodule SpecDSL.Predicate do
           %{op: :and | :or, left: condition(), right: condition()}
           | %{op: :is | :is_not | :before | :after, field: atom(), value: String.t()}
           | %{op: :within, field: atom(), days: pos_integer()}
+          | %{op: :above | :below, field: atom(), value: number()}
+          | %{op: :is_me, field: atom()}
   @type t :: %__MODULE__{
           entity: String.t(),
           name: String.t(),
@@ -226,31 +243,64 @@ defmodule SpecDSL.Derived do
 
   defstruct predicates: [], counts: []
 
-  @doc "Whether the record map, keyed by field atoms, satisfies the predicate on the given date."
-  @spec holds?(Predicate.t() | Predicate.condition(), map(), Date.t()) :: boolean()
-  def holds?(%Predicate{condition: condition}, record, today),
-    do: holds?(condition, record, today)
+  @doc "Whether the record map, keyed by field atoms, satisfies the predicate on the given date; `viewer` is the signed-in user's id that `:is_me` compares with."
+  @spec holds?(Predicate.t() | Predicate.condition(), map(), Date.t(), term()) :: boolean()
+  def holds?(predicate, record, today, viewer \\ nil)
 
-  def holds?(%{op: :and, left: left, right: right}, record, today),
-    do: holds?(left, record, today) and holds?(right, record, today)
+  def holds?(%Predicate{condition: condition}, record, today, viewer),
+    do: holds?(condition, record, today, viewer)
 
-  def holds?(%{op: :or, left: left, right: right}, record, today),
-    do: holds?(left, record, today) or holds?(right, record, today)
+  def holds?(%{op: :and, left: left, right: right}, record, today, viewer),
+    do: holds?(left, record, today, viewer) and holds?(right, record, today, viewer)
 
-  def holds?(%{op: :is, field: field, value: value}, record, today),
+  def holds?(%{op: :or, left: left, right: right}, record, today, viewer),
+    do: holds?(left, record, today, viewer) or holds?(right, record, today, viewer)
+
+  def holds?(%{op: :is, field: field, value: value}, record, today, _viewer),
     do: equal?(Map.get(record, field), value, today)
 
-  def holds?(%{op: :is_not, field: field, value: value}, record, today),
+  def holds?(%{op: :is_not, field: field, value: value}, record, today, _viewer),
     do: not equal?(Map.get(record, field), value, today)
 
-  def holds?(%{op: :before, field: field, value: value}, record, today),
+  def holds?(%{op: :before, field: field, value: value}, record, today, _viewer),
     do: compare_dates(Map.get(record, field), value, today) == :lt
 
-  def holds?(%{op: :after, field: field, value: value}, record, today),
+  def holds?(%{op: :after, field: field, value: value}, record, today, _viewer),
     do: compare_dates(Map.get(record, field), value, today) == :gt
 
-  def holds?(%{op: :within, field: field, days: days}, record, today),
+  def holds?(%{op: :above, field: field, value: value}, record, _today, _viewer),
+    do: compare_numbers(Map.get(record, field), value) == :gt
+
+  def holds?(%{op: :below, field: field, value: value}, record, _today, _viewer),
+    do: compare_numbers(Map.get(record, field), value) == :lt
+
+  def holds?(%{op: :is_me, field: field}, record, _today, viewer),
+    do: viewer != nil and Map.get(record, field) == viewer
+
+  def holds?(%{op: :within, field: field, days: days}, record, today, _viewer),
     do: within_days?(Map.get(record, field), days, today)
+
+  @doc "Whether the predicate or condition reads the signed-in user."
+  @spec viewer_relative?(Predicate.t() | Predicate.condition()) :: boolean()
+  def viewer_relative?(%Predicate{condition: condition}), do: viewer_relative?(condition)
+  def viewer_relative?(%{op: :is_me}), do: true
+
+  def viewer_relative?(%{left: left, right: right}),
+    do: viewer_relative?(left) or viewer_relative?(right)
+
+  def viewer_relative?(_condition), do: false
+
+  @doc "The numbers an `:above` or `:below` comparison on the field uses, without repeats."
+  @spec thresholds(Predicate.t() | Predicate.condition(), atom()) :: [number()]
+  def thresholds(%Predicate{condition: condition}, field), do: thresholds(condition, field)
+
+  def thresholds(%{left: left, right: right}, field),
+    do: Enum.uniq(thresholds(left, field) ++ thresholds(right, field))
+
+  def thresholds(%{op: op, field: field, value: value}, field) when op in [:above, :below],
+    do: [value]
+
+  def thresholds(_condition, _field), do: []
 
   @doc "The field atoms a predicate or condition reads, without repeats."
   @spec fields(Predicate.t() | Predicate.condition()) :: [atom()]
@@ -274,6 +324,29 @@ defmodule SpecDSL.Derived do
   defp within_days?(%Date{} = actual, days, today),
     do: Date.compare(actual, today) != :lt and Date.compare(actual, Date.add(today, days)) != :gt
 
+  defp compare_numbers(nil, _value), do: nil
+
+  defp compare_numbers(actual, value) do
+    with {:ok, left} <- to_decimal(actual), {:ok, right} <- to_decimal(value) do
+      Decimal.compare(left, right)
+    else
+      :error -> nil
+    end
+  end
+
+  defp to_decimal(%Decimal{} = number), do: {:ok, number}
+  defp to_decimal(number) when is_integer(number), do: {:ok, Decimal.new(number)}
+  defp to_decimal(number) when is_float(number), do: {:ok, Decimal.from_float(number)}
+
+  defp to_decimal(text) when is_binary(text) do
+    case Decimal.parse(text) do
+      {number, ""} -> {:ok, number}
+      _unparsable -> :error
+    end
+  end
+
+  defp to_decimal(_other), do: :error
+
   defp compare_dates(nil, _value, _today), do: nil
 
   defp compare_dates(%DateTime{} = actual, value, today),
@@ -286,7 +359,9 @@ defmodule SpecDSL.Derived do
   defp date_value(value, _today), do: Date.from_iso8601!(value)
 
   defp normalise(nil), do: nil
-  defp normalise(value), do: value |> to_string() |> String.downcase() |> String.replace(" ", "_")
+
+  defp normalise(value),
+    do: value |> to_string() |> String.downcase() |> String.replace(~r/[ -]/, "_")
 end
 
 defmodule SpecDSL.AST do
@@ -301,6 +376,7 @@ defmodule SpecDSL.AST do
           surfaces: %{String.t() => Surface.t()},
           model: %{String.t() => Entity.t()},
           policies: %{String.t() => %{String.t() => [String.t()]}},
+          scopes: %{String.t() => %{String.t() => String.t()}},
           invariants: [Invariant.t()],
           derived: SpecDSL.Derived.t(),
           effects: [SpecDSL.Effect.t()],
@@ -314,6 +390,7 @@ defmodule SpecDSL.AST do
     surfaces: %{},
     model: %{},
     policies: %{},
+    scopes: %{},
     invariants: [],
     derived: %SpecDSL.Derived{},
     effects: [],
@@ -352,13 +429,22 @@ defmodule SpecDSL.AST do
   @invariant_kinds %{
     "product" => :product,
     "sum" => :sum,
+    "formula" => :formula,
     "unique" => :unique,
     "frozen-except" => :frozen_except,
     "same-parent" => :same_parent,
     "sequence" => :sequence
   }
 
-  @comparison_ops %{"is" => :is, "is not" => :is_not, "before" => :before, "after" => :after}
+  @comparison_ops %{
+    "is" => :is,
+    "is not" => :is_not,
+    "before" => :before,
+    "after" => :after,
+    "above" => :above,
+    "below" => :below
+  }
+  @arithmetic_ops %{"+" => :add, "-" => :sub, "*" => :mul, "/" => :div}
 
   @doc "Reads and decodes an AST JSON file."
   @spec load!(Path.t()) :: t()
@@ -383,7 +469,8 @@ defmodule SpecDSL.AST do
         |> Map.new(fn {name, config} -> {name, atomize_keys(config)} end),
       surfaces: surfaces,
       model: raw |> Map.get("model", %{}) |> Map.new(&build_entity/1),
-      policies: Map.get(raw, "policies", %{}),
+      policies: raw |> Map.get("policies", %{}) |> build_policies(),
+      scopes: raw |> Map.get("policies", %{}) |> build_scopes(),
       invariants: raw |> Map.get("invariants", []) |> Enum.map(&build_invariant/1),
       derived: raw |> Map.get("derived", %{}) |> build_derived(),
       effects: raw |> Map.get("effects", []) |> Enum.map(&build_effect/1),
@@ -472,6 +559,8 @@ defmodule SpecDSL.AST do
       parent: raw |> Map.get("parent") |> optional_atom(),
       relation_entity: Map.get(raw, "relationEntity"),
       relation_parent: raw |> Map.get("relationParent") |> optional_atom(),
+      expression: raw |> Map.get("expression") |> build_expression(),
+      condition: raw |> Map.get("when") |> build_optional_condition(),
       file: Map.get(raw, "file"),
       line: Map.get(raw, "line")
     }
@@ -513,6 +602,52 @@ defmodule SpecDSL.AST do
       line: Map.get(raw, "line")
     }
   end
+
+  defp build_policies(raw) do
+    Map.new(raw, fn {entity, roles} ->
+      {entity, Map.new(roles, fn {role, entry} -> {role, policy_actions(entry)} end)}
+    end)
+  end
+
+  defp policy_actions(%{"actions" => actions}), do: actions
+  defp policy_actions(actions) when is_list(actions), do: actions
+
+  defp build_scopes(raw) do
+    for {entity, roles} <- raw,
+        scoped = for({role, %{"scope" => scope}} <- roles, into: %{}, do: {role, scope}),
+        scoped != %{},
+        into: %{},
+        do: {entity, scoped}
+  end
+
+  defp build_expression(nil), do: nil
+
+  defp build_expression(%{"op" => "number", "value" => value}), do: %{op: :number, value: value}
+
+  defp build_expression(%{"op" => "field", "field" => field}),
+    do: %{op: :field, field: snake_atom(field)}
+
+  defp build_expression(%{"op" => "sum"} = raw),
+    do: %{
+      op: :sum,
+      relation: raw |> Map.fetch!("relation") |> snake_atom(),
+      target: Map.fetch!(raw, "target"),
+      field: raw |> Map.fetch!("field") |> snake_atom(),
+      where: raw |> Map.get("where") |> build_optional_condition()
+    }
+
+  defp build_expression(%{"op" => op, "left" => left, "right" => right}),
+    do: %{
+      op: fetch_known!(@arithmetic_ops, op, "arithmetic operator"),
+      left: build_expression(left),
+      right: build_expression(right)
+    }
+
+  defp build_optional_condition(nil), do: nil
+  defp build_optional_condition(raw), do: build_condition(raw)
+
+  defp build_condition(%{"op" => "is me", "field" => field}),
+    do: %{op: :is_me, field: snake_atom(field)}
 
   defp build_condition(%{"op" => op, "left" => left, "right" => right}) when op in ["and", "or"],
     do: %{

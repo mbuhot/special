@@ -1,6 +1,7 @@
 import type {
   ConditionNode,
   ComparisonOp,
+  NumericOp,
   CountNode,
   DerivedKind,
   EntityNode,
@@ -24,7 +25,11 @@ export interface DerivedContext {
   report: (message: string) => void;
 }
 
-const COMPARISON = /^(.+?)\s+is\s+(?:(not|before|after)\s+)?(\S.*)$/i;
+const COMPARISON = /^(.+?)\s+is\s+(?:(not|before|after|above|below)\s+)?(\S.*)$/i;
+const NUMBER = /^-?\d+(?:\.\d+)?$/;
+const NUMERIC_TYPES = new Set(["integer", "decimal", "money"]);
+const ME = "me";
+const USER_ENTITY = "User";
 const WITHIN = /^(.+?)\s+is\s+within\s+(\S+)\s+days?\s+of\s+today$/i;
 const POSITIVE_INTEGER = /^[1-9]\d*$/;
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
@@ -123,13 +128,47 @@ class ConditionParser {
       );
       return undefined;
     }
-    const field = this.field(parsed[1] as string);
     const op = comparisonOp(parsed[2]);
     const value = (parsed[3] as string).trim();
-    const checked = field === undefined ? undefined : this.checkedValue(field, op, value);
-    return field === undefined || checked === undefined
-      ? undefined
-      : { op, field: field.name, value: checked };
+    const relation = this.userRelation(parsed[1] as string);
+    if (relation !== undefined && value.toLowerCase() === ME) {
+      return this.meComparison(relation, op);
+    }
+    const field = this.field(parsed[1] as string);
+    if (field === undefined) {
+      return undefined;
+    }
+    if (op === "above" || op === "below") {
+      return this.numericComparison(field, op, value);
+    }
+    const checked = this.checkedValue(field, op, value);
+    return checked === undefined ? undefined : { op, field: field.name, value: checked };
+  }
+
+  private userRelation(name: string): string | undefined {
+    const entry = this.context.registry.lookup("Field", name.trim(), this.entity);
+    return entry?.kind === "relation" && entry.data["target"] === USER_ENTITY
+      ? entry.name
+      : undefined;
+  }
+
+  private meComparison(relation: string, op: ComparisonOp | NumericOp): ConditionNode | undefined {
+    const label = `${this.entity}.${relation}`;
+    op === "is" || this.context.report(`${label} compares with ${ME} only through "is"`);
+    return op === "is" ? { op: "is me", field: relation } : undefined;
+  }
+
+  private numericComparison(
+    field: FieldNode,
+    op: NumericOp,
+    value: string,
+  ): ConditionNode | undefined {
+    const label = `${this.entity}.${field.name}`;
+    const numeric = field.type !== undefined && NUMERIC_TYPES.has(field.type);
+    numeric || this.context.report(`${label} is not a number and cannot be compared with ${op}`);
+    const valid = NUMBER.test(value);
+    valid || this.context.report(`"${value}" is not a number for ${label}`);
+    return numeric && valid ? { op, field: field.name, value: Number(value) } : undefined;
   }
 
   private field(name: string): FieldNode | undefined {
@@ -189,15 +228,24 @@ class ConditionParser {
   }
 }
 
-function comparisonOp(word: string | undefined): ComparisonOp {
+function comparisonOp(word: string | undefined): ComparisonOp | NumericOp {
   return word === undefined
     ? "is"
     : word.toLowerCase() === "not"
       ? "is not"
-      : (word.toLowerCase() as ComparisonOp);
+      : (word.toLowerCase() as ComparisonOp | NumericOp);
 }
 
 function fold(nodes: ConditionNode[], op: "and" | "or"): ConditionNode {
   const [first, ...rest] = nodes as [ConditionNode, ...ConditionNode[]];
   return rest.reduce<ConditionNode>((left, right) => ({ op, left, right }), first);
+}
+
+/** Parses a condition over the fields of `entity` against the declared model; reports and returns undefined on unknown names or malformed text. */
+export function parseCondition(
+  entity: string,
+  text: string,
+  context: DerivedContext,
+): ConditionNode | undefined {
+  return new ConditionParser(entity, context).parse(text);
 }

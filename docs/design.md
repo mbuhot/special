@@ -67,6 +67,9 @@ An actor line is `<Actor>: role <Role>[, named <Name>]`. A declared name is the 
 
 - Invoice: accountant may read
 - Invoice: admin may read, mark paid
+- Task: sales may read only mine
+
+`<Entity>: <Role> may read only <Predicate>` limits the role's reads to records satisfying a Derived predicate of the entity. AST `policies.Task.sales` is `{ "actions": ["read"], "scope": "mine" }`; roles without a scope keep the plain action list. List surfaces and has-many rows hide records the viewer's role may not read. `SpecDSL.PolicyCase` calls the adapter callback `read_as(entity, role, actor_user)` and checks that every returned record satisfies the predicate; the check skips with a message when the adapter does not export `read_as/3`.
 
 ## Context
 
@@ -184,6 +187,10 @@ Merging is add-only: redeclaring an entity, actor, or surface is an error naming
 | sequence   | within a scenario, consecutive `observed` emissions follow a declared `machine` transition |
 | referenced | every entry in `declared` is referenced by some step                                       |
 
+### Invariants
+
+- Formula: `<Entity>.<Field> = <Expression> [when <Condition>]`. An expression is numbers, fields of the entity, `sum of <Target>.<Field> [where <Condition>]` over a has-many, `+ - * /` and parentheses with the usual precedence; money results round half-up to the cent and an absent operand reads as 0. A field may carry several lines with mutually exclusive `when` conditions (the Derived condition grammar); two unconditional lines for one field, or a dependency cycle between computed fields, are bind errors. Runtimes evaluate formulas in dependency order. AST `{ "kind": "formula", "entity": "Invoice", "field": "gst", "expression": { "op": "/", "left": { "op": "*", "left": { "op": "field", "field": "taxable" }, "right": { "op": "field", "field": "gst rate" } }, "right": { "op": "number", "value": 100 } }, "when": { "op": "is", "field": "prices", "value": "exclude gst" } }`; expression ops are `number`, `field`, `sum` (`relation`, `target`, `field`, optional `where`) and `+ - * /`. A line of the form `field * field` or `sum of Target.field` without `when` or `where` binds as the earlier `product` or `sum` kind. Every field the formulas name, such as `taxable`, is declared in the Model.
+
 ### Derived
 
 A `## Derived` section in a base file declares named predicates and counts over them. Three closed shapes:
@@ -195,11 +202,14 @@ A `## Derived` section in a base file declares named predicates and counts over 
 
 A condition is comparisons joined by `and` / `or` (no parentheses; `and` binds tighter). A comparison is `<Field> is <Value>`, `<Field> is not <Value>`, `<Field> is before <Value>` or `<Field> is after <Value>`. Enum fields compare against their states or `one of` values; `before` and `after` apply to date fields, whose value is `today` or `YYYY-MM-DD`. Fields and values that the model does not declare are bind errors with the line.
 
+- Numeric comparison: `<Field> is above <Number>` and `<Field> is below <Number>` on integer, decimal and money fields (a bind error on any other field). AST `{ "op": "above", "field": "gst", "value": 0 }`; `Invoice is tax invoice when gst is above 0`.
+- Read scope value: `<Relation> is me` on a belongs-to User relation holds when the relation points at the signed-in actor's user. AST `{ "op": "is me", "field": "assignee" }`; `Task is mine when assignee is me`. Runtimes pass the viewer to `holds`/`holds?`; without a viewer the condition is false.
+
 A date field also compares as `<Field> is within <N> days of today` (`N` a positive integer): true when the date is today or later and at most `N` days after today. AST `{ "op": "within", "field": "due date", "days": 7 }`; a non-date field or non-integer `N` is a bind error.
 
-A scenario step `<Ref> is <Predicate>` or `<Ref> is not <Predicate>` asserts a predicate on a record. It runs in domain mode only. The invariant shapes `Entity.field = left * right` and `= sum of Target.field` remain in `## Invariants`.
+A scenario step `<Ref> is <Predicate>` or `<Ref> is not <Predicate>` asserts a predicate on a record. It runs in domain mode only. The formula, product and sum shapes live in `## Invariants`.
 
-`SpecDSL.Derived.holds?(predicate, record, today)` evaluates a predicate over a map of field atoms to values; the conformance test holds the app's counts to it.
+`SpecDSL.Derived.holds?(predicate, record, today, viewer \\ nil)` evaluates a predicate over a map of field atoms to values; the conformance test holds the app's counts to it.
 
 ### Effects
 

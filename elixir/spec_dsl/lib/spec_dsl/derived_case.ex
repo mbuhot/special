@@ -18,7 +18,11 @@ defmodule SpecDSL.DerivedCase do
   defmacro __using__(opts) do
     config = CaseOptions.read(opts, __CALLER__)
     adapter = config.adapter
-    predicates = Union.predicates(config.asts)
+
+    predicates =
+      config.asts
+      |> Union.predicates()
+      |> Enum.reject(fn {predicate, _fields} -> Derived.viewer_relative?(predicate) end)
 
     predicate_tests =
       for {predicate, model_fields} <- predicates do
@@ -36,7 +40,7 @@ defmodule SpecDSL.DerivedCase do
       end
 
     count_tests =
-      for count <- Union.counts(config.asts) do
+      for count <- Union.counts(config.asts), counted_predicate?(predicates, count) do
         quote do
           test unquote(
                  "#{count.name} equals the number of generated #{count.entity} records that are #{count.predicate}"
@@ -92,10 +96,17 @@ defmodule SpecDSL.DerivedCase do
     end
   end
 
+  @doc false
+  def counted_predicate?(predicates, count) do
+    Enum.any?(predicates, fn {predicate, _fields} ->
+      predicate.entity == count.entity and predicate.name == count.predicate
+    end)
+  end
+
   defp record_generator(predicate, model_fields) do
     predicate
     |> Derived.fields()
-    |> Map.new(fn field -> {field, value_generator(field, model_fields)} end)
+    |> Map.new(fn field -> {field, value_generator(predicate, field, model_fields)} end)
     |> fixed_map()
   end
 
@@ -106,11 +117,32 @@ defmodule SpecDSL.DerivedCase do
     end)
   end
 
-  defp value_generator(field, model_fields) do
+  defp value_generator(predicate, field, model_fields) do
     case Enum.find(model_fields, &(AST.snake_atom(&1.name) == field)) do
-      %{type: :enum, values: values} -> member_of(values)
-      %{type: type} when type in [:date, :datetime] -> map(integer(-3..3), &Date.add(@today, &1))
-      other -> raise "no generator for #{inspect(other)} field #{field}"
+      %{type: type} when type in [:money, :decimal, :integer] ->
+        member_of(numeric_values(predicate, field, type))
+
+      %{type: :enum, values: values} ->
+        member_of(values)
+
+      %{type: type} when type in [:date, :datetime] ->
+        map(integer(-3..3), &Date.add(@today, &1))
+
+      other ->
+        raise "no generator for #{inspect(other)} field #{field}"
     end
   end
+
+  defp numeric_values(predicate, field, type) do
+    around =
+      predicate
+      |> Derived.thresholds(field)
+      |> Enum.flat_map(&[&1 - 1, &1, &1 + 1])
+
+    Enum.map(Enum.uniq([0, 1 | around]), &numeric_value(&1, type))
+  end
+
+  defp numeric_value(number, :integer), do: trunc(number)
+  defp numeric_value(number, _decimal) when is_integer(number), do: Decimal.new(number)
+  defp numeric_value(number, _decimal), do: Decimal.from_float(number)
 end

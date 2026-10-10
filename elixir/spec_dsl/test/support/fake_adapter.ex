@@ -48,7 +48,15 @@ defmodule SpecDSL.Test.FakeAdapter do
   end
 
   @impl true
-  def reload(_entity_name, record), do: world().reload.(record.attrs)
+  def reload(entity_name, record) do
+    case world() do
+      %{reload_record: reload_record} ->
+        reload_record.(entity_name, record.id, record.attrs, records())
+
+      %{reload: reload} ->
+        reload.(record.attrs)
+    end
+  end
 
   @impl true
   def attempt_update(_entity_name, _record, _action, _field), do: :ok

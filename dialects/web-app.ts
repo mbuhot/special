@@ -17,6 +17,7 @@ export default dialect({
     Ref: ns({ scope: "scenario" }),
     Name: freeText,
     Condition: freeText,
+    Expression: freeText,
     Design: freeText,
     Type: freeText,
     Value: freeText,
@@ -113,20 +114,20 @@ export default dialect({
           emits: "Policy",
           output: "policies",
         },
+        {
+          pattern: "<Entity>: <Role> may read only <Predicate>",
+          references: ["Entity", "Predicate"],
+          output: "policies",
+        },
       ],
     }),
     Invariants: section({
       occurs: "once",
       items: [
         {
-          pattern: "<Entity>.<Field> = <Left=Field> * <Right=Field>",
+          pattern: "<Entity>.<Field> = <Expression> [when <Condition>]",
           output: "invariants",
-          invariant: "product",
-        },
-        {
-          pattern: "<Entity>.<Field> = sum of <Target=Entity>.<TargetField=Field>",
-          output: "invariants",
-          invariant: "sum",
+          invariant: "formula",
         },
         {
           pattern: "<Entity>.<Field> is unique",

@@ -56,6 +56,9 @@ export type {
   Emission,
   FieldNode,
   FieldType,
+  FormulaNode,
+  NumericOp,
+  PolicyEntry,
   InvariantKind,
   InvariantNode,
   NarrationNode,
@@ -85,4 +88,14 @@ export type { SpecFileKind, TreeConfig } from "./tree.js";
 export { artboardStates, designLint, parseArtboard, readArtboards } from "./design.js";
 export type { Artboard } from "./design.js";
 export { holds } from "./evaluate.js";
+export {
+  computationOrder,
+  conditionFields,
+  evaluateFormula,
+  expressionFields,
+  expressionSums,
+  roundToCent,
+} from "./formula.js";
+export type { ComputedInvariant, FormulaScope } from "./formula.js";
+export { policyActions, policyScope } from "./policies.js";
 export type { FieldRecord } from "./evaluate.js";

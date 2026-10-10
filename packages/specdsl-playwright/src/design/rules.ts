@@ -1,13 +1,16 @@
-import type { EntityNode, InvariantNode, SpecAst } from "@special/specdsl-core";
+import { computationOrder, evaluateFormula, holds, roundToCent } from "@special/specdsl-core";
+import type { EntityNode, FormulaScope, InvariantNode, SpecAst } from "@special/specdsl-core";
 import type { GivenEntity } from "./props.js";
 
 type Entities = ReadonlyMap<string, GivenEntity>;
 type Entry = [string, GivenEntity];
 type ProductInvariant = Extract<InvariantNode, { kind: "product" }>;
+type FormulaInvariant = Extract<InvariantNode, { kind: "formula" }>;
 type SumInvariant = Extract<InvariantNode, { kind: "sum" }>;
 type SequenceInvariant = Extract<InvariantNode, { kind: "sequence" }>;
 
 const CENTS = 100;
+const NO_DATE = "";
 const USER_ENTITY = "User";
 
 /** Context a newly created record takes its defaults from: the scenario clock and the user on screen. */
@@ -23,7 +26,7 @@ export function parseNumber(value: string | undefined): number | undefined {
   return cleaned === "" || Number.isNaN(amount) ? undefined : amount;
 }
 
-/** Copies of every record with the spec's product and sum invariants evaluated into their target fields. */
+/** Copies of every record with the spec's product, sum and formula invariants evaluated into their target fields in dependency order. */
 export function withComputedFields(spec: SpecAst, entities: Entities): Map<string, GivenEntity> {
   const resolved = new Map<string, GivenEntity>(
     [...entities].map(([refName, record]) => [
@@ -31,11 +34,10 @@ export function withComputedFields(spec: SpecAst, entities: Entities): Map<strin
       { entity: record.entity, fields: new Map(record.fields) },
     ]),
   );
-  for (const invariant of spec.invariants) {
+  for (const invariant of computationOrder(spec.invariants)) {
     invariant.kind === "product" && applyProduct(resolved, invariant);
-  }
-  for (const invariant of spec.invariants) {
     invariant.kind === "sum" && applySum(spec, resolved, invariant);
+    invariant.kind === "formula" && applyFormula(spec, resolved, invariant);
   }
   return resolved;
 }
@@ -71,6 +73,59 @@ function applySum(spec: SpecAst, records: Map<string, GivenEntity>, invariant: S
       );
     parent.fields.set(invariant.field.toLowerCase(), stored(total));
   }
+}
+
+function applyFormula(
+  spec: SpecAst,
+  records: Map<string, GivenEntity>,
+  invariant: FormulaInvariant,
+): void {
+  const money =
+    spec.model[invariant.entity]?.fields.find((candidate) => candidate.name === invariant.field)
+      ?.type === "money";
+  for (const [parentRef, parent] of records) {
+    if (parent.entity !== invariant.entity) continue;
+    const applies =
+      invariant.when === undefined ||
+      holds(invariant.when, Object.fromEntries(parent.fields), NO_DATE);
+    const amount = applies
+      ? evaluateFormula(invariant.expression, formulaScope(spec, records, parentRef, parent))
+      : undefined;
+    amount === undefined ||
+      parent.fields.set(
+        invariant.field.toLowerCase(),
+        stored(money ? roundToCent(amount) : amount),
+      );
+  }
+}
+
+function formulaScope(
+  spec: SpecAst,
+  records: Map<string, GivenEntity>,
+  parentRef: string,
+  parent: GivenEntity,
+): FormulaScope {
+  return {
+    field: (name) => parseNumber(parent.fields.get(name.toLowerCase())) ?? 0,
+    sum: (node) => {
+      const owner = spec.model[node.target]?.relations.find(
+        (relation) => relation.kind === "belongs-to" && relation.entity === parent.entity,
+      );
+      return [...records.values()]
+        .filter(
+          (child) =>
+            child.entity === node.target &&
+            owner !== undefined &&
+            child.fields.get(owner.name.toLowerCase()) === parentRef &&
+            (node.where === undefined ||
+              holds(node.where, Object.fromEntries(child.fields), NO_DATE)),
+        )
+        .reduce(
+          (total, child) => total + (parseNumber(child.fields.get(node.field.toLowerCase())) ?? 0),
+          0,
+        );
+    },
+  };
 }
 
 function stored(amount: number): string {

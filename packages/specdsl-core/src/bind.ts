@@ -28,7 +28,8 @@ import {
   type DerivedSource,
 } from "./derived.js";
 import { resolveEffect } from "./effects.js";
-import { resolveInvariant } from "./invariants.js";
+import { policyActions, policyScope } from "./policies.js";
+import { checkComputedFields, resolveInvariant } from "./invariants.js";
 import {
   compilePattern,
   PatternError,
@@ -69,6 +70,7 @@ interface PendingItem {
 }
 
 const REDECLARATION_GUARDED = new Set(["Entity", "Actor", "Surface"]);
+const READ_ACTION = "read";
 
 interface FieldSpec {
   type?: FieldType;
@@ -132,6 +134,9 @@ class Binder {
     pending.forEach((item) => this.declare(item));
     pending.forEach((item) => this.complete(item));
     pending.forEach((item) => this.recordInvariant(item));
+    checkComputedFields(this.invariants, (invariant, message) =>
+      this.report(invariant.file, invariant.line, message),
+    );
     this.reconcileMachineFields();
     pending.forEach((item) => this.recordEffect(item));
     pending
@@ -485,10 +490,19 @@ class Binder {
       return;
     }
     const roles = (this.policies[entity] ??= {});
-    const actions = (roles[role] ??= []);
-    for (const action of valuesOf(item.match, "Action")) {
+    const actions = policyActions(roles[role]);
+    const scope = this.registry.lookup("Predicate", item.match.slots["Predicate"] ?? "", entity);
+    const earlierScope = policyScope(roles[role]);
+    const scoped = item.match.slots["Predicate"] !== undefined;
+    scoped &&
+      earlierScope !== undefined &&
+      earlierScope !== scope?.name &&
+      this.report(item.file, item.line, `${entity}: ${role} already reads only ${earlierScope}`);
+    for (const action of scoped ? [READ_ACTION] : valuesOf(item.match, "Action")) {
       actions.includes(action) || actions.push(action);
     }
+    const readScope = scope?.name ?? earlierScope;
+    roles[role] = readScope === undefined ? actions : { actions, scope: readScope };
   }
 
   private declarePolicies(item: PendingItem): void {

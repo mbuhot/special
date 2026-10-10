@@ -1,4 +1,4 @@
-import { holds } from "@special/specdsl-core";
+import { holds, policyActions, policyScope } from "@special/specdsl-core";
 import type { EntityNode, FieldNode, PredicateNode, SpecAst } from "@special/specdsl-core";
 import type { Props } from "./render.js";
 import { orderEntries, parseNumber, initialFields, withComputedFields } from "./rules.js";
@@ -22,16 +22,17 @@ export function buildProps(
   refName: string,
   today: string,
   role?: string,
+  viewer?: string,
 ): Props {
   const entities = withComputedFields(spec, givenEntities);
   const record = entities.get(refName);
   if (record === undefined) return {};
   const model = spec.model[record.entity];
-  const rows = relationRows(spec, entities, refName, record, today, role);
+  const rows = relationRows(spec, entities, refName, record, today, role, viewer);
   return {
-    ...countProps(spec, entities, today),
-    ...allProps(spec, entities, today, role),
-    ...rowOf(spec, refName, record, today, role),
+    ...countProps(spec, entities, today, viewer),
+    ...allProps(spec, entities, today, role, viewer),
+    ...rowOf(spec, refName, record, today, role, viewer),
     [camelCase(record.entity)]: recordOf(spec, entities, model, refName, record, role),
     ...Object.fromEntries(rows.map((relation) => [relation.prop, relation.rows])),
     ...Object.fromEntries(rows.flatMap(anyFlags)),
@@ -49,7 +50,7 @@ export function buildNewProps(
 ): Props {
   const blank = new Map(entities);
   blank.set("", { entity, fields: initialFields(spec, entities, entity, context) });
-  return buildProps(spec, blank, "", today, role);
+  return buildProps(spec, blank, "", today, role, context.userRef);
 }
 
 export type RowFilter =
@@ -234,15 +235,16 @@ export function buildListProps(
   listed: readonly string[],
   today: string,
   role?: string,
+  viewer?: string,
 ): Props {
   const entities = withComputedFields(spec, givenEntities);
   return {
-    ...countProps(spec, entities, today),
-    ...allProps(spec, entities, today, role),
+    ...countProps(spec, entities, today, viewer),
+    ...allProps(spec, entities, today, role, viewer),
     ...Object.fromEntries(
       listed.map((entity) => [
         pluralCamelCase(entity),
-        entityRows(spec, entities, entity, today, role),
+        entityRows(spec, entities, entity, today, role, viewer),
       ]),
     ),
     ...Object.fromEntries(
@@ -260,19 +262,28 @@ function entityRows(
   entity: string,
   today: string,
   role?: string,
+  viewer?: string,
 ): Props[] {
-  const entries = [...entities].filter(([, record]) => record.entity === entity);
+  const entries = [...entities].filter(
+    ([, record]) => record.entity === entity && readable(spec, record, role, today, viewer),
+  );
   return orderEntries(spec, entity, entries).map(([refName, record]) =>
-    rowFor(spec, entities, refName, record, today, role),
+    rowFor(spec, entities, refName, record, today, role, viewer),
   );
 }
 
 /** `all<EntityPlural>` for every entity: every record as a row, for select options. */
-function allProps(spec: SpecAst, entities: Entities, today: string, role?: string): Props {
+function allProps(
+  spec: SpecAst,
+  entities: Entities,
+  today: string,
+  role?: string,
+  viewer?: string,
+): Props {
   return Object.fromEntries(
     Object.keys(spec.model).map((entity) => [
       `all${pascalCase(pluralCamelCase(entity))}`,
-      optionRows(spec, entities, entity, today, role),
+      optionRows(spec, entities, entity, today, role, viewer),
     ]),
   );
 }
@@ -284,10 +295,11 @@ function optionRows(
   entity: string,
   today: string,
   role?: string,
+  viewer?: string,
 ): Props[] {
   const entries = [...entities].filter(([, record]) => record.entity === entity);
   return orderEntries(spec, entity, entries).map(([refName, record]) => ({
-    ...rowFor(spec, entities, refName, record, today, role),
+    ...rowFor(spec, entities, refName, record, today, role, viewer),
     name: record.fields.get("name") ?? refName,
   }));
 }
@@ -299,15 +311,16 @@ function rowFor(
   record: GivenEntity,
   today: string,
   role?: string,
+  viewer?: string,
 ): Props {
   return {
     ...recordOf(spec, entities, spec.model[record.entity], refName, record, role),
-    ...rowOf(spec, refName, record, today, role),
+    ...rowOf(spec, refName, record, today, role, viewer),
   };
 }
 
 /** Top-level counts: every Derived count and `<state><EntityPlural>Count` for every machine state, with `has<Count>` booleans. */
-function countProps(spec: SpecAst, entities: Entities, today: string): Props {
+function countProps(spec: SpecAst, entities: Entities, today: string, viewer?: string): Props {
   const records = [...entities.values()];
   const derived = spec.derived.counts.map((count): [string, number] => {
     const predicate = spec.derived.predicates.find(
@@ -319,7 +332,7 @@ function countProps(spec: SpecAst, entities: Entities, today: string): Props {
         (record) =>
           record.entity === count.entity &&
           predicate !== undefined &&
-          holds(predicate, Object.fromEntries(record.fields), today),
+          holds(predicate, Object.fromEntries(record.fields), today, viewer),
       ).length,
     ];
   });
@@ -346,13 +359,13 @@ function countProps(spec: SpecAst, entities: Entities, today: string): Props {
 
 /** Actions the role may perform on the entity. */
 function permittedActions(spec: SpecAst, entity: string, role?: string): string[] {
-  return role === undefined ? [] : (spec.policies[entity]?.[role] ?? []);
+  return role === undefined ? [] : policyActions(spec.policies[entity]?.[role]);
 }
 
 /** `can<Action>` for every action any role has on the entity, true when the viewer's role has it. */
 function permissionProps(spec: SpecAst, entity: string, role?: string): Props {
   const allowed = permittedActions(spec, entity, role);
-  const everyAction = new Set(Object.values(spec.policies[entity] ?? {}).flat());
+  const everyAction = new Set(Object.values(spec.policies[entity] ?? {}).flatMap(policyActions));
   return Object.fromEntries(
     [...everyAction].map((action) => [`can${pascalCase(action)}`, allowed.includes(action)]),
   );
@@ -416,6 +429,7 @@ function rowOf(
   record: GivenEntity,
   today: string,
   role?: string,
+  viewer?: string,
 ): Props {
   const model = spec.model[record.entity];
   return {
@@ -423,7 +437,7 @@ function rowOf(
     matches: true,
     ...permissionProps(spec, record.entity, role),
     ...stateProps(model, record),
-    ...predicateProps(spec, record, today),
+    ...predicateProps(spec, record, today, viewer),
   };
 }
 
@@ -440,10 +454,10 @@ function stateProps(model: EntityNode | undefined, record: GivenEntity): Props {
 }
 
 /** `<predicate>` and its inverse `not<Predicate>` for every Derived predicate of the record's entity. */
-function predicateProps(spec: SpecAst, record: GivenEntity, today: string): Props {
+function predicateProps(spec: SpecAst, record: GivenEntity, today: string, viewer?: string): Props {
   return Object.fromEntries(
     predicatesOf(spec, record.entity).flatMap((predicate) => {
-      const holding = holds(predicate, Object.fromEntries(record.fields), today);
+      const holding = holds(predicate, Object.fromEntries(record.fields), today, viewer);
       return [
         [camelCase(predicate.name), holding],
         [inverseName(predicate.name), !holding],
@@ -469,6 +483,7 @@ function relationRows(
   parent: GivenEntity,
   today: string,
   role?: string,
+  viewer?: string,
 ): RelationRows[] {
   return (spec.model[parent.entity]?.relations ?? [])
     .filter((relation) => relation.kind === "has-many")
@@ -481,7 +496,8 @@ function relationRows(
         ([, child]) =>
           child.entity === relation.entity &&
           owner !== undefined &&
-          child.fields.get(owner.name.toLowerCase()) === parentRef,
+          child.fields.get(owner.name.toLowerCase()) === parentRef &&
+          readable(spec, child, role, today, viewer),
       );
       return {
         prop: pluralCamelCase(relation.name),
@@ -489,7 +505,7 @@ function relationRows(
           camelCase(predicate.name),
         ),
         rows: orderEntries(spec, relation.entity, children).map(([childRef, child]) =>
-          rowFor(spec, entities, childRef, child, today, role),
+          rowFor(spec, entities, childRef, child, today, role, viewer),
         ),
       };
     });
@@ -573,4 +589,22 @@ export function camelCase(text: string): string {
 export function pluralCamelCase(text: string): string {
   const singular = camelCase(text);
   return /[^aeiou]y$/.test(singular) ? `${singular.slice(0, -1)}ies` : `${singular}s`;
+}
+
+/** Whether the viewer's role may read the record: true unless the role reads only records satisfying a predicate that the record fails. */
+function readable(
+  spec: SpecAst,
+  record: GivenEntity,
+  role: string | undefined,
+  today: string,
+  viewer: string | undefined,
+): boolean {
+  const scope = role === undefined ? undefined : policyScope(spec.policies[record.entity]?.[role]);
+  const predicate =
+    scope === undefined
+      ? undefined
+      : predicatesOf(spec, record.entity).find((candidate) => candidate.name === scope);
+  return (
+    predicate === undefined || holds(predicate, Object.fromEntries(record.fields), today, viewer)
+  );
 }

@@ -51,8 +51,13 @@ Base files declare structure once and cascade from `specs/` down into each proje
 | `## Actors`     | `- Sales rep: role sales`                                                                                                       |
 |                 | `- Sales rep: role sales, named Sam Rivera`                                                                                     |
 | `## Policies`   | `- Deal: sales may read, create, update, qualify, propose`                                                                      |
+|                 | `- Task: sales may read only mine`                                                                                              |
 | `## Invariants` | `- Invoice.total = sum of LineItem.total`                                                                                       |
+|                 | `- Invoice.gst = taxable * gst rate / 100 when prices is exclude gst`                                                           |
+|                 | `- Invoice.taxable = sum of LineItem.total where tax code is gst`                                                               |
 | `## Derived`    | `- Task is overdue when status is open and due date is before today`                                                            |
+|                 | `- Invoice is tax invoice when gst is above 0`                                                                                  |
+|                 | `- Task is mine when assignee is me`                                                                                            |
 |                 | `- Task is due soon when status is open and due date is within 7 days of today`                                                 |
 | `## Effects`    | `- When Invoice mark paid: create Activity for the first Contact of its company with kind "note", body "Invoice {number} paid"` |
 | `## Steps`      | Composite steps with optional data slots, expanded before binding                                                               |

@@ -1,11 +1,11 @@
 defmodule SpecDSL.InvariantCase do
-  @moduledoc "Defines tests holding an app's behaviour to the product, sum, unique, frozen-except, same-parent and sequence invariants the spec declares."
+  @moduledoc "Defines tests holding an app's behaviour to the product, sum, formula, unique, frozen-except, same-parent and sequence invariants the spec declares."
 
   import ExUnit.Assertions
   import StreamData
   use ExUnitProperties
 
-  alias SpecDSL.{Adapter, CaseOptions, Union}
+  alias SpecDSL.{Adapter, CaseOptions, Formula, Union}
 
   @max_runs 20
 
@@ -14,12 +14,20 @@ defmodule SpecDSL.InvariantCase do
     config = CaseOptions.read(opts, __CALLER__)
     adapter = config.adapter
     invariants = Union.invariants(config.asts)
+    model = Union.model(config.asts)
 
-    tests = Enum.map(invariants, &invariant_test(&1, adapter))
+    tests =
+      invariants
+      |> Enum.uniq_by(fn
+        %{kind: :formula} = invariant -> {:formula, invariant.entity, invariant.field}
+        invariant -> invariant
+      end)
+      |> Enum.map(&invariant_test(&1, adapter))
 
     quote do
       unquote(CaseOptions.preamble(config, true))
       @spec_dsl_invariants unquote(Macro.escape(invariants))
+      @spec_dsl_model unquote(Macro.escape(model))
       unquote_splicing(tests)
     end
   end
@@ -41,6 +49,21 @@ defmodule SpecDSL.InvariantCase do
           unquote(adapter),
           unquote(Macro.escape(invariant)),
           @spec_dsl_invariants
+        )
+      end
+    end
+  end
+
+  defp invariant_test(%{kind: :formula} = invariant, adapter) do
+    name = "#{invariant.entity}.#{invariant.field} equals the value its formula computes"
+
+    quote do
+      test unquote(name) do
+        SpecDSL.InvariantCase.check_formula(
+          unquote(adapter),
+          unquote(Macro.escape(invariant)),
+          @spec_dsl_invariants,
+          @spec_dsl_model
         )
       end
     end
@@ -123,6 +146,52 @@ defmodule SpecDSL.InvariantCase do
       assert Decimal.equal?(decimal_field(reloaded, entity, field), expected),
              "#{entity}.#{field} is #{inspect(reloaded[Atom.to_string(field)])}, " <>
                "expected the sum #{expected} of #{length(children)} #{target}.#{target_field}"
+    end
+  end
+
+  @doc false
+  def check_formula(adapter, %{entity: entity, field: field}, invariants, model) do
+    resource = Adapter.resource!(adapter, entity)
+    %{own: own, children: child_leaves} = Formula.leaves(invariants, entity, field)
+
+    inputs =
+      fixed_map(%{
+        own: fixed_map(Map.new(own, &{&1, leaf_generator(adapter, resource, &1)})),
+        children:
+          fixed_map(
+            Map.new(child_leaves, fn {target, fields} ->
+              target_resource = Adapter.resource!(adapter, target)
+
+              leaves =
+                fixed_map(Map.new(fields, &{&1, leaf_generator(adapter, target_resource, &1)}))
+
+              {target, list_of(leaves, max_length: 3)}
+            end)
+          )
+      })
+
+    check all(%{own: own_values, children: children_values} <- inputs, max_runs: @max_runs) do
+      parent = adapter.create(entity, stored_attributes(own_values))
+
+      for {target, records} <- children_values, attributes <- records do
+        foreign_key = foreign_key_to_children(adapter, entity, target)
+        adapter.create(target, Map.put(stored_attributes(attributes), foreign_key, parent.id))
+      end
+
+      expected =
+        invariants
+        |> Formula.compute(model, entity, own_values, children_values)
+        |> Map.get(field)
+
+      reloaded = adapter.reload(entity, parent)
+
+      expected == nil or
+        assert(
+          Decimal.equal?(decimal_field(reloaded, entity, field), expected),
+          "#{entity}.#{field} is #{inspect(reloaded[Atom.to_string(field)])} for " <>
+            "#{inspect(own_values)} and children #{inspect(children_values)}, " <>
+            "expected #{expected}"
+        )
     end
   end
 
@@ -217,6 +286,22 @@ defmodule SpecDSL.InvariantCase do
       nil ->
         fixed_map(%{field => value_generator(adapter, resource, field)})
     end
+  end
+
+  defp leaf_generator(adapter, resource, field) do
+    case Enum.find(adapter.fields(resource), &(&1.name == field)) do
+      %{type: :decimal} -> map(integer(1..100_000), &Decimal.div(Decimal.new(&1), 100))
+      %{type: :integer} -> integer(1..1000)
+      %{type: :atom, one_of: [_first | _rest] = values} -> member_of(values)
+      other -> raise "no generator for #{inspect(other)} field #{field}"
+    end
+  end
+
+  defp stored_attributes(attributes) do
+    Map.new(attributes, fn
+      {key, value} when is_atom(value) -> {Atom.to_string(key), Atom.to_string(value)}
+      {key, value} -> {Atom.to_string(key), value}
+    end)
   end
 
   defp value_generator(adapter, resource, field) do

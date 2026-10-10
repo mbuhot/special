@@ -85,6 +85,13 @@ export interface EntityNode {
   order?: EntityOrder;
 }
 
+/** An arithmetic expression over the fields of one entity and sums over its has-many children. */
+export type FormulaNode =
+  | { op: "number"; value: number }
+  | { op: "field"; field: string }
+  | { op: "sum"; relation: string; target: string; field: string; where?: ConditionNode }
+  | { op: "+" | "-" | "*" | "/"; left: FormulaNode; right: FormulaNode };
+
 export interface InvariantSite {
   line: number;
   file: string;
@@ -99,6 +106,13 @@ export type InvariantNode = (
       relation: string;
       target: string;
       targetField: string;
+    }
+  | {
+      kind: "formula";
+      entity: string;
+      field: string;
+      expression: FormulaNode;
+      when?: ConditionNode;
     }
   | { kind: "unique"; entity: string; field: string }
   | { kind: "frozen-except"; entity: string; field: string; actions: string[] }
@@ -135,9 +149,13 @@ export interface EffectNode {
 
 export type ComparisonOp = "is" | "is not" | "before" | "after";
 
+export type NumericOp = "above" | "below";
+
 export type ConditionNode =
   | { op: "and" | "or"; left: ConditionNode; right: ConditionNode }
   | { op: ComparisonOp; field: string; value: string }
+  | { op: NumericOp; field: string; value: number }
+  | { op: "is me"; field: string }
   | { op: "within"; field: string; days: number };
 
 export interface PredicateNode {
@@ -156,6 +174,9 @@ export interface CountNode {
   line: number;
 }
 
+/** A role's allowed actions; a role that reads only records satisfying a predicate carries that predicate as `scope`. */
+export type PolicyEntry = string[] | { actions: string[]; scope: string };
+
 export interface DerivedNode {
   predicates: PredicateNode[];
   counts: CountNode[];
@@ -169,7 +190,7 @@ export interface SpecAst {
   actors: Record<string, Record<string, string | Record<string, string>>>;
   surfaces: Record<string, SurfaceNode>;
   model: Record<string, EntityNode>;
-  policies: Record<string, Record<string, string[]>>;
+  policies: Record<string, Record<string, PolicyEntry>>;
   invariants: InvariantNode[];
   derived: DerivedNode;
   effects: EffectNode[];

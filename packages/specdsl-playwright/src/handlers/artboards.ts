@@ -536,7 +536,7 @@ function propsFor(env: Env, view: View, session: Session): Props {
       ? buildNewProps(env.spec, givenOf(env), view.creating, today, role, context)
       : view.ref === undefined
         ? buildListProps(env.spec, givenOf(env), listedEntities(env, view.design), today, role)
-        : buildProps(env.spec, givenOf(env), view.ref, today, role);
+        : buildProps(env.spec, givenOf(env), view.ref, today, role, context.userRef);
   return applyViewState(applyRowFilters(base, session.filters), session.view);
 }
 

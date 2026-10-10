@@ -107,3 +107,54 @@ defmodule SpecDSL.DerivedTest do
     end
   end
 end
+
+defmodule SpecDSL.DerivedNumericTest do
+  use ExUnit.Case, async: true
+
+  alias SpecDSL.Derived
+
+  @today ~D[2026-01-15]
+
+  test "an amount above the number holds, an amount equal to it does not" do
+    above = %{op: :above, field: :gst, value: 0}
+
+    assert Derived.holds?(above, %{gst: Decimal.new("0.01")}, @today)
+    refute Derived.holds?(above, %{gst: Decimal.new(0)}, @today)
+    refute Derived.holds?(above, %{}, @today)
+  end
+
+  test "an amount below the number holds, whatever its type" do
+    below = %{op: :below, field: :total, value: 100}
+
+    assert Derived.holds?(below, %{total: 99}, @today)
+    assert Derived.holds?(below, %{total: "99.5"}, @today)
+    refute Derived.holds?(below, %{total: Decimal.new(100)}, @today)
+  end
+
+  test "a relation to the signed-in user holds only for that user" do
+    mine = %{op: :is_me, field: :assignee}
+
+    assert Derived.holds?(mine, %{assignee: 7}, @today, 7)
+    refute Derived.holds?(mine, %{assignee: 7}, @today, 8)
+    refute Derived.holds?(mine, %{assignee: 7}, @today)
+  end
+
+  test "a predicate reading the signed-in user is viewer-relative" do
+    mine = %{
+      op: :and,
+      left: %{op: :is, field: :status, value: "open"},
+      right: %{op: :is_me, field: :assignee}
+    }
+
+    assert Derived.viewer_relative?(mine)
+    refute Derived.viewer_relative?(%{op: :above, field: :gst, value: 0})
+  end
+
+  test "an enum value with a hyphen equals its atom spelling" do
+    assert Derived.holds?(
+             %{op: :is, field: :tax_code, value: "gst-free"},
+             %{tax_code: :gst_free},
+             @today
+           )
+  end
+end

@@ -584,3 +584,251 @@ test("selection count and any-selected follow the selected rows of the selection
   expect(cleared["anySelected"]).toBe(false);
   expect(cleared["selectedCount"]).toBe(0);
 });
+
+const site = { file: "", line: 0 };
+const field = (name: string) => ({ op: "field", field: name }) as const;
+const number = (value: number) => ({ op: "number", value }) as const;
+
+const computedSpec = {
+  actors: {},
+  model: {
+    User: { fields: [{ name: "name", type: "text" }], relations: [], machines: {} },
+    Invoice: {
+      fields: [
+        { name: "gst rate", type: "decimal" },
+        { name: "prices", type: "enum", values: ["exclude gst", "include gst"] },
+        { name: "taxable", type: "money" },
+        { name: "subtotal", type: "money" },
+        { name: "gst", type: "money" },
+        { name: "total", type: "money" },
+      ],
+      relations: [{ kind: "has-many", entity: "LineItem", name: "line_item" }],
+      machines: {},
+    },
+    LineItem: {
+      fields: [
+        { name: "quantity", type: "integer" },
+        { name: "unit price", type: "money" },
+        { name: "tax code", type: "enum", values: ["gst", "gst-free"] },
+        { name: "total", type: "money" },
+      ],
+      relations: [{ kind: "belongs-to", entity: "Invoice", name: "invoice" }],
+      machines: {},
+    },
+    Task: {
+      fields: [{ name: "title", type: "text" }],
+      relations: [{ kind: "belongs-to", entity: "User", name: "assignee" }],
+      machines: {},
+    },
+  },
+  policies: {
+    Task: { sales: { actions: ["read"], scope: "mine" }, admin: ["read"] },
+    Invoice: { admin: ["read"] },
+  },
+  invariants: [
+    {
+      kind: "product",
+      entity: "LineItem",
+      field: "total",
+      left: "quantity",
+      right: "unit price",
+      ...site,
+    },
+    {
+      kind: "formula",
+      entity: "Invoice",
+      field: "total",
+      expression: { op: "+", left: field("subtotal"), right: field("gst") },
+      ...site,
+    },
+    {
+      kind: "formula",
+      entity: "Invoice",
+      field: "gst",
+      expression: {
+        op: "/",
+        left: { op: "*", left: field("taxable"), right: field("gst rate") },
+        right: number(100),
+      },
+      when: { op: "is", field: "prices", value: "exclude gst" },
+      ...site,
+    },
+    {
+      kind: "formula",
+      entity: "Invoice",
+      field: "gst",
+      expression: {
+        op: "/",
+        left: { op: "*", left: field("taxable"), right: field("gst rate") },
+        right: { op: "+", left: number(100), right: field("gst rate") },
+      },
+      when: { op: "is", field: "prices", value: "include gst" },
+      ...site,
+    },
+    {
+      kind: "formula",
+      entity: "Invoice",
+      field: "taxable",
+      expression: {
+        op: "sum",
+        relation: "line_item",
+        target: "LineItem",
+        field: "total",
+        where: { op: "is", field: "tax code", value: "gst" },
+      },
+      ...site,
+    },
+    {
+      kind: "formula",
+      entity: "Invoice",
+      field: "subtotal",
+      expression: { op: "sum", relation: "line_item", target: "LineItem", field: "total" },
+      when: { op: "is", field: "prices", value: "exclude gst" },
+      ...site,
+    },
+    {
+      kind: "formula",
+      entity: "Invoice",
+      field: "subtotal",
+      expression: {
+        op: "-",
+        left: { op: "sum", relation: "line_item", target: "LineItem", field: "total" },
+        right: field("gst"),
+      },
+      when: { op: "is", field: "prices", value: "include gst" },
+      ...site,
+    },
+  ],
+  effects: [],
+  derived: {
+    predicates: [
+      { entity: "Task", name: "mine", condition: { op: "is me", field: "assignee" }, ...site },
+      {
+        entity: "Invoice",
+        name: "tax invoice",
+        condition: { op: "above", field: "gst", value: 0 },
+        ...site,
+      },
+    ],
+    counts: [],
+  },
+  surfaces: {},
+  contexts: {},
+  scenarios: [],
+  dialect: { name: "", version: "", stepIds: [] },
+} as unknown as SpecAst;
+
+const invoice = (prices: string) =>
+  new Map<string, GivenEntity>([
+    [
+      "INV-1",
+      {
+        entity: "Invoice",
+        fields: new Map([
+          ["gst rate", "10"],
+          ["prices", prices],
+        ]),
+      },
+    ],
+    [
+      "Widget",
+      {
+        entity: "LineItem",
+        fields: new Map([
+          ["invoice", "INV-1"],
+          ["quantity", "2"],
+          ["unit price", "55"],
+          ["tax code", "gst"],
+        ]),
+      },
+    ],
+    [
+      "Food",
+      {
+        entity: "LineItem",
+        fields: new Map([
+          ["invoice", "INV-1"],
+          ["quantity", "1"],
+          ["unit price", "40"],
+          ["tax code", "gst-free"],
+        ]),
+      },
+    ],
+  ]);
+
+const flattened = (entities: Map<string, GivenEntity>) => {
+  const props = buildProps(computedSpec, entities, "INV-1", "2026-01-15", "admin");
+  return { ...(props["invoice"] as object), taxInvoice: props["taxInvoice"] };
+};
+
+const invoiceProps = (prices: string) => flattened(invoice(prices));
+
+test("an invoice with prices excluding GST adds GST on the GST lines to the subtotal", () => {
+  expect(invoiceProps("exclude gst")).toMatchObject({
+    taxable: "$110.00",
+    gst: "$11.00",
+    subtotal: "$150.00",
+    total: "$161.00",
+    taxInvoice: true,
+  });
+});
+
+test("an invoice with prices including GST contains GST in the lines", () => {
+  expect(invoiceProps("include gst")).toMatchObject({
+    taxable: "$110.00",
+    gst: "$10.00",
+    subtotal: "$140.00",
+    total: "$150.00",
+  });
+});
+
+test("an invoice with no GST rate charges no GST", () => {
+  const entities = invoice("exclude gst");
+  entities.get("INV-1")?.fields.delete("gst rate");
+  expect(flattened(entities)).toMatchObject({
+    gst: "$0.00",
+    total: "$150.00",
+    taxInvoice: false,
+  });
+});
+
+const tasks = () =>
+  new Map<string, GivenEntity>([
+    ["Sam", { entity: "User", fields: new Map([["name", "Sam"]]) }],
+    ["Morgan", { entity: "User", fields: new Map([["name", "Morgan"]]) }],
+    [
+      "Call Ada",
+      {
+        entity: "Task",
+        fields: new Map([
+          ["title", "Call Ada"],
+          ["assignee", "Sam"],
+        ]),
+      },
+    ],
+    [
+      "Draft",
+      {
+        entity: "Task",
+        fields: new Map([
+          ["title", "Draft"],
+          ["assignee", "Morgan"],
+        ]),
+      },
+    ],
+  ]);
+
+const listedTitles = (role: string, viewer: string) =>
+  (
+    buildListProps(computedSpec, tasks(), ["Task"], "2026-01-15", role, viewer)["tasks"] as {
+      title: string;
+    }[]
+  ).map((row) => row.title);
+
+test("a role that reads only its own tasks lists only the tasks assigned to the viewer", () => {
+  expect(listedTitles("sales", "Sam")).toEqual(["Call Ada"]);
+});
+
+test("a role without a read scope lists every task", () => {
+  expect(listedTitles("admin", "Morgan")).toEqual(["Call Ada", "Draft"]);
+});

@@ -60,10 +60,15 @@ defmodule SpecDSL.Adapter do
   @doc "The number of records of the entity the app counts for the named predicate on the date."
   @callback app_count(entity_name(), predicate_name :: String.t(), Date.t()) :: integer()
 
+  @doc "The records of the entity a user of the role reads, as `reload/2`-style string-keyed maps, for the given actor user record."
+  @callback read_as(entity_name(), role :: String.t(), actor_user :: stored_record()) :: [
+              %{String.t() => term()}
+            ]
+
   @doc "Prepares per-test state such as a database sandbox."
   @callback setup(ExUnit.Callbacks.context()) :: term()
 
-  @optional_callbacks setup: 1
+  @optional_callbacks setup: 1, read_as: 3
 
   @doc "Runs the adapter's optional per-test setup."
   @spec setup(module(), map()) :: :ok

@@ -305,7 +305,7 @@ async function logIn(env: Env, page: Page, email: string): Promise<void> {
   await page.waitForURL((url) => url.pathname !== login.route);
 }
 
-function durationMilliseconds(duration: string): number {
+export function durationMilliseconds(duration: string): number {
   const match = /^(\d+)\s*(second|minute|hour|day|week)s?$/i.exec(duration.trim());
   if (match === null) throw new Error(`cannot parse duration "${duration}"`);
   const unit = match[2]?.toLowerCase() as DurationUnit;

@@ -9,6 +9,7 @@ export default defineConfig({
   reporter: "list",
   use: { baseURL, trace: "retain-on-failure" },
   projects: [
+    { name: "render", testMatch: "design/render.test.ts" },
     { name: "chromium", testMatch: "run.ts", use: { ...devices["Desktop Chrome"] } },
     {
       name: "demo",

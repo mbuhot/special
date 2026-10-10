@@ -21,8 +21,12 @@ claude.ai canvas  ──/design-sync──►  designs/  ──►  specs/  ─�
 
 - Every element a spec can name carries `data-control="<Name>"`; the artboard root area carries `data-surface="<Surface>"`. Names match the spec exactly.
 - One artboard per state of a surface, named after the state in the model (`pipeline/deal-page/qualified.dc.html`). A button that moves to another state carries `data-next-state="<state>"`; a link to another surface is an `<a href>` to that artboard.
+- A surface with data props is one `default.dc.html` (`pipeline/deal-page/default.dc.html`). Props: the record as `<entity>` (`deal.name`, `deal.amount`), machine field `stage` with `is<State>` flags (`isLead`), predicates as booleans (`<predicate>`), has-many rows as `<relation plural>` (`tasks`, each row with its fields, `is<State>` and child predicates such as `row.overdue`) and `any<Predicate>` (`anyOverdue`). Holes are dotted lookups, so `renderVals` computes the flags from the tweaks and design mode fills the same names from the scenario.
+- Per-state files remain valid; design mode picks the file named after the record's machine state, else `default`.
 - The canvas board paths mirror `designs/` (`project/pipeline/deal-page/qualified.dc.html`), so sync is a copy.
 - The canvas URL lives in `designs/canvas.json`.
+
+Design mode also outlines the control in red and shows a caption "Design differs: expected ..., found ..." for 2 seconds when a text check disagrees with the artboard.
 
 ## What each check proves
 

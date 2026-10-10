@@ -6,6 +6,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json --noEmit",
     "test": "playwright test --project=chromium",
+    "test:render": "playwright test --project=render",
     "demo": "node scripts/demo.mjs",
     "design": "node scripts/design.mjs",
     "demo:reel": "node scripts/reel.mjs"

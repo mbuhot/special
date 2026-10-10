@@ -81,3 +81,5 @@ export {
 export type { SpecFileKind, TreeConfig } from "./tree.js";
 export { artboardStates, designLint, parseArtboard, readArtboards } from "./design.js";
 export type { Artboard } from "./design.js";
+export { holds } from "./evaluate.js";
+export type { FieldRecord } from "./evaluate.js";

@@ -12,8 +12,18 @@ designs/
 - `shell/Shell.dc.html` holds the application shell (reference; the Sidebar is a shared surface).
 - `dashboard/dashboard/` holds the dashboard in `default` and `empty` states.
 - `crm/contact-page/` and `crm/company-page/` hold the record pages.
-- `pipeline/deal-page/` holds the deal page in `qualified` and `proposal` states.
+- `pipeline/deal-page/default.dc.html` holds the deal page as one data-driven artboard.
 - `invoicing/invoice-list/` and `invoicing/invoice-editor/` (`draft`, `sent`) hold the invoice screens.
+
+Data props: an artboard declares `data-props` on its `text/x-dc` script (`default` = sample data; `editor` enum or boolean = canvas tweak; `editor: null` = data). Holes are dotted lookups into `renderVals()`, which returns `{ ...this.props }` plus derived flags. `pnpm design` fills the props from the scenario:
+
+| Prop                           | Value                                                                                         |
+| ------------------------------ | --------------------------------------------------------------------------------------------- |
+| `<entity>`                     | the surface record's fields, camelCase keys, plus `name` (the Ref)                            |
+| `<machine field>`, `is<State>` | current state and one flag per state                                                          |
+| `<predicate>`                  | the entity's Derived predicate at the scenario clock                                          |
+| `<relation plural>`            | child rows; each row has its fields, `name`, `is<State>` and child predicates (`row.overdue`) |
+| `any<Predicate>`               | true when any child row satisfies the predicate                                               |
 
 Markup contract:
 

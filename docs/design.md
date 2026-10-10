@@ -347,11 +347,26 @@ Each surface line may name its artboards: `- Deal page: design pipeline/deal-pag
 
 Step semantics in design mode:
 
-- `opens` loads the artboard named by the machine field the `Given` lines set on the Ref's entity, then `default`, then the first file.
-- `clicks` highlights the `data-control` element, then follows an `<a href="*.dc.html">` or loads the `data-next-state` artboard of the same surface.
+- `opens` keeps a record store filled from `Given` lines. The surface record is the Ref, or the first Given entity with a machine state. The artboard named by that state is rendered, else `default`, else the first file, with props built from the record (see "Artboard props").
+- `clicks` highlights the `data-control` element, then follows an `<a href="*.dc.html">`, or applies `data-next-state` to the record's machine field and re-renders.
+- `time advances` moves the scenario clock, which starts at the Context clock.
 - `sees`, `no longer sees`, `does not see` and `is on` compare against the artboard; mismatches go to `report.json` and do not fail the run.
+- A mismatch outlines the control in red and captions "Design differs: expected ..., found ..." for 2 seconds in the video.
 - A missing artboard or control fails the run.
-- `Given`, `has`, `may`, `may not` and `time advances` do nothing; `Story`, `Narrate` and `Caption` behave as in demo mode.
+- `has`, `may`, `may not`, `is` and `is not` do nothing; `Story`, `Narrate` and `Caption` behave as in demo mode.
+
+### Artboard props
+
+An artboard declares props in its `data-props` (each prop's `default` is sample data) and fills `{{ path }}` holes, `<sc-if>` and `<sc-for>`. The local renderer (`packages/specdsl-playwright/src/design/render.ts`) merges design-mode props over those defaults, expands the template and serves static HTML; it does not run the artboard script. Design mode builds these props from the record:
+
+| Prop                     | Value                                                                                                                            |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| `<entity>` (lower camel) | the record's fields (camelCase keys; dates `20 Jan 2026`, money `$12,000.00`) and `name` = the Ref                               |
+| `<machine field>`        | current state (`stage`)                                                                                                          |
+| `is<State>`              | true for the current state (`isLead`)                                                                                            |
+| `<predicate>`            | the Derived predicate of the record's entity, evaluated at the scenario clock                                                    |
+| `<relation plural>`      | child rows of each has-many relation (`tasks`); a row holds the fields, `name`, `is<State>` and child predicates (`row.overdue`) |
+| `any<Predicate>`         | true when any child row satisfies the predicate (`anyOverdue`)                                                                   |
 
 ## Build order
 

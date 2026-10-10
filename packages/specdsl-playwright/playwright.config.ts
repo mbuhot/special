@@ -9,7 +9,7 @@ export default defineConfig({
   reporter: "list",
   use: { baseURL, trace: "retain-on-failure" },
   projects: [
-    { name: "render", testMatch: /design\/(render|props)\.test\.ts/ },
+    { name: "render", testMatch: /design\/(render|props|records)\.test\.ts/ },
     { name: "chromium", testMatch: "run.ts", use: { ...devices["Desktop Chrome"] } },
     {
       name: "demo",

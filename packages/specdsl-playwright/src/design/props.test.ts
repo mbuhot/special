@@ -46,6 +46,7 @@ const spec = {
     Task: { sales: ["read"] },
   },
   invariants: [],
+  effects: [],
   derived: {
     predicates: [
       {
@@ -260,6 +261,7 @@ const billing = {
     { kind: "sequence", entity: "Invoice", field: "number", prefix: "INV-", width: 3 },
   ],
   derived: { predicates: [], counts: [] },
+  effects: [],
   surfaces: {},
   contexts: {},
   scenarios: [],

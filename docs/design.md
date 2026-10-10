@@ -196,6 +196,21 @@ A scenario step `<Ref> is <Predicate>` or `<Ref> is not <Predicate>` asserts a p
 
 `SpecDSL.Derived.holds?(predicate, record, today)` evaluates a predicate over a map of field atoms to values; the conformance test holds the app's counts to it.
 
+### Effects
+
+A `## Effects` section in a base file declares what an action on one entity creates on another. One closed shape; any other line is a bind error.
+
+| Shape                                                                                                        | Example                                                                                                                       |
+| ------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| `When <Entity> <Action>: create <Target> for the first <Owner> of its <Relation> with <Field> "<Text>", ...` | `When Invoice mark paid: create Activity for the first Contact of its company with kind "note", body "Invoice {number} paid"` |
+
+- `<Action>` is declared in `## Policies` and ends with the state it moves the entity to (`mark paid` reaches `paid`); that state and its machine field are recorded in the AST.
+- `<Relation>` is a belongs-to relation of `<Entity>`. `<Owner>` belongs to the entity that relation leads to, and `<Target>` belongs to `<Owner>`.
+- The first `<Owner>` is the earliest record in declaration order that shares the triggering record's `<Relation>` value.
+- Each `<Field>` is a field of `<Target>`. `{field}` in a value is a field of `<Entity>`, filled from the triggering record. Unknown names are bind errors with the line.
+- AST `effects` holds `entity`, `action`, `field`, `state`, `target`, `owner`, `relation`, `ownerRelation`, `targetRelation` and `values`. `SpecDSL.Effect` carries the same.
+- Design mode applies an effect when a click with `data-next-state` moves a record into the effect's state.
+
 ## AST JSON
 
 ```json

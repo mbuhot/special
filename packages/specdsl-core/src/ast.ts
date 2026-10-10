@@ -117,6 +117,22 @@ export type InvariantNode = (
 
 export type InvariantKind = InvariantNode["kind"];
 
+/** When `action` moves an `entity` into `state` of machine `field`, create a `target` for the first `owner` the entity's `relation` leads to, with `values` filled from the triggering record. */
+export interface EffectNode {
+  entity: string;
+  action: string;
+  field: string;
+  state: string;
+  target: string;
+  owner: string;
+  relation: string;
+  ownerRelation: string;
+  targetRelation: string;
+  values: { field: string; value: string }[];
+  file: string;
+  line: number;
+}
+
 export type ComparisonOp = "is" | "is not" | "before" | "after";
 
 export type ConditionNode =
@@ -155,6 +171,7 @@ export interface SpecAst {
   policies: Record<string, Record<string, string[]>>;
   invariants: InvariantNode[];
   derived: DerivedNode;
+  effects: EffectNode[];
   scenarios: Scenario[];
 }
 

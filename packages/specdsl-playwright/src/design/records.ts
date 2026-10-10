@@ -101,6 +101,48 @@ export function createRecord(
   return refName;
 }
 
+/** Runs the spec's effects triggered by moving `refName` into `nextState`: each creates its target record under the first owner reached through the record's relation, with `{field}` placeholders filled from the record. */
+export function applyEffects(
+  spec: SpecAst,
+  records: Records,
+  refName: string,
+  nextState: string,
+  context: NewRecordContext,
+): void {
+  const record = records.get(refName);
+  if (record === undefined) return;
+  for (const effect of spec.effects) {
+    const triggered =
+      effect.entity === record.entity &&
+      effect.state === nextState &&
+      spec.model[record.entity]?.machines[effect.field] !== undefined;
+    const parentRef = record.fields.get(effect.relation.toLowerCase());
+    const ownerRef = [...records].find(
+      ([, candidate]) =>
+        candidate.entity === effect.owner &&
+        candidate.fields.get(effect.ownerRelation.toLowerCase()) === parentRef,
+    )?.[0];
+    triggered &&
+      parentRef !== undefined &&
+      ownerRef !== undefined &&
+      createRecord(
+        spec,
+        records,
+        effect.target,
+        new Map(effect.values.map(({ field, value }) => [field, filled(record, value)])),
+        { relation: effect.targetRelation, ref: ownerRef },
+        context,
+      );
+  }
+}
+
+function filled(record: GivenEntity, template: string): string {
+  return template.replace(
+    /\{([^{}]+)\}/g,
+    (_, field: string) => record.fields.get(field.toLowerCase()) ?? "",
+  );
+}
+
 /** The names of pending fields that `entity` declares as fields or relations. */
 export function ownedFields(
   spec: SpecAst,

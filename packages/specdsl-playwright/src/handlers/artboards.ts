@@ -21,6 +21,7 @@ import {
 } from "../design/props.js";
 import type { GivenEntity, RowFilter } from "../design/props.js";
 import {
+  applyEffects,
   childRelation,
   createRecord,
   editorEntity,
@@ -729,7 +730,10 @@ async function advanceState(
   nextState: string,
   record?: string,
 ): Promise<void> {
-  recordStateChange(env, record ?? view.ref, nextState);
+  const changed = record ?? view.ref;
+  recordStateChange(env, changed, nextState);
+  changed !== undefined &&
+    applyEffects(env.spec, givenOf(env), changed, nextState, prepareUsers(env, actorName));
   if (record !== undefined) {
     await load(env, actorName, view, true);
     return;

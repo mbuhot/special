@@ -1,5 +1,5 @@
 defmodule SpecDSL.Union do
-  @moduledoc "Merges the model, policies, actors, invariants and derived declarations across the AST files a glob matches."
+  @moduledoc "Merges the model, policies, actors, invariants, effects and derived declarations across the AST files a glob matches."
 
   alias SpecDSL.{AST, Entity}
 
@@ -51,6 +51,10 @@ defmodule SpecDSL.Union do
   @doc "Every distinct invariant."
   @spec invariants([AST.t()]) :: [SpecDSL.Invariant.t()]
   def invariants(asts), do: asts |> Enum.flat_map(& &1.invariants) |> Enum.uniq()
+
+  @doc "Every distinct effect."
+  @spec effects([AST.t()]) :: [SpecDSL.Effect.t()]
+  def effects(asts), do: asts |> Enum.flat_map(& &1.effects) |> Enum.uniq()
 
   @doc "Every distinct predicate, paired with the model field definitions of its entity."
   @spec predicates([AST.t()]) :: [{SpecDSL.Predicate.t(), [SpecDSL.Field.t()]}]

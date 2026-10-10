@@ -54,3 +54,7 @@ Narrate: The sidebar has a Sign out button at its foot.
 And Sales rep clicks "Sign out"
 Then Sales rep is on Login
 Narrate: The login page opens. The sidebar is gone.
+When Sales rep enters sales-rep@example.com into "Email"
+Narrate: The email address is typed into the Email field.
+Then Sales rep sees "Log in" in "Log in"
+Narrate: The Log in button sits below the field.

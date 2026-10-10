@@ -95,3 +95,7 @@ docs/reviews/2026-10-10-iteration-2.md: FAIL. Record pages closed UX 3, 4 and sp
 - Hindered: the Model section cannot hold a free sentence, so the numbering rule waited for the Invariants section to land.
 - Hindered: `sees` matches element text, so the line description became a textarea to make its value visible to the assertion; the vocabulary has no "field has value" check.
 - Open from this iteration: "New invoice" still preselects the first company (the scenario never chooses one); the deal editor lists every contact, so a mismatched pick now errors instead of being filtered.
+
+### Effects (follow-up)
+
+- Add an app conformance check holding the Ash resources to `## Effects` (marking an invoice paid creates the declared Activity).

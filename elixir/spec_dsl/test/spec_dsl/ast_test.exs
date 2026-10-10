@@ -187,6 +187,52 @@ defmodule SpecDSL.ASTTest do
     assert AST.from_map(%{}).policies == %{}
   end
 
+  test "reads no effects when the AST has none" do
+    assert AST.from_map(%{}).effects == []
+  end
+
+  test "reads an effect with snake_case atoms and verbatim value templates" do
+    ast =
+      AST.from_map(%{
+        "effects" => [
+          %{
+            "entity" => "Invoice",
+            "action" => "mark paid",
+            "field" => "status",
+            "state" => "paid",
+            "target" => "Activity",
+            "owner" => "Contact",
+            "relation" => "company",
+            "ownerRelation" => "company",
+            "targetRelation" => "contact",
+            "values" => [
+              %{"field" => "kind", "value" => "note"},
+              %{"field" => "body", "value" => "Invoice {number} paid"}
+            ],
+            "file" => "specs/effects.md",
+            "line" => 5
+          }
+        ]
+      })
+
+    assert [effect] = ast.effects
+
+    assert %SpecDSL.Effect{
+             entity: "Invoice",
+             action: :mark_paid,
+             field: :status,
+             state: "paid",
+             target: "Activity",
+             owner: "Contact",
+             relation: :company,
+             owner_relation: :company,
+             target_relation: :contact,
+             values: [kind: "note", body: "Invoice {number} paid"],
+             file: "specs/effects.md",
+             line: 5
+           } = effect
+  end
+
   test "reads no invariants when the AST has none" do
     assert AST.from_map(%{}).invariants == []
   end

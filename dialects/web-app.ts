@@ -149,6 +149,16 @@ export default dialect({
         },
       ],
     }),
+    Effects: section({
+      occurs: "once",
+      items: [
+        {
+          pattern:
+            '<Entity> <Action>: create <Target=Entity> for the first <Owner=Entity> of its <Relation=Field> with <Field> "<Text>", ...',
+          output: "effects",
+        },
+      ],
+    }),
     Derived: section({
       occurs: "once",
       items: [

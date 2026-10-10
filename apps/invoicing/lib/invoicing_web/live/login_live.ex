@@ -15,6 +15,10 @@ defmodule InvoicingWeb.LoginLive do
   end
 
   @impl true
+  def handle_event("validate", %{"login" => params}, socket) do
+    {:noreply, assign(socket, form: to_form(params, as: :login))}
+  end
+
   def handle_event("submit", %{"login" => %{"email" => email} = params}, socket) do
     login_status =
       case Accounts.get_user_by_email(email, not_found_error?: false, authorize?: false) do
@@ -35,6 +39,7 @@ defmodule InvoicingWeb.LoginLive do
         id="login-form"
         action={~p"/session"}
         method="post"
+        phx-change="validate"
         phx-submit="submit"
         phx-trigger-action={@login_status == :accepted}
       >

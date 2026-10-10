@@ -7,6 +7,7 @@ import {
   type FieldNode,
   type FieldType,
   type DerivedNode,
+  type EffectNode,
   type InvariantNode,
   type Scenario,
   type SpecAst,
@@ -26,6 +27,7 @@ import {
   type DerivedContext,
   type DerivedSource,
 } from "./derived.js";
+import { resolveEffect } from "./effects.js";
 import { resolveInvariant } from "./invariants.js";
 import {
   compilePattern,
@@ -106,6 +108,7 @@ class Binder {
   private readonly policies: SpecAst["policies"] = {};
   private readonly invariants: InvariantNode[] = [];
   private readonly derived: DerivedNode = { predicates: [], counts: [] };
+  private readonly effects: EffectNode[] = [];
   private readonly listedSurfaces = new Set<string>();
   private readonly surfaceDesigns = new Map<string, string>();
   private readonly usedSurfaces = new Set<string>();
@@ -130,6 +133,7 @@ class Binder {
     pending.forEach((item) => this.complete(item));
     pending.forEach((item) => this.recordInvariant(item));
     this.reconcileMachineFields();
+    pending.forEach((item) => this.recordEffect(item));
     pending
       .filter((item) => item.rule.derived === "predicate")
       .forEach((item) => this.recordDerived(item));
@@ -366,6 +370,21 @@ class Binder {
       },
     );
     node !== undefined && this.invariants.push(node);
+  }
+
+  private recordEffect(item: PendingItem): void {
+    if (item.rule.output !== "effects") {
+      return;
+    }
+    const node = resolveEffect(
+      { match: item.match, file: item.file, line: item.line },
+      {
+        registry: this.registry,
+        model: this.model,
+        report: (message) => this.report(item.file, item.line, message),
+      },
+    );
+    node !== undefined && this.effects.push(node);
   }
 
   private recordDerived(item: PendingItem): void {
@@ -779,6 +798,7 @@ class Binder {
       policies: this.policies,
       invariants: this.invariants,
       derived: this.derived,
+      effects: this.effects,
       scenarios,
     };
     const feature = this.sources[this.sources.length - 1] as ParsedSource;

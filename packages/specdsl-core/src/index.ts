@@ -48,6 +48,7 @@ export type {
   Declaration,
   DerivedKind,
   DerivedNode,
+  EffectNode,
   PredicateNode,
   EntityNode,
   EntityOrder,

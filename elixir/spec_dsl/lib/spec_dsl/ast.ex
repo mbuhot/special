@@ -151,6 +151,40 @@ defmodule SpecDSL.Invariant do
   ]
 end
 
+defmodule SpecDSL.Effect do
+  @moduledoc "A cross-entity consequence of an action: creates a target record under the first owner reached through the triggering record's relation; entities keep their spec spelling, fields and relations are snake_case atoms, value templates keep `{field}` placeholders."
+
+  @type t :: %__MODULE__{
+          entity: String.t(),
+          action: atom(),
+          field: atom(),
+          state: String.t(),
+          target: String.t(),
+          owner: String.t(),
+          relation: atom(),
+          owner_relation: atom(),
+          target_relation: atom(),
+          values: [{atom(), String.t()}],
+          file: String.t() | nil,
+          line: non_neg_integer() | nil
+        }
+
+  defstruct [
+    :entity,
+    :action,
+    :field,
+    :state,
+    :target,
+    :owner,
+    :relation,
+    :owner_relation,
+    :target_relation,
+    :file,
+    :line,
+    values: []
+  ]
+end
+
 defmodule SpecDSL.Predicate do
   @moduledoc "A named condition over one entity; the condition is a tree of and/or nodes over field comparisons whose fields are snake_case atoms."
 
@@ -257,6 +291,7 @@ defmodule SpecDSL.AST do
           policies: %{String.t() => %{String.t() => [String.t()]}},
           invariants: [Invariant.t()],
           derived: SpecDSL.Derived.t(),
+          effects: [SpecDSL.Effect.t()],
           scenarios: [Scenario.t()]
         }
 
@@ -269,6 +304,7 @@ defmodule SpecDSL.AST do
     policies: %{},
     invariants: [],
     derived: %SpecDSL.Derived{},
+    effects: [],
     scenarios: []
   ]
 
@@ -338,6 +374,7 @@ defmodule SpecDSL.AST do
       policies: Map.get(raw, "policies", %{}),
       invariants: raw |> Map.get("invariants", []) |> Enum.map(&build_invariant/1),
       derived: raw |> Map.get("derived", %{}) |> build_derived(),
+      effects: raw |> Map.get("effects", []) |> Enum.map(&build_effect/1),
       scenarios: raw |> Map.get("scenarios", []) |> Enum.map(&build_scenario(&1, surfaces))
     }
   end
@@ -423,6 +460,26 @@ defmodule SpecDSL.AST do
       parent: raw |> Map.get("parent") |> optional_atom(),
       relation_entity: Map.get(raw, "relationEntity"),
       relation_parent: raw |> Map.get("relationParent") |> optional_atom(),
+      file: Map.get(raw, "file"),
+      line: Map.get(raw, "line")
+    }
+  end
+
+  defp build_effect(raw) do
+    %SpecDSL.Effect{
+      entity: Map.fetch!(raw, "entity"),
+      action: raw |> Map.fetch!("action") |> snake_atom(),
+      field: raw |> Map.fetch!("field") |> snake_atom(),
+      state: Map.fetch!(raw, "state"),
+      target: Map.fetch!(raw, "target"),
+      owner: Map.fetch!(raw, "owner"),
+      relation: raw |> Map.fetch!("relation") |> snake_atom(),
+      owner_relation: raw |> Map.fetch!("ownerRelation") |> snake_atom(),
+      target_relation: raw |> Map.fetch!("targetRelation") |> snake_atom(),
+      values:
+        raw
+        |> Map.get("values", [])
+        |> Enum.map(fn %{"field" => field, "value" => value} -> {snake_atom(field), value} end),
       file: Map.get(raw, "file"),
       line: Map.get(raw, "line")
     }

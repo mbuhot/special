@@ -15,6 +15,7 @@ defmodule InvoicingWeb.ConnCase do
   this option is not recommended for other databases.
   """
 
+  use Boundary, top_level?: true, check: [in: false, out: false]
   use ExUnit.CaseTemplate
 
   using do

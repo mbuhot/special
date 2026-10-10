@@ -1,6 +1,7 @@
 defmodule Invoicing.SpecHandlers do
   @moduledoc "Runs invoicing spec steps in-process through Phoenix.LiveViewTest and the Ecto sandbox."
 
+  use Boundary, top_level?: true, check: [in: false, out: false]
   use SpecDSL.Handlers, dialect: "../../dialects/invoicing.lock.json"
 
   import ExUnit.Assertions

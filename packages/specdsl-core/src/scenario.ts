@@ -9,6 +9,7 @@ export interface Composite {
   matcher: Matcher;
   children: Line[];
   line: number;
+  file: string;
 }
 
 export interface ScenarioEnvironment {
@@ -36,7 +37,6 @@ type Candidate =
   | { type: "step"; step: ResolvedStep; match: Match; weight: number }
   | { type: "composite"; composite: Composite; match: Match; weight: number };
 
-const MAX_EXPANSION_DEPTH = 8;
 const NARRATION_LINE = /^(narrate|caption)\s*:\s*(.*)$/i;
 const STORY_LINE = /^story\s*:\s*(.*)$/i;
 
@@ -51,6 +51,7 @@ export class ScenarioResolver {
   private readonly current = new Map<string, string>();
   private readonly states = new Map<string, string>();
   private readonly nodes: ScenarioNode[] = [];
+  private readonly expanding: Composite[] = [];
   private readonly lexicon: Lexicon = {
     names: (namespace) => this.environment.registry.names(namespace),
   };
@@ -63,14 +64,14 @@ export class ScenarioResolver {
     const body = story === null ? lines : rest;
     for (const entry of body) {
       STORY_LINE.test(entry.text)
-        ? this.environment.report(entry.line, "Story must be the first line of a scenario")
-        : this.resolveLine(entry.text, entry.line, 0);
+        ? this.report(entry.line, "Story must be the first line of a scenario")
+        : this.resolveLine(entry.text, entry.line);
     }
     const text = story === null ? "" : (story[1] as string).trim();
     return text === "" ? { steps: this.nodes } : { story: text, steps: this.nodes };
   }
 
-  private resolveLine(text: string, line: number, depth: number): void {
+  private resolveLine(text: string, line: number): void {
     const narration = NARRATION_LINE.exec(text);
     if (narration !== null) {
       const node: NarrationNode = {
@@ -84,9 +85,9 @@ export class ScenarioResolver {
     }
     const candidate = this.bestCandidate(text);
     if (candidate === null) {
-      this.environment.report(line, `No step matches "${text}"`);
+      this.report(line, `No step matches "${text}"`);
     } else if (candidate.type === "composite") {
-      this.expand(candidate.composite, candidate.match, line, depth);
+      this.expand(candidate.composite, candidate.match, line);
     } else {
       this.resolveStep(candidate.step, candidate.match, line);
     }
@@ -115,14 +116,28 @@ export class ScenarioResolver {
     );
   }
 
-  private expand(composite: Composite, match: Match, line: number, depth: number): void {
-    if (depth >= MAX_EXPANSION_DEPTH) {
-      this.environment.report(line, `Composite step "${composite.header}" expands recursively`);
+  private expand(composite: Composite, match: Match, line: number): void {
+    if (this.expanding.includes(composite)) {
+      this.report(line, `Composite step "${composite.header}" expands recursively`);
       return;
     }
+    const omitted = omittedSlots(composite, match);
+    this.expanding.push(composite);
     for (const child of composite.children) {
-      this.resolveLine(substituteSlots(child.text, match.slots), line, depth + 1);
+      mentionsAny(child.text, omitted) ||
+        this.resolveLine(substituteSlots(child.text, match.slots), line);
     }
+    this.expanding.pop();
+  }
+
+  private report(line: number, message: string): void {
+    const composite = this.expanding[this.expanding.length - 1];
+    this.environment.report(
+      line,
+      composite === undefined
+        ? message
+        : `${message} (in composite step "${composite.header}" defined at ${composite.file}:${composite.line})`,
+    );
   }
 
   private resolveStep(step: ResolvedStep, match: Match, line: number): void {
@@ -242,8 +257,7 @@ export class ScenarioResolver {
       return value;
     }
     const state = registry.lookup("State", value, `${entity}.${field}`);
-    state === undefined &&
-      this.environment.report(line, `"${value}" is not a state of ${entity}.${field}`);
+    state === undefined && this.report(line, `"${value}" is not a state of ${entity}.${field}`);
     return state?.name ?? value;
   }
 
@@ -281,10 +295,7 @@ export class ScenarioResolver {
   private resolveRef(value: string, line: number): string | undefined {
     const found = this.refs.get(value.toLowerCase());
     if (found === undefined) {
-      this.environment.report(
-        line,
-        `Ref "${value}" is not declared by an earlier step in this scenario`,
-      );
+      this.report(line, `Ref "${value}" is not declared by an earlier step in this scenario`);
     }
     return found?.name;
   }
@@ -311,16 +322,13 @@ export class ScenarioResolver {
       this.scopeValue(ancestor, scope),
     );
     if ("missing" in scopeKey) {
-      this.environment.report(
-        scope.line,
-        this.missingScopeMessage(descriptor, value, scopeKey.missing, scope),
-      );
+      this.report(scope.line, this.missingScopeMessage(descriptor, value, scopeKey.missing, scope));
       return undefined;
     }
     const entry = registry.lookup(descriptor.namespace, value, scopeKey.key);
     if (entry === undefined) {
       const location = scopeKey.key === "" ? "" : ` on ${scopeKey.key}`;
-      this.environment.report(scope.line, `Unknown ${descriptor.namespace} "${value}"${location}`);
+      this.report(scope.line, `Unknown ${descriptor.namespace} "${value}"${location}`);
       return undefined;
     }
     return this.acceptEntry(descriptor, entry, scope);
@@ -352,7 +360,7 @@ export class ScenarioResolver {
   ): string | undefined {
     const allowedKinds = descriptor.constraint?.split("|");
     if (allowedKinds !== undefined && !allowedKinds.includes(entry.kind ?? "")) {
-      this.environment.report(
+      this.report(
         scope.line,
         `${descriptor.namespace} "${entry.name}" is a ${entry.kind}, expected ${allowedKinds.join(" or ")}`,
       );
@@ -468,4 +476,14 @@ function substituteSlots(text: string, slots: Readonly<Record<string, string>>):
     /<([A-Za-z][A-Za-z0-9_]*)>/g,
     (placeholder, name: string) => slots[name] ?? placeholder,
   );
+}
+
+function omittedSlots(composite: Composite, match: Match): string[] {
+  return composite.matcher.slots
+    .filter((slot) => slot.occurrence === "optional" && match.slots[slot.name] === undefined)
+    .map((slot) => slot.name);
+}
+
+function mentionsAny(text: string, names: readonly string[]): boolean {
+  return names.some((name) => text.includes(`<${name}>`));
 }

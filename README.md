@@ -173,6 +173,17 @@ Narrate: The line total updates as the quantity changes.
 - A field may carry a type and `required`: text, email, phone, url, money, integer, decimal, date, datetime, boolean, or `one of a, b, c`. A relation may be named: `Belongs to User as author`. Conformance tests hold the Ash resources to these.
 - `Story:` is the first line of every scenario: "As <who>, I need <what>, so that <why>." Demo mode speaks it over the opening card, and lint warns when it is missing.
 - `Narrate:` applies to the step above it and is used by demo mode only.
+- A composite step is declared in `## Steps` as `- <header pattern> means` with nested child steps. Header slots are substituted into the children. A slot in `[ ... ]` is optional: children that mention an omitted slot are dropped, so a composite fills every field it is given and the scenario adds further steps after it.
+
+  ```markdown
+  - <Actor> creates a deal <Name=Text> for <Company=Ref> [with amount <Amount=Value>] means
+    - <Actor> opens Pipeline board
+    - <Actor> clicks "New deal"
+    - <Actor> enters <Name> into "Name"
+    - <Actor> enters <Amount> into "Amount"
+  ```
+
+- A `Narrate:` line after a composite step is spoken after its last child. A `Narrate:` child inside a composite is spoken in place.
 
 ## Adding vocabulary
 

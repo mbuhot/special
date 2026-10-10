@@ -114,7 +114,7 @@ Every task runs from the repository root.
 
 | Task                                   | Command                                                                                                                        |
 | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| Install and set up everything          | `pnpm setup`                                                                                                                   |
+| Install and set up everything          | `pnpm bootstrap`                                                                                                               |
 | Load demo data                         | `pnpm seed:demo`                                                                                                               |
 | Run the app                            | `pnpm server`, then http://localhost:4000 as sales@example.com, manager@example.com, accounts@example.com or admin@example.com |
 | Bind and lint specs and designs        | `pnpm bind`                                                                                                                    |

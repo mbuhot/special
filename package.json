@@ -3,7 +3,7 @@
   "private": true,
   "packageManager": "pnpm@11.9.0",
   "scripts": {
-    "setup": "pnpm install && cd apps/invoicing && mix setup && MIX_ENV=e2e mix ash.setup && MIX_ENV=e2e mix assets.build",
+    "bootstrap": "pnpm install && cd apps/invoicing && mix setup && MIX_ENV=e2e mix ash.setup && MIX_ENV=e2e mix assets.build",
     "seed:demo": "cd apps/invoicing && mix run priv/repo/demo_seeds.exs",
     "server": "cd apps/invoicing && mix phx.server",
     "build": "pnpm -r build",

@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Company list</title>
+    <script src="./support.js"></script>
+  </head>
+  <body>
+    <x-dc>
+      <helmet>
+        <style>
+          body {
+            margin: 0;
+            font-family:
+              system-ui,
+              -apple-system,
+              "Segoe UI",
+              sans-serif;
+            color: #0f172a;
+          }
+          a {
+            color: #1d4ed8;
+          }
+          a:hover {
+            color: #1e40af;
+          }
+        </style>
+      </helmet>
+      <div
+        style="
+          width: 1280px;
+          height: 800px;
+          display: flex;
+          background: #ffffff;
+          color: #0f172a;
+          font-family:
+            system-ui,
+            -apple-system,
+            &quot;Segoe UI&quot;,
+            sans-serif;
+          overflow: hidden;
+        "
+      >
+        <nav
+          data-surface="Sidebar"
+          style="
+            width: 240px;
+            height: 800px;
+            box-sizing: border-box;
+            flex: none;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            padding: 20px 16px;
+            background: #ffffff;
+            border-right: 1px solid #e2e8f0;
+          "
+        >
+          <div style="padding: 4px 12px; font-size: 18px; font-weight: 700; color: #0f172a">
+            Ledger CRM
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 4px">
+            <a
+              href="#"
+              data-control="Dashboard"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 10px 12px;
+                border-radius: 8px;
+                color: #334155;
+                font-size: 14px;
+                font-weight: 500;
+                text-decoration: none;
+              "
+            >
+              <svg
+                aria-hidden="true"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                style="flex: none"
+              >
+                <rect x="3" y="3" width="7" height="9" rx="1" />
+                <rect x="14" y="3" width="7" height="5" rx="1" />
+                <rect x="14" y="12" width="7" height="9" rx="1" />
+                <rect x="3" y="16" width="7" height="5" rx="1" />
+              </svg>
+              <span>Dashboard</span>
+            </a>
+            <a
+              href="#"
+              data-control="Contacts"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 10px 12px;
+                border-radius: 8px;
+                color: #334155;
+                font-size: 14px;
+                font-weight: 500;
+                text-decoration: none;
+              "
+            >
+              <svg
+                aria-hidden="true"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                style="flex: none"
+              >
+                <circle cx="12" cy="8" r="4" />
+                <path d="M4 21c0-4 3.6-7 8-7s8 3 8 7" />
+              </svg>
+              <span>Contacts</span>
+            </a>
+            <a
+              href="#"
+              data-control="Companies"
+              aria-current="page"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 10px 12px;
+                border-radius: 8px;
+                background: #eff6ff;
+                color: #1d4ed8;
+                font-size: 14px;
+                font-weight: 600;
+                text-decoration: none;
+              "
+            >
+              <svg
+                aria-hidden="true"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                style="flex: none"
+              >
+                <path d="M4 21V5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v16" />
+                <path d="M14 10h5a1 1 0 0 1 1 1v10" />
+                <path d="M8 8h2M8 12h2M8 16h2M2 21h20" />
+              </svg>
+              <span>Companies</span>
+            </a>
+            <a
+              href="#"
+              data-control="Pipeline"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 10px 12px;
+                border-radius: 8px;
+                color: #334155;
+                font-size: 14px;
+                font-weight: 500;
+                text-decoration: none;
+              "
+            >
+              <svg
+                aria-hidden="true"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                style="flex: none"
+              >
+                <path d="M3 4h18l-7 8v7l-4 2v-9z" />
+              </svg>
+              <span>Pipeline</span>
+            </a>
+            <a
+              href="#"
+              data-control="Invoices"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 10px 12px;
+                border-radius: 8px;
+                color: #334155;
+                font-size: 14px;
+                font-weight: 500;
+                text-decoration: none;
+              "
+            >
+              <svg
+                aria-hidden="true"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                style="flex: none"
+              >
+                <path d="M6 3h9l4 4v14H6z" />
+                <path d="M14 3v5h5" />
+                <path d="M9 13h7M9 17h7" />
+              </svg>
+              <span>Invoices</span>
+            </a>
+          </div>
+          <div style="flex: 1"></div>
+          <div
+            data-control="Signed in as"
+            style="
+              display: flex;
+              flex-direction: column;
+              gap: 2px;
+              padding: 12px;
+              border-top: 1px solid #e2e8f0;
+            "
+          >
+            <div style="font-size: 12px; color: #64748b">Signed in as</div>
+            <div style="font-size: 14px; font-weight: 600; color: #0f172a">Sales rep</div>
+            <div style="font-size: 12px; color: #64748b">sales-rep@example.com</div>
+          </div>
+          <button
+            type="button"
+            data-control="Sign out"
+            style="
+              margin-top: -12px;
+              padding: 8px 12px;
+              border: 1px solid #cbd5e1;
+              border-radius: 8px;
+              background: #ffffff;
+              color: #334155;
+              font-size: 14px;
+              font-weight: 600;
+              font-family: inherit;
+              cursor: pointer;
+            "
+          >
+            Sign out
+          </button>
+          <button
+            type="button"
+            data-control="Sign out"
+            style="
+              margin-top: -12px;
+              padding: 8px 12px;
+              border: 1px solid #cbd5e1;
+              border-radius: 8px;
+              background: #ffffff;
+              color: #334155;
+              font-size: 14px;
+              font-weight: 600;
+              font-family: inherit;
+              cursor: pointer;
+            "
+          >
+            Sign out
+          </button>
+        </nav>
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column">
+          <header style="display: flex; align-items: center; justify-content: space-between; gap: 16px; height: 72px; box-sizing: border-box; flex: none; padding: 0 32px; border-bottom: 1px solid #e2e8f0;">
+            <h1 style="margin: 0; font-size: 24px; font-weight: 600; color: #0f172a">Companies</h1>
+            <a href="../company-editor/default.dc.html" data-control="New company" style="padding: 8px 16px; border: 0; border-radius: 8px; background: #1d4ed8; color: #ffffff; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; text-decoration: none;">New company</a>
+          </header>
+          <main data-surface="Company list" style="flex: 1; display: flex; flex-direction: column; gap: 20px; padding: 32px; background: #ffffff;">
+            <div style="display: flex; flex-direction: column; gap: 4px">
+              <label for="company-search" style="font-size: 12px; color: #64748b">Search</label>
+              <input id="company-search" type="text" data-control="Search" placeholder="Search companies" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; font-size: 14px; font-family: inherit; box-sizing: border-box;" />
+            </div>
+            <section style="display: flex; flex-direction: column; box-sizing: border-box; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px; background: #ffffff;">
+              <table data-control="Companies" style="width: 100%; border-collapse: collapse; font-size: 14px">
+                <thead>
+                  <tr>
+                    <th style="text-align: left; padding: 8px 12px 8px 0; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: #64748b;">Name</th>
+                    <th style="text-align: left; padding: 8px 12px 8px 0; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: #64748b;">Domain</th>
+                    <th style="text-align: left; padding: 8px 12px 8px 0; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: #64748b;">Industry</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td style="padding: 8px 12px 8px 0; border-top: 1px solid #e2e8f0; color: #334155;"><a href="../company-page/default.dc.html" style="text-decoration: none">Acme</a></td>
+                    <td style="padding: 8px 12px 8px 0; border-top: 1px solid #e2e8f0; color: #334155;">acme.example</td>
+                    <td style="padding: 8px 12px 8px 0; border-top: 1px solid #e2e8f0; color: #334155;">Software</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 8px 12px 8px 0; border-top: 1px solid #e2e8f0; color: #334155;"><a href="../company-page/default.dc.html" style="text-decoration: none">Globex</a></td>
+                    <td style="padding: 8px 12px 8px 0; border-top: 1px solid #e2e8f0; color: #334155;">globex.example</td>
+                    <td style="padding: 8px 12px 8px 0; border-top: 1px solid #e2e8f0; color: #334155;">Manufacturing</td>
+                  </tr>
+                </tbody>
+              </table>
+            </section>
+          </main>
+        </div>
+      </div>
+    </x-dc>
+    <script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
+      class Component extends DCLogic {
+      renderVals() {
+      return {};
+      }
+      }
+    </script>
+  </body>
+</html>

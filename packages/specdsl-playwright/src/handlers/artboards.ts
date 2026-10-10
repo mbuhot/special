@@ -281,8 +281,9 @@ function fieldMap(pairs: readonly EntityPair[]): Map<string, string> {
 function stateFor(env: Env, design: string, refName: string | undefined): string {
   const states = artboardStates(join(env.services.designsDirectory, design));
   if (states.length === 0) throw new Error(`no artboard in designs/${design}`);
-  const machineState = refName === undefined ? undefined : machineStateOf(env, refName);
-  const wanted = [machineState, DEFAULT_STATE].find(
+  const machineStates =
+    refName === undefined ? machineStatesOfAnyEntity(env) : [machineStateOf(env, refName)];
+  const wanted = [...machineStates, DEFAULT_STATE].find(
     (candidate) => candidate !== undefined && states.includes(candidate),
   );
   return wanted ?? (states[0] as string);
@@ -295,6 +296,10 @@ function machineStateOf(env: Env, refName: string): string | undefined {
   return Object.keys(machines)
     .map((field) => given.fields.get(field.toLowerCase()))
     .find((value) => value !== undefined);
+}
+
+function machineStatesOfAnyEntity(env: Env): string[] {
+  return [...givenOf(env).keys()].flatMap((refName) => machineStateOf(env, refName) ?? []);
 }
 
 async function load(env: Env, actorName: string, view: View): Promise<void> {

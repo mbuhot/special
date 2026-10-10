@@ -20,6 +20,10 @@ defmodule SpecDSL.MixProject do
   defp elixirc_paths(_env), do: ["lib"]
 
   defp deps do
-    [{:jason, "~> 1.4"}]
+    [
+      {:jason, "~> 1.4"},
+      {:decimal, "~> 2.0 or ~> 3.0"},
+      {:stream_data, "~> 1.0"}
+    ]
   end
 end

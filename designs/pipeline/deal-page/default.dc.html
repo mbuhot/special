@@ -769,6 +769,8 @@
                             <button
                               type="button"
                               data-control="Complete task"
+                              data-record="{{ row.name }}"
+                              data-next-state="done"
                               style="
                                 padding: 4px 12px;
                                 border: 1px solid #cbd5e1;
@@ -835,7 +837,7 @@
         </div>
       </div>
     </x-dc>
-    <script type="text/x-dc" data-dc-script data-props='{"stage":{"editor":"enum","options":["lead","qualified","proposal","won","lost"],"default":"lead"},"anyOverdue":{"editor":"boolean","default":true},"deal":{"editor":null,"default":{"name":"Big deal","amount":"12,000.00","closeDate":"31 Mar 2026","company":"Acme","contact":"Ada Lovelace"}},"tasks":{"editor":null,"default":[{"title":"Confirm decision maker","dueDate":"2 Feb 2026","isOpen":true,"isDone":false,"overdue":true},{"title":"Send proposal draft","dueDate":"14 Mar 2026","isOpen":true,"isDone":false,"overdue":false},{"title":"Qualify budget","dueDate":"20 Jan 2026","isOpen":false,"isDone":true,"overdue":false}]},"isLead":{"editor":null,"default":true},"isQualified":{"editor":null,"default":false},"isProposal":{"editor":null,"default":false},"isWon":{"editor":null,"default":false},"isLost":{"editor":null,"default":false},"$preview":{"width":1280,"height":800}}'>
+    <script type="text/x-dc" data-dc-script data-props='{"stage":{"editor":"enum","options":["lead","qualified","proposal","won","lost"],"default":"lead"},"anyOverdue":{"editor":"boolean","default":true},"deal":{"editor":null,"default":{"name":"Big deal","amount":"12,000.00","closeDate":"31 Mar 2026","company":"Acme","contact":"Ada Lovelace"}},"tasks":{"editor":null,"default":[{"name":"Confirm decision maker","title":"Confirm decision maker","dueDate":"2 Feb 2026","isOpen":true,"isDone":false,"overdue":true},{"name":"Send proposal draft","title":"Send proposal draft","dueDate":"14 Mar 2026","isOpen":true,"isDone":false,"overdue":false},{"name":"Qualify budget","title":"Qualify budget","dueDate":"20 Jan 2026","isOpen":false,"isDone":true,"overdue":false}]},"isLead":{"editor":null,"default":true},"isQualified":{"editor":null,"default":false},"isProposal":{"editor":null,"default":false},"isWon":{"editor":null,"default":false},"isLost":{"editor":null,"default":false},"$preview":{"width":1280,"height":800}}'>
       class Component extends DCLogic {
       renderVals() {
       const stage = this.props.stage;

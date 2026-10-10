@@ -31,6 +31,35 @@ export function buildProps(
   };
 }
 
+/** Entities whose plural (`deals`) is declared in `declared` and which have no singular record prop (`deal`) declared: a list surface. */
+export function listEntities(spec: SpecAst, declared: readonly string[]): string[] {
+  const entityNames = Object.keys(spec.model);
+  const isRecordSurface = entityNames.some((entity) => declared.includes(camelCase(entity)));
+  return isRecordSurface
+    ? []
+    : entityNames.filter((entity) => declared.includes(pluralCamelCase(entity)));
+}
+
+/** Props for a list surface: every Given record of each listed entity, in Given order, as rows built like has-many child rows. */
+export function buildListProps(
+  spec: SpecAst,
+  entities: Entities,
+  listed: readonly string[],
+  today: string,
+): Props {
+  return Object.fromEntries(
+    listed.map((entity) => [
+      pluralCamelCase(entity),
+      [...entities]
+        .filter(([, record]) => record.entity === entity)
+        .map(([refName, record]) => ({
+          ...displayFields(spec.model[entity], refName, record),
+          ...rowOf(spec, refName, record, today),
+        })),
+    ]),
+  );
+}
+
 /** Booleans and states of one record: machine fields, `is<State>` flags and `<predicate>` results. */
 function rowOf(spec: SpecAst, refName: string, record: GivenEntity, today: string): Props {
   const model = spec.model[record.entity];

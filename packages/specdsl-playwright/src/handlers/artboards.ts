@@ -11,9 +11,9 @@ import type {
   ScenarioEnv,
   StepHandlers,
 } from "../runtime.js";
-import { buildProps } from "../design/props.js";
+import { buildListProps, buildProps, listEntities } from "../design/props.js";
 import type { GivenEntity } from "../design/props.js";
-import { renderArtboard } from "../design/render.js";
+import { propDefaults, renderArtboard } from "../design/render.js";
 import type { Props } from "../design/render.js";
 import { durationMilliseconds } from "./web-app.js";
 import type { WebAppContextStates, WebAppServices, WebAppStepArgs } from "./web-app.js";
@@ -153,14 +153,16 @@ export const designSteps: StepHandlers<WebAppStepArgs, DesignServices, WebAppCon
   },
   async clicks(args, env) {
     const page = pageOf(env, args.Actor);
-    const control = await existing(env, args.Actor, args.Control);
+    const located = await existing(env, args.Actor, args.Control);
     await page.waitForTimeout(HIGHLIGHT_HOLD_MILLISECONDS);
+    const control = await clickTarget(env, page, args.Control, located);
     const href = await control.getAttribute("href");
     const nextState = await control.getAttribute("data-next-state");
+    const record = (await control.getAttribute("data-record")) || undefined;
     if (href?.endsWith(ARTBOARD_SUFFIX) === true) {
       await followLink(env, args.Actor, page, href);
     } else if (nextState !== null) {
-      await advanceState(env, args.Actor, viewOf(page), nextState);
+      await advanceState(env, args.Actor, viewOf(page), nextState, record);
     }
   },
   async selects(args, env) {
@@ -279,6 +281,33 @@ async function existing(env: Env, actorName: string, control: ResolvedControl): 
   return located;
 }
 
+/** Among several matches of a control, the one on the card of the only record not yet in a final state, else the first. */
+async function clickTarget(
+  env: Env,
+  page: Page,
+  control: ResolvedControl,
+  first: Locator,
+): Promise<Locator> {
+  const matches = page.locator(selectorOf(control));
+  if ((await matches.count()) < 2) return first;
+  const open = openRecordRefs(env);
+  if (open.length !== 1) return first;
+  const onCard = page.locator(`${selectorOf(control)}[data-record="${open[0]}"]`).first();
+  return (await onCard.count()) > 0 ? onCard : first;
+}
+
+function openRecordRefs(env: Env): string[] {
+  return [...givenOf(env).entries()]
+    .filter(([, record]) =>
+      Object.entries(env.spec.model[record.entity]?.machines ?? {}).some(([field, machine]) =>
+        machine.transitions.some(
+          (transition) => transition.from === record.fields.get(field.toLowerCase()),
+        ),
+      ),
+    )
+    .map(([refName]) => refName);
+}
+
 async function tagOf(control: Locator): Promise<string> {
   return control.evaluate((element) => element.tagName.toLowerCase());
 }
@@ -322,8 +351,16 @@ function stateFor(env: Env, design: string, refName: string | undefined): string
   return wanted ?? (states[0] as string);
 }
 
+function listedEntities(env: Env, design: string): string[] {
+  const file = join(env.services.designsDirectory, design, `${DEFAULT_STATE}${ARTBOARD_SUFFIX}`);
+  return existsSync(file)
+    ? listEntities(env.spec, Object.keys(propDefaults(readFileSync(file, "utf8"))))
+    : [];
+}
+
 function recordRefFor(env: Env, design: string, refName: string | undefined): string | undefined {
   if (refName !== undefined) return refName;
+  if (listedEntities(env, design).length > 0) return undefined;
   const states = artboardStates(join(env.services.designsDirectory, design));
   const withMachine = [...givenOf(env).keys()].filter(
     (candidate) => machineStateOf(env, candidate) !== undefined,
@@ -350,15 +387,16 @@ async function load(env: Env, actorName: string, view: View): Promise<void> {
   }
   const page = pageOf(env, actorName);
   routeRenderedArtboards(env, page);
-  propsByPage.set(page, propsFor(env, view.ref));
+  propsByPage.set(page, propsFor(env, view));
   await page.goto(`${env.services.baseURL}/${view.design}/${view.state}${ARTBOARD_SUFFIX}`);
   viewByPage.set(page, view);
 }
 
-function propsFor(env: Env, refName: string | undefined): Props {
-  return refName === undefined
-    ? {}
-    : buildProps(env.spec, givenOf(env), refName, storeOf(env).now.toISOString().slice(0, 10));
+function propsFor(env: Env, view: View): Props {
+  const today = storeOf(env).now.toISOString().slice(0, 10);
+  return view.ref === undefined
+    ? buildListProps(env.spec, givenOf(env), listedEntities(env, view.design), today)
+    : buildProps(env.spec, givenOf(env), view.ref, today);
 }
 
 function routeRenderedArtboards(env: Env, page: Page): void {
@@ -384,8 +422,13 @@ async function advanceState(
   actorName: string,
   view: View,
   nextState: string,
+  record?: string,
 ): Promise<void> {
-  recordStateChange(env, view.ref, nextState);
+  recordStateChange(env, record ?? view.ref, nextState);
+  if (record !== undefined) {
+    await load(env, actorName, view);
+    return;
+  }
   const states = artboardStates(join(env.services.designsDirectory, view.design));
   const state = states.includes(nextState) ? nextState : view.state;
   await load(env, actorName, { ...view, state });

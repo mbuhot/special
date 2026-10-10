@@ -348,7 +348,7 @@ Each surface line may name its artboards: `- Deal page: design pipeline/deal-pag
 Step semantics in design mode:
 
 - `opens` keeps a record store filled from `Given` lines. The surface record is the Ref, or the first Given entity with a machine state. The artboard named by that state is rendered, else `default`, else the first file, with props built from the record (see "Artboard props").
-- `clicks` highlights the `data-control` element, then follows an `<a href="*.dc.html">`, or applies `data-next-state` to the record's machine field and re-renders.
+- `clicks` highlights the `data-control` element, then follows an `<a href="*.dc.html">`, or applies `data-next-state` to the machine field of the record named by `data-record` (else the surface record) and re-renders. With `data-record` the same artboard is re-rendered; the control chosen among several matches is the one on the card of the only record not in a final state, else the first.
 - `time advances` moves the scenario clock, which starts at the Context clock.
 - `sees`, `no longer sees`, `does not see` and `is on` compare against the artboard; mismatches go to `report.json` and do not fail the run.
 - A mismatch outlines the control in red and captions "Design differs: expected ..., found ..." for 2 seconds in the video.
@@ -356,6 +356,8 @@ Step semantics in design mode:
 - `has`, `may`, `may not`, `is` and `is not` do nothing; `Story`, `Narrate` and `Caption` behave as in demo mode.
 
 ### Artboard props
+
+List surface: opened without a Ref, with a declared plural prop (`deals`) and no `<entity>` prop, the artboard gets every Given record of that entity in Given order as rows, built like has-many child rows.
 
 An artboard declares props in its `data-props` (each prop's `default` is sample data) and fills `{{ path }}` holes, `<sc-if>` and `<sc-for>`. The local renderer (`packages/specdsl-playwright/src/design/render.ts`) merges design-mode props over those defaults, expands the template and serves static HTML; it does not run the artboard script. Design mode builds these props from the record:
 

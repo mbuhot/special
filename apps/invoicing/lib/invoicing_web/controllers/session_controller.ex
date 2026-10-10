@@ -1,5 +1,5 @@
 defmodule InvoicingWeb.SessionController do
-  @moduledoc "Starts a signed-in session for an existing user."
+  @moduledoc "Starts a signed-in session for an existing user and ends it on sign out."
 
   use InvoicingWeb, :controller
 
@@ -18,5 +18,11 @@ defmodule InvoicingWeb.SessionController do
         |> put_flash(:error, "No such user")
         |> redirect(to: ~p"/login")
     end
+  end
+
+  def delete(conn, _params) do
+    conn
+    |> configure_session(drop: true)
+    |> redirect(to: ~p"/login")
   end
 end

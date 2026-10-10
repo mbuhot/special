@@ -82,6 +82,16 @@ defmodule InvoicingWeb.Layouts do
         <div class="truncate text-xs text-base-content/60">{@current_user.email}</div>
       </div>
 
+      <.link
+        id="sign-out"
+        href={~p"/session"}
+        method="delete"
+        role="button"
+        class="btn btn-ghost btn-sm justify-start"
+      >
+        <.icon name="hero-arrow-right-start-on-rectangle" class="size-4 flex-none" /> Sign out
+      </.link>
+
       <.theme_toggle />
     </nav>
     """

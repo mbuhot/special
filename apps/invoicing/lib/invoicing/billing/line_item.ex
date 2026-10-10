@@ -12,16 +12,25 @@ defmodule Invoicing.Billing.LineItem do
   end
 
   actions do
-    defaults [:read, :destroy]
+    defaults [:read]
 
     create :create do
       primary? true
       accept [:description, :quantity, :unit_price, :invoice_id]
+      validate Invoicing.Billing.Invoice.DraftOnly
     end
 
     update :update do
       primary? true
+      require_atomic? false
       accept [:description, :quantity, :unit_price]
+      validate Invoicing.Billing.Invoice.DraftOnly
+    end
+
+    destroy :destroy do
+      primary? true
+      require_atomic? false
+      validate Invoicing.Billing.Invoice.DraftOnly
     end
   end
 
@@ -30,12 +39,8 @@ defmodule Invoicing.Billing.LineItem do
       authorize_if actor_present()
     end
 
-    policy action_type([:create, :update]) do
+    policy action_type([:create, :update, :destroy]) do
       authorize_if actor_attribute_equals(:role, :accountant)
-      authorize_if actor_attribute_equals(:role, :admin)
-    end
-
-    policy action_type(:destroy) do
       authorize_if actor_attribute_equals(:role, :admin)
     end
   end
@@ -72,6 +77,6 @@ defmodule Invoicing.Billing.LineItem do
   end
 
   calculations do
-    calculate :line_total, :decimal, expr(quantity * unit_price), public?: true
+    calculate :total, :decimal, expr(quantity * unit_price), public?: true
   end
 end

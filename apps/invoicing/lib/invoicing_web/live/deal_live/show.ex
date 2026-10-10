@@ -205,15 +205,16 @@ defmodule InvoicingWeb.DealLive.Show do
                 </tr>
               </thead>
               <tbody>
+                <.empty_row :if={@tasks == []} colspan={4}>No tasks yet</.empty_row>
                 <tr :for={task <- @tasks} id={"task-#{task.id}"} class="border-t border-base-300">
                   <td class="py-3 pr-3">{task.title}</td>
                   <td class="py-3 pr-3">
                     <time datetime={Date.to_iso8601(task.due_date)}>
-                      {Date.to_iso8601(task.due_date)}
+                      {Format.date(task.due_date)}
                     </time>
                   </td>
                   <td class="py-3 pr-3">
-                    <.badge value={task.status}>{task.status}</.badge>
+                    <.badge value={task.status} />
                   </td>
                   <td class="py-3 text-right">
                     <button

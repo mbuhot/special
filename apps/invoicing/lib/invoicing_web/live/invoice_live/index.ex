@@ -5,7 +5,6 @@ defmodule InvoicingWeb.InvoiceLive.Index do
 
   alias Invoicing.Billing
   alias Invoicing.CRM
-  alias InvoicingWeb.AmountFormat
 
   @impl true
   def mount(_params, _session, socket) do
@@ -15,7 +14,7 @@ defmodule InvoicingWeb.InvoiceLive.Index do
       Billing.list_invoices!(
         actor: current_user,
         load: [:total, :company],
-        query: [sort: [number: :asc]]
+        query: [sort: [sequence: :asc, number: :asc]]
       )
 
     socket =
@@ -36,7 +35,7 @@ defmodule InvoicingWeb.InvoiceLive.Index do
       [company | _] ->
         invoice =
           Billing.create_invoice!(
-            %{number: Billing.next_invoice_number(), company_id: company.id},
+            %{company_id: company.id},
             actor: socket.assigns.current_user
           )
 
@@ -79,7 +78,7 @@ defmodule InvoicingWeb.InvoiceLive.Index do
             <td><.link navigate={~p"/invoices/#{invoice.id}/edit"}>{invoice.number}</.link></td>
             <td>{invoice.company.name}</td>
             <td>{invoice.status}</td>
-            <td>{AmountFormat.format(invoice.total)}</td>
+            <td>{Format.money(invoice.total)}</td>
           </tr>
         </tbody>
       </table>

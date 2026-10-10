@@ -66,7 +66,7 @@ defmodule InvoicingWeb.ContactLive.Show do
   end
 
   defp kind_options do
-    Enum.map(CRM.activity_kinds(), &{Atom.to_string(&1), &1})
+    Enum.map(CRM.activity_kinds(), &{Format.label(&1), &1})
   end
 
   @impl true
@@ -121,6 +121,7 @@ defmodule InvoicingWeb.ContactLive.Show do
                 </tr>
               </thead>
               <tbody>
+                <.empty_row :if={@deals == []} colspan={4}>No deals yet</.empty_row>
                 <tr :for={deal <- @deals} id={"deal-#{deal.id}"} class="border-t border-base-300">
                   <td class="py-3 pr-3">
                     <.link navigate={~p"/deals/#{deal.id}"} class="font-semibold text-primary">

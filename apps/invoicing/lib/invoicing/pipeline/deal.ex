@@ -7,7 +7,7 @@ defmodule Invoicing.Pipeline.Deal do
     authorizers: [Ash.Policy.Authorizer],
     extensions: [AshStateMachine]
 
-  alias Invoicing.Pipeline.Deal.AssignOwner
+  alias Invoicing.Pipeline.Deal.{AssignOwner, ContactInCompany}
 
   postgres do
     table "deals"
@@ -34,11 +34,14 @@ defmodule Invoicing.Pipeline.Deal do
       primary? true
       accept [:name, :amount, :close_date, :company_id, :contact_id, :owner_id]
       change AssignOwner
+      validate ContactInCompany
     end
 
     update :update do
       primary? true
+      require_atomic? false
       accept [:name, :amount, :close_date, :company_id, :contact_id]
+      validate ContactInCompany
     end
 
     update :reassign do

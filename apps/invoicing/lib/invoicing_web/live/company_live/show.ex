@@ -77,6 +77,9 @@ defmodule InvoicingWeb.CompanyLive.Show do
                 </tr>
               </thead>
               <tbody>
+                <.empty_row :if={@company.contacts == []} colspan={3}>
+                  No contacts yet
+                </.empty_row>
                 <tr
                   :for={contact <- @company.contacts}
                   id={"contact-#{contact.id}"}
@@ -105,6 +108,7 @@ defmodule InvoicingWeb.CompanyLive.Show do
                 </tr>
               </thead>
               <tbody>
+                <.empty_row :if={@deals == []} colspan={4}>No deals yet</.empty_row>
                 <tr :for={deal <- @deals} id={"deal-#{deal.id}"} class="border-t border-base-300">
                   <td class="py-3 pr-3">
                     <.link navigate={~p"/deals/#{deal.id}"} class="font-semibold text-primary">
@@ -129,6 +133,7 @@ defmodule InvoicingWeb.CompanyLive.Show do
                 </tr>
               </thead>
               <tbody>
+                <.empty_row :if={@invoices == []} colspan={3}>No invoices yet</.empty_row>
                 <tr
                   :for={invoice <- @invoices}
                   id={"invoice-#{invoice.id}"}

@@ -26,6 +26,7 @@ defmodule InvoicingWeb.Router do
     get "/", PageController, :home
     live "/login", LoginLive
     post "/session", SessionController, :create
+    delete "/session", SessionController, :delete
   end
 
   scope "/", InvoicingWeb do

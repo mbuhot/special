@@ -20,10 +20,6 @@ defmodule InvoicingWeb.DashboardLive do
     {:ok, socket}
   end
 
-  defp kind_label(kind), do: kind |> Atom.to_string() |> String.capitalize()
-
-  defp activity_date(occurred_at), do: Calendar.strftime(occurred_at, "%-d %b %Y")
-
   @impl true
   def render(assigns) do
     ~H"""
@@ -84,7 +80,7 @@ defmodule InvoicingWeb.DashboardLive do
           class="grid grid-cols-[72px_1fr_160px_96px] items-center gap-4 border-t border-base-300 py-3 text-sm"
         >
           <span class="justify-self-start rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
-            {kind_label(activity.kind)}
+            {Format.label(activity.kind)}
           </span>
           <span>{activity.body}</span>
           <.link
@@ -93,7 +89,7 @@ defmodule InvoicingWeb.DashboardLive do
           >
             {activity.contact.full_name}
           </.link>
-          <span class="text-base-content/60">{activity_date(activity.occurred_at)}</span>
+          <span class="text-base-content/60">{Format.date(activity.occurred_at)}</span>
         </div>
       </section>
     </Layouts.app>

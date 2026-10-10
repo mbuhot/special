@@ -1,8 +1,19 @@
 defmodule InvoicingWeb.PageControllerTest do
   use InvoicingWeb.ConnCase, async: true
 
-  test "GET /", %{conn: conn} do
+  alias Invoicing.Accounts
+
+  test "the root path sends a visitor who is not signed in to the login page", %{conn: conn} do
     conn = get(conn, ~p"/")
-    assert html_response(conn, 200) =~ "Peace of mind from prototype to production"
+
+    assert redirected_to(conn) == "/login"
+  end
+
+  test "the root path sends a signed-in user to the dashboard", %{conn: conn} do
+    user = Accounts.create_user!(%{email: "sales@example.com", role: :sales}, authorize?: false)
+
+    conn = conn |> Accounts.log_in_conn(user) |> get(~p"/")
+
+    assert redirected_to(conn) == "/dashboard"
   end
 end

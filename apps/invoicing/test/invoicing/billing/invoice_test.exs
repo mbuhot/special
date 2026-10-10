@@ -133,3 +133,67 @@ defmodule Invoicing.Billing.InvoiceTest do
     assert {:error, %Ash.Error.Invalid{}} = Billing.void_invoice(sent_invoice, actor: admin)
   end
 end
+
+defmodule Invoicing.Billing.SentInvoiceEditingTest do
+  use Invoicing.DataCase, async: true
+
+  alias Invoicing.{Accounts, Billing, CRM}
+
+  setup do
+    accountant =
+      Accounts.create_user!(%{email: "accounts@example.com", role: :accountant},
+        authorize?: false
+      )
+
+    company = CRM.create_company!(%{name: "Acme"}, actor: accountant)
+    invoice = Billing.create_invoice!(%{company_id: company.id}, actor: accountant)
+
+    line_item =
+      Billing.create_line_item!(
+        %{invoice_id: invoice.id, description: "Consulting", quantity: 1, unit_price: "100"},
+        actor: accountant
+      )
+
+    {:ok, sent_invoice} = Billing.send_invoice(invoice, actor: accountant)
+    %{invoice: sent_invoice, line_item: line_item, accountant: accountant}
+  end
+
+  test "a sent invoice rejects detail changes", %{invoice: invoice, accountant: accountant} do
+    assert {:error, error} = Billing.update_invoice(invoice, %{notes: "Late"}, actor: accountant)
+    assert Billing.error_messages(error) == ["Only draft invoices can be edited"]
+  end
+
+  test "a sent invoice rejects a new line", %{invoice: invoice, accountant: accountant} do
+    assert {:error, error} =
+             Billing.create_line_item(%{invoice_id: invoice.id}, actor: accountant)
+
+    assert Billing.error_messages(error) == ["Only draft invoices can be edited"]
+  end
+
+  test "a sent invoice rejects line changes", %{line_item: line_item, accountant: accountant} do
+    assert {:error, error} =
+             Billing.update_line_item(line_item, %{quantity: 5}, actor: accountant)
+
+    assert Billing.error_messages(error) == ["Only draft invoices can be edited"]
+  end
+
+  test "a sent invoice rejects line removal", %{line_item: line_item, accountant: accountant} do
+    assert {:error, error} = Billing.remove_line_item(line_item, actor: accountant)
+    assert Billing.error_messages(error) == ["Only draft invoices can be edited"]
+  end
+
+  test "a draft invoice's line can be removed", %{accountant: accountant} do
+    company = CRM.create_company!(%{name: "Globex"}, actor: accountant)
+    invoice = Billing.create_invoice!(%{company_id: company.id}, actor: accountant)
+
+    line_item =
+      Billing.create_line_item!(%{invoice_id: invoice.id, description: "Support"},
+        actor: accountant
+      )
+
+    assert :ok = Billing.remove_line_item(line_item, actor: accountant)
+
+    assert Billing.get_invoice!(invoice.id, load: [:line_items], actor: accountant).line_items ==
+             []
+  end
+end

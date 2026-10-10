@@ -48,10 +48,6 @@ defmodule InvoicingWeb.DealLive.Board do
     |> Enum.filter(&Pipeline.can_transition_deal?(socket.assigns.current_user, deal, &1))
   end
 
-  defp transition_label(transition), do: transition |> Atom.to_string() |> String.capitalize()
-
-  defp stage_label(stage), do: stage |> Atom.to_string() |> String.capitalize()
-
   @impl true
   def render(assigns) do
     ~H"""
@@ -77,14 +73,14 @@ defmodule InvoicingWeb.DealLive.Board do
 
       <div class="grid grid-cols-1 gap-4 md:grid-cols-5">
         <section :for={stage <- @stages} id={"column-#{stage}"} class="space-y-2">
-          <h2 class="font-semibold">{stage_label(stage)}</h2>
+          <h2 class="font-semibold">{Format.label(stage)}</h2>
           <article
             :for={deal <- Map.get(@deals_by_stage, stage, [])}
             id={"deal-#{deal.id}"}
             class="card bg-base-200 p-3 space-y-1"
           >
             <.link navigate={~p"/deals/#{deal.id}"} class="font-medium">{deal.name}</.link>
-            <p :if={deal.amount}>{deal.amount}</p>
+            <p :if={deal.amount}>{Format.money(deal.amount)}</p>
             <p class="text-sm">{deal.company.name}</p>
             <div class="flex flex-wrap gap-1">
               <button
@@ -96,7 +92,7 @@ defmodule InvoicingWeb.DealLive.Board do
                 phx-value-id={deal.id}
                 phx-value-transition={transition}
               >
-                {transition_label(transition)}
+                {Format.label(transition)}
               </button>
             </div>
           </article>

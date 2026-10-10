@@ -23,7 +23,7 @@ defmodule Invoicing.SpecSupport.Factory do
     "User" => User
   }
 
-  @calculations %{Contact => [:full_name], Invoice => [:total], LineItem => [:line_total]}
+  @calculations %{Contact => [:full_name], Invoice => [:total], LineItem => [:total]}
 
   @relationship_attributes %{
     "company" => "company_id",
@@ -118,7 +118,6 @@ defmodule Invoicing.SpecSupport.Factory do
 
     invoice_attrs
     |> Map.put_new_lazy("company_id", fn -> create("Company", %{}).id end)
-    |> Map.put_new_lazy("number", &Billing.next_invoice_number/0)
     |> Billing.create_invoice!(authorize?: false)
     |> put_status(status)
   end
@@ -135,9 +134,12 @@ defmodule Invoicing.SpecSupport.Factory do
   end
 
   defp build(attrs, LineItem) do
-    attrs
-    |> Map.put_new_lazy("invoice_id", fn -> create("Invoice", %{}).id end)
-    |> Billing.create_line_item!(authorize?: false)
+    seed_attributes =
+      attrs
+      |> Map.put_new_lazy("invoice_id", fn -> create("Invoice", %{}).id end)
+      |> cast_attributes(LineItem)
+
+    Ash.Seed.seed!(LineItem, seed_attributes)
   end
 
   defp build(attrs, Task) do
@@ -158,6 +160,14 @@ defmodule Invoicing.SpecSupport.Factory do
       "user-#{System.unique_integer([:positive])}@example.com"
     end)
     |> Accounts.create_user!(authorize?: false)
+  end
+
+  defp cast_attributes(attrs, resource) do
+    Map.new(attrs, fn {name, value} ->
+      attribute = Ash.Resource.Info.attribute(resource, String.to_existing_atom(name))
+      {:ok, cast_value} = Ash.Type.cast_input(attribute.type, value, attribute.constraints)
+      {attribute.name, cast_value}
+    end)
   end
 
   defp put_status(invoice, nil), do: invoice

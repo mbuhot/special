@@ -10,6 +10,7 @@ defmodule Invoicing.Billing.Invoice do
   postgres do
     table "invoices"
     repo Invoicing.Repo
+    migration_defaults issue_date: "fragment(\"CURRENT_DATE\")"
   end
 
   state_machine do
@@ -29,12 +30,16 @@ defmodule Invoicing.Billing.Invoice do
 
     create :create do
       primary? true
-      accept [:number, :company_id]
+      accept [:number, :company_id, :issue_date, :due_date, :notes]
+      allow_nil_input [:number]
+      change Invoicing.Billing.Invoice.AssignNumber
     end
 
     update :update do
       primary? true
-      accept [:number, :company_id]
+      require_atomic? false
+      accept [:number, :company_id, :issue_date, :due_date, :notes]
+      validate Invoicing.Billing.Invoice.DraftOnly
     end
 
     update :send do
@@ -73,6 +78,15 @@ defmodule Invoicing.Billing.Invoice do
   attributes do
     uuid_primary_key :id
     attribute :number, :string, allow_nil?: false, public?: true
+
+    attribute :issue_date, :date,
+      allow_nil?: false,
+      public?: true,
+      default: &__MODULE__.today/0
+
+    attribute :due_date, :date, public?: true
+    attribute :notes, :string, public?: true
+
     timestamps()
   end
 
@@ -88,12 +102,22 @@ defmodule Invoicing.Billing.Invoice do
   end
 
   calculations do
-    calculate :total, :decimal, expr(line_items_total), public?: true
+    calculate :sequence,
+              :integer,
+              expr(
+                fragment(
+                  "COALESCE(NULLIF(regexp_replace(?, '\\D', '', 'g'), '')::integer, 0)",
+                  number
+                )
+              )
   end
 
   aggregates do
-    sum :line_items_total, :line_items, :line_total, default: Decimal.new(0)
+    sum :total, :line_items, :total, default: Decimal.new(0), public?: true
   end
+
+  @doc "Returns today's date on the application clock."
+  def today, do: DateTime.to_date(Invoicing.Clock.now())
 
   identities do
     identity :unique_number, [:number]

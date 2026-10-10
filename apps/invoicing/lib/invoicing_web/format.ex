@@ -1,12 +1,15 @@
 defmodule InvoicingWeb.Format do
   @moduledoc "Display formats for amounts, dates, enum labels and user roles."
 
-  @doc "Formats a Decimal with thousands separators and two decimals."
+  @currency_symbol "$"
+
+  @doc "Formats a Decimal with the currency symbol, thousands separators and two decimals."
   def money(nil), do: ""
 
   def money(%Decimal{} = amount) do
     [whole, fraction] = amount |> Decimal.round(2) |> Decimal.to_string(:normal) |> split_amount()
-    "#{group_thousands(whole)}.#{fraction}"
+    {sign, digits} = sign_and_digits(whole)
+    "#{sign}#{@currency_symbol}#{group_thousands(digits)}.#{fraction}"
   end
 
   @doc "Formats a date as day, short month and year."
@@ -26,14 +29,15 @@ defmodule InvoicingWeb.Format do
   def role_label(:accountant), do: "Accounts"
   def role_label(:admin), do: "Admin"
 
+  defp sign_and_digits("-" <> digits), do: {"-", digits}
+  defp sign_and_digits(digits), do: {"", digits}
+
   defp split_amount(text) do
     case String.split(text, ".") do
       [whole] -> [whole, "00"]
       [whole, fraction] -> [whole, String.pad_trailing(fraction, 2, "0")]
     end
   end
-
-  defp group_thousands("-" <> digits), do: "-" <> group_thousands(digits)
 
   defp group_thousands(digits) do
     digits

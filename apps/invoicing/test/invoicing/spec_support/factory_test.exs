@@ -62,7 +62,7 @@ defmodule Invoicing.SpecSupport.FactoryTest do
 
     reloaded = Factory.reload("LineItem", line_item.id)
 
-    assert Decimal.equal?(reloaded["line_total"], Decimal.new(300)) == true
+    assert Decimal.equal?(reloaded["total"], Decimal.new(300)) == true
     assert Decimal.equal?(reloaded["unit price"], Decimal.new(100)) == true
   end
 

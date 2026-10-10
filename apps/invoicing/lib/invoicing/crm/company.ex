@@ -59,7 +59,7 @@ defmodule Invoicing.CRM.Company do
 
   relationships do
     has_many :invoices, Invoicing.Billing.Invoice do
-      sort number: :asc
+      sort sequence: :asc
     end
 
     has_many :contacts, Invoicing.CRM.Contact

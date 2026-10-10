@@ -68,12 +68,15 @@ defmodule Invoicing.SpecHandlers do
   end
 
   step "selects", %{actor: actor, value: value, control: control}, ctx do
-    submit_field_change(ctx, actor, control, resolve_value(ctx, value))
+    option_value = option_value_for_label(ctx, actor, control, resolve_value(ctx, value))
+    submit_field_change(ctx, actor, control, option_value)
   end
 
   step "clicks", %{actor: actor, control: control}, ctx do
-    result = ctx |> Ctx.view(actor) |> element(control.locators.lv) |> render_click()
-    follow_navigation(ctx, actor, result)
+    view = Ctx.view(ctx, actor)
+    method = link_method(view, control)
+    result = view |> element(control.locators.lv) |> render_click()
+    follow_navigation(ctx, actor, result, method)
   end
 
   step "sees", %{actor: actor, text: text, control: control}, ctx do
@@ -232,13 +235,47 @@ defmodule Invoicing.SpecHandlers do
     [{input_name, value}] |> URI.encode_query() |> Plug.Conn.Query.decode()
   end
 
-  defp follow_navigation(ctx, actor, {:error, {:live_redirect, %{to: path}}}) do
+  defp follow_navigation(ctx, actor, {:error, {:live_redirect, %{to: path}}}, _method) do
     session = actor_session(ctx, actor)
     {:ok, view, _html} = live(session.conn, path)
     store_navigation(ctx, actor, view, path)
   end
 
-  defp follow_navigation(ctx, _actor, _rendered), do: ctx
+  defp follow_navigation(ctx, actor, {:error, {:redirect, %{to: path}}}, method) do
+    session = actor_session(ctx, actor)
+
+    response =
+      Phoenix.ConnTest.dispatch(Phoenix.ConnTest.recycle(session.conn), @endpoint, method, path)
+
+    landing_path = Phoenix.ConnTest.redirected_to(response)
+    {:ok, view, _html} = live(Phoenix.ConnTest.recycle(response), landing_path)
+    store_navigation(ctx, actor, view, landing_path)
+  end
+
+  defp follow_navigation(ctx, _actor, _rendered, _method), do: ctx
+
+  defp link_method(view, control) do
+    view
+    |> element(control.locators.lv)
+    |> render()
+    |> LazyHTML.from_fragment()
+    |> LazyHTML.attribute("data-method")
+    |> List.first("get")
+    |> String.to_existing_atom()
+  end
+
+  defp option_value_for_label(ctx, actor, control, label) do
+    ctx
+    |> Ctx.view(actor)
+    |> element(control.locators.form)
+    |> render()
+    |> LazyHTML.from_fragment()
+    |> LazyHTML.query(~s(select[name="#{control.locators.lv}"] option))
+    |> Enum.find_value(label, fn option ->
+      option_text = option |> LazyHTML.text() |> String.trim()
+      if option_text == label, do: option |> LazyHTML.attribute("value") |> List.first()
+    end)
+  end
 
   defp element_text(view, control) do
     view |> element(control.locators.lv) |> render()

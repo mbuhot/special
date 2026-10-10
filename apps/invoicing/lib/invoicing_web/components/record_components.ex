@@ -51,6 +51,18 @@ defmodule InvoicingWeb.RecordComponents do
     """
   end
 
+  @doc "A table row announcing that a table has no records."
+  attr :colspan, :integer, required: true
+  slot :inner_block, required: true
+
+  def empty_row(assigns) do
+    ~H"""
+    <tr class="border-t border-base-300">
+      <td colspan={@colspan} class="py-3 text-base-content/60">{render_slot(@inner_block)}</td>
+    </tr>
+    """
+  end
+
   defp tint(value) when value in [:lead, :draft, :open], do: "bg-slate-100 text-slate-600"
   defp tint(value) when value in [:qualified, :sent], do: "bg-blue-50 text-blue-700"
   defp tint(:proposal), do: "bg-amber-100 text-amber-700"

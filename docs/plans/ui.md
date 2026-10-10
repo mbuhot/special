@@ -14,9 +14,9 @@ Goal: a small business owner would consider running the app in place of HubSpot.
 
 ## Iterations
 
-| #   | Change                                                                                                         | Why                                                                                                                                       | Status      |
-| --- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| 1   | Application shell: sidebar on every page, identity block, dashboard as linked cards; DSL gains shared surfaces | Every screen reviewed is an unstyled scaffold under a top bar; the shell is what a buyer sees first and every later screen sits inside it | in progress |
+| #   | Change                                                                                                         | Why                                                                                                                                       | Status       |
+| --- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
+| 1   | Application shell: sidebar on every page, identity block, dashboard as linked cards; DSL gains shared surfaces | Every screen reviewed is an unstyled scaffold under a top bar; the shell is what a buyer sees first and every later screen sits inside it | done a6afddd |
 
 ## Spec-first notes
 
@@ -45,7 +45,7 @@ Interleaved with UI iterations. The specs must capture the critical behaviour an
 - Hindered: `clicks` accepted only buttons, so sidebar links needed kind alternatives in the pattern language (`<Control:button|link>`). A vocabulary gap surfaces as a bind error, which is cheap to find and costs a core change to fix.
 - Design: artboards carry `data-control` names matching the spec; a lint that checks them is not written yet (D6).
 
-### Invariants and architecture (queued)
+### Invariants and architecture
 
 | #   | Idea                                           | Shape                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | --- | ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -69,9 +69,9 @@ Interleaved with UI iterations. The specs must capture the critical behaviour an
 
 docs/reviews/2026-10-10-iteration-1.md: FAIL. Blocking: invoice editor, contact/deal/company record pages, login; invoice line editing, new-invoice company, racy numbering, email-only auth.
 
-| 2 | Record pages for contact, company and deal: properties panel with every model field, associations as links, stage and status controls, timeline with author and formatted dates; DSL gains typed fields, enums and named relations (D4) | Reviewer's top recommendation; closes UX 2, 3, 4, 6 and spec 2, 3, 7 | in progress |
+| 2 | Record pages for contact, company and deal: properties panel with every model field, associations as links, stage and status controls, timeline with author and formatted dates; DSL gains typed fields, enums and named relations (D4) | Reviewer's top recommendation; closes UX 2, 3, 4, 6 and spec 2, 3, 7 | done 4614bfe |
 | 3 | Invoice editor: customer selection, dates, per-line totals, read-only outside draft, persisted-or-error edits, safe numbering; DSL gains invariants (D9) | Blocking UX 1 and code 1, 2, 3 | done 9f33c54 |
-| 4 | Authentication: password login, logout, no stock landing page | Blocking UX 5 and code 4 | queued |
+| 4 | Authentication: password login (logout and the landing-page redirect landed in 9f33c54) | Blocking UX 5 and code 4 | next |
 
 ### Iteration 2, record pages
 
@@ -84,7 +84,7 @@ docs/reviews/2026-10-10-iteration-1.md: FAIL. Blocking: invoice editor, contact/
 
 docs/reviews/2026-10-10-iteration-2.md: FAIL. Record pages closed UX 3, 4 and spec 2, 7, 8. Twelve blockers remain, shortest first: labels and dates, one money formatter, sign out, invoice numbering, user names, create accepts and editor authorization, editor flow, dashboard money, timelines on deal and company, invoice editor, password login, delete.
 
-### Iteration 3, invoice editor (in progress)
+### Iteration 3, invoice editor (done 9f33c54)
 
 - Spec first: model gains issue date, due date, notes, LineItem.total; surfaces gain company, dates, notes, lines table, per-line total, add and remove line, company link; five scenarios (per-line totals and remove, add line, details saved, sent invoice read only, sales rep cannot edit).
 - DSL: `## Invariants` section (D9) with product, sum, unique, frozen-except, same-parent and sequence shapes; an ExUnit property suite is generated from them.

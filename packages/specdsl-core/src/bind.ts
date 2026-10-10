@@ -341,6 +341,7 @@ class Binder {
     this.checkReferences(item);
     this.applyRelation(item);
     this.recordRelation(item);
+    this.recordListing(item);
     this.recordOutput(item);
     if (item.rule.emits === "Transition") {
       this.declareTransitions(item);
@@ -543,6 +544,24 @@ class Binder {
       (seen) => seen.kind === kind && seen.entity === targetName && seen.name === name,
     );
     targetName === undefined || known || relations?.push({ kind, entity: targetName, name });
+  }
+
+  private recordListing(item: PendingItem): void {
+    if (item.rule.listing !== true) {
+      return;
+    }
+    const entity = this.entityNode(item.match.slots["Entity"] ?? "");
+    const field = this.registry.lookup(
+      "Field",
+      item.match.slots["Field"] ?? "",
+      this.registry.lookup("Entity", item.match.slots["Entity"] ?? "", "")?.name ?? "",
+    )?.name;
+    if (entity !== undefined && field !== undefined) {
+      entity.order = {
+        field,
+        direction: item.match.slots["Direction"] === "newest" ? "newest first" : "oldest first",
+      };
+    }
   }
 
   private entityNode(name: string): EntityNode | undefined {

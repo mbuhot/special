@@ -50,6 +50,8 @@ export type {
   DerivedNode,
   PredicateNode,
   EntityNode,
+  EntityOrder,
+  ListDirection,
   Emission,
   FieldNode,
   FieldType,

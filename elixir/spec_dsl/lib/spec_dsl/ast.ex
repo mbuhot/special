@@ -97,10 +97,11 @@ defmodule SpecDSL.Entity do
   @type t :: %__MODULE__{
           fields: [SpecDSL.Field.t()],
           relations: [relation()],
-          machines: %{String.t() => machine()}
+          machines: %{String.t() => machine()},
+          order: %{field: String.t(), direction: String.t()} | nil
         }
 
-  defstruct fields: [], relations: [], machines: %{}
+  defstruct fields: [], relations: [], machines: %{}, order: nil
 
   @doc "The spelling of each field, in declaration order."
   @spec field_names(t()) :: [String.t()]
@@ -363,9 +364,15 @@ defmodule SpecDSL.AST do
      %Entity{
        fields: raw |> Map.get("fields", []) |> Enum.map(&build_field/1),
        relations: raw |> Map.get("relations", []) |> Enum.map(&build_relation/1),
-       machines: raw |> Map.get("machines", %{}) |> Map.new(&build_machine/1)
+       machines: raw |> Map.get("machines", %{}) |> Map.new(&build_machine/1),
+       order: raw |> Map.get("order") |> build_order()
      }}
   end
+
+  defp build_order(nil), do: nil
+
+  defp build_order(raw),
+    do: %{field: Map.fetch!(raw, "field"), direction: Map.fetch!(raw, "direction")}
 
   defp build_field(name) when is_binary(name), do: %Field{name: name}
 

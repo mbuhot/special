@@ -4,6 +4,7 @@
 
 - Activity: kind (one of note, call, email, meeting, required), body (text, required), occurred at (datetime, required). Belongs to Contact. Belongs to User as author.
 - Contact has many Activity
+- Activity is listed by occurred at newest first
 
 ## Policies
 

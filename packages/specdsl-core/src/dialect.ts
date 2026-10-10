@@ -31,6 +31,7 @@ export interface ItemRule {
   context?: string;
   output?: ItemOutput;
   relation?: ItemRelation;
+  listing?: true;
   invariant?: InvariantKind;
   derived?: DerivedKind;
 }

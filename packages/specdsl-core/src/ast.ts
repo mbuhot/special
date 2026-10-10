@@ -71,10 +71,18 @@ export interface RelationNode {
   name: string;
 }
 
+export type ListDirection = "newest first" | "oldest first";
+
+export interface EntityOrder {
+  field: string;
+  direction: ListDirection;
+}
+
 export interface EntityNode {
   fields: FieldNode[];
   relations: RelationNode[];
   machines: Record<string, StateMachineNode>;
+  order?: EntityOrder;
 }
 
 export interface InvariantSite {

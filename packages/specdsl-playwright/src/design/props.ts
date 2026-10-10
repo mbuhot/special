@@ -1,6 +1,8 @@
 import { holds } from "@special/specdsl-core";
 import type { EntityNode, FieldNode, PredicateNode, SpecAst } from "@special/specdsl-core";
 import type { Props } from "./render.js";
+import { orderEntries, parseNumber, initialFields, withComputedFields } from "./rules.js";
+import type { NewRecordContext } from "./rules.js";
 
 export interface GivenEntity {
   entity: string;
@@ -11,21 +13,24 @@ type Entities = ReadonlyMap<string, GivenEntity>;
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const ISO_DATE = /^(\d{4})-(\d{2})-(\d{2})/;
+const ISO_DATE_LENGTH = 10;
 
 /** Props for an artboard of the record `refName`: its fields, has-many rows, machine states, state flags and predicates, named after the model. */
 export function buildProps(
   spec: SpecAst,
-  entities: Entities,
+  givenEntities: Entities,
   refName: string,
   today: string,
   role?: string,
 ): Props {
+  const entities = withComputedFields(spec, givenEntities);
   const record = entities.get(refName);
   if (record === undefined) return {};
   const model = spec.model[record.entity];
   const rows = relationRows(spec, entities, refName, record, today, role);
   return {
     ...countProps(spec, entities, today),
+    ...allProps(spec, entities, today, role),
     ...rowOf(spec, refName, record, today, role),
     [camelCase(record.entity)]: recordOf(spec, entities, model, refName, record, role),
     ...Object.fromEntries(rows.map((relation) => [relation.prop, relation.rows])),
@@ -33,16 +38,17 @@ export function buildProps(
   };
 }
 
-/** Props for an editor opened for a new record of `entity`: an empty record, counts and permissions. */
+/** Props for an editor opened for a new record of `entity`: a record with its initial fields, counts and permissions. */
 export function buildNewProps(
   spec: SpecAst,
   entities: Entities,
   entity: string,
   today: string,
   role?: string,
+  context: NewRecordContext = { now: `${today}T00:00:00.000Z` },
 ): Props {
   const blank = new Map(entities);
-  blank.set("", { entity, fields: new Map() });
+  blank.set("", { entity, fields: initialFields(spec, entities, entity, context) });
   return buildProps(spec, blank, "", today, role);
 }
 
@@ -87,22 +93,22 @@ export function listEntities(spec: SpecAst, declared: readonly string[]): string
     : entityNames.filter((entity) => declared.includes(pluralCamelCase(entity)));
 }
 
-/** Props for a list surface: every Given record of each listed entity, in Given order, as rows built like has-many child rows. */
+/** Props for a list surface: every record of each listed entity, in the entity's declared order else Given order, as rows built like has-many child rows. */
 export function buildListProps(
   spec: SpecAst,
-  entities: Entities,
+  givenEntities: Entities,
   listed: readonly string[],
   today: string,
   role?: string,
 ): Props {
+  const entities = withComputedFields(spec, givenEntities);
   return {
     ...countProps(spec, entities, today),
+    ...allProps(spec, entities, today, role),
     ...Object.fromEntries(
       listed.map((entity) => [
         pluralCamelCase(entity),
-        [...entities]
-          .filter(([, record]) => record.entity === entity)
-          .map(([refName, record]) => rowFor(spec, entities, refName, record, today, role)),
+        entityRows(spec, entities, entity, today, role),
       ]),
     ),
     ...Object.fromEntries(
@@ -112,6 +118,29 @@ export function buildListProps(
       ]),
     ),
   };
+}
+
+function entityRows(
+  spec: SpecAst,
+  entities: Entities,
+  entity: string,
+  today: string,
+  role?: string,
+): Props[] {
+  const entries = [...entities].filter(([, record]) => record.entity === entity);
+  return orderEntries(spec, entity, entries).map(([refName, record]) =>
+    rowFor(spec, entities, refName, record, today, role),
+  );
+}
+
+/** `all<EntityPlural>` for every entity: every record as a row, for select options. */
+function allProps(spec: SpecAst, entities: Entities, today: string, role?: string): Props {
+  return Object.fromEntries(
+    Object.keys(spec.model).map((entity) => [
+      `all${pascalCase(pluralCamelCase(entity))}`,
+      entityRows(spec, entities, entity, today, role),
+    ]),
+  );
 }
 
 function rowFor(
@@ -128,7 +157,7 @@ function rowFor(
   };
 }
 
-/** Top-level counts: every Derived count and `<state><EntityPlural>Count` for every machine state. */
+/** Top-level counts: every Derived count and `<state><EntityPlural>Count` for every machine state, with `has<Count>` booleans. */
 function countProps(spec: SpecAst, entities: Entities, today: string): Props {
   const records = [...entities.values()];
   const derived = spec.derived.counts.map((count): [string, number] => {
@@ -155,7 +184,15 @@ function countProps(spec: SpecAst, entities: Entities, today: string): Props {
       ]),
     ),
   );
-  return Object.fromEntries([...derived, ...byState]);
+  const counts: [string, number][] = [...derived, ...byState];
+  const flags = [
+    ...derived,
+    ...byState.map(([name, count]): [string, number] => [name.replace(/Count$/, ""), count]),
+  ];
+  return Object.fromEntries([
+    ...counts,
+    ...flags.map(([name, count]): [string, boolean] => [`has${pascalCase(name)}`, count > 0]),
+  ]);
 }
 
 /** Actions the role may perform on the entity. */
@@ -280,7 +317,7 @@ function relationRows(
         predicateNames: predicatesOf(spec, relation.entity).map((predicate) =>
           camelCase(predicate.name),
         ),
-        rows: children.map(([childRef, child]) =>
+        rows: orderEntries(spec, relation.entity, children).map(([childRef, child]) =>
           rowFor(spec, entities, childRef, child, today, role),
         ),
       };
@@ -304,8 +341,25 @@ function displayFields(model: EntityNode | undefined, refName: string, record: G
         displayValue(typeOf(field), value),
       ]),
     ),
+    ...Object.fromEntries(
+      [...record.fields].flatMap(([field, value]): [string, string][] => {
+        const raw = rawValue(typeOf(field), value);
+        return raw === undefined ? [] : [[`${camelCase(field)}Value`, raw]];
+      }),
+    ),
     name: refName,
   };
+}
+
+/** The value an input holds: ISO date for date fields, plain number for numeric fields; undefined for other types. */
+function rawValue(field: FieldNode | undefined, value: string): string | undefined {
+  if (field?.type === "date" || field?.type === "datetime") {
+    return ISO_DATE.test(value) ? value.slice(0, ISO_DATE_LENGTH) : value;
+  }
+  if (field?.type === "money" || field?.type === "integer" || field?.type === "decimal") {
+    return String(parseNumber(value) ?? value);
+  }
+  return undefined;
 }
 
 function displayValue(field: FieldNode | undefined, value: string): string {

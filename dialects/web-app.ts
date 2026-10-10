@@ -75,6 +75,11 @@ export default dialect({
           references: ["Entity", "Field"],
           emits: "Transition",
         },
+        {
+          pattern: "<Entity> is listed by <Field> [<Direction=newest|oldest> first]",
+          references: ["Entity", "Field"],
+          listing: true,
+        },
       ],
     }),
     Surfaces: section({

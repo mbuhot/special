@@ -303,18 +303,18 @@
                     <a href="../../crm/company-page/default.dc.html" data-record="{{ invoice.company }}" data-control="Company link" style="font-size: 12px; font-weight: 600; text-decoration: none">{{ invoice.company }}</a>
                   </div>
                   <select id="invoice-company" data-control="Company" data-field="company" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; font-size: 14px; font-family: inherit; box-sizing: border-box;">
-                    <option>Acme</option>
-                    <option>Globex</option>
-                    <option>Initech</option>
+                    <sc-for list="{{ allCompanies }}" as="option" hint-placeholder-count="3">
+                      <option>{{ option.name }}</option>
+                    </sc-for>
                   </select>
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 4px">
                   <label for="invoice-issue-date" style="font-size: 12px; color: #64748b">Issue date</label>
-                  <input id="invoice-issue-date" type="date" value="{{ invoice.issueDate }}" data-control="Issue date" data-field="issueDate" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; font-size: 14px; font-family: inherit; box-sizing: border-box;" />
+                  <input id="invoice-issue-date" type="date" value="{{ invoice.issueDateValue }}" data-control="Issue date" data-field="issueDate" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; font-size: 14px; font-family: inherit; box-sizing: border-box;" />
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 4px">
                   <label for="invoice-due-date" style="font-size: 12px; color: #64748b">Due date</label>
-                  <input id="invoice-due-date" type="date" value="{{ invoice.dueDate }}" data-control="Due date" data-field="dueDate" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; font-size: 14px; font-family: inherit; box-sizing: border-box;" />
+                  <input id="invoice-due-date" type="date" value="{{ invoice.dueDateValue }}" data-control="Due date" data-field="dueDate" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; font-size: 14px; font-family: inherit; box-sizing: border-box;" />
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 4px">
                   <label for="invoice-notes" style="font-size: 12px; color: #64748b">Notes</label>
@@ -387,7 +387,7 @@
         </div>
       </div>
     </x-dc>
-    <script type="text/x-dc" data-dc-script data-props='{"isDraft":{"editor":"boolean","default":true},"isSent":{"editor":"boolean","default":false},"isPaid":{"editor":"boolean","default":false},"isVoid":{"editor":"boolean","default":false},"invoice":{"editor":null,"default":{"name":"INV-001","number":"INV-001","status":"draft","company":"Acme","issueDate":"15 Jan 2026","dueDate":"14 Feb 2026","notes":"Thanks for your business","total":"$320.00","canSend":true,"canVoid":true,"canMarkPaid":true,"canUpdate":true}},"lineItems":{"editor":null,"default":[{"name":"Consulting","quantity":"2","unitPrice":"$100.00","total":"$200.00"},{"name":"Support","quantity":"3","unitPrice":"$40.00","total":"$120.00"}]},"$preview":{"width":1280,"height":800}}'>
+    <script type="text/x-dc" data-dc-script data-props='{"isDraft":{"editor":"boolean","default":true},"isSent":{"editor":"boolean","default":false},"isPaid":{"editor":"boolean","default":false},"isVoid":{"editor":"boolean","default":false},"invoice":{"editor":null,"default":{"name":"INV-001","number":"INV-001","status":"draft","company":"Acme","issueDate":"15 Jan 2026","issueDateValue":"2026-01-15","dueDate":"14 Feb 2026","dueDateValue":"2026-02-14","notes":"Thanks for your business","total":"$320.00","canSend":true,"canVoid":true,"canMarkPaid":true,"canUpdate":true}},"allCompanies":{"editor":null,"default":[{"name":"Acme"},{"name":"Globex"},{"name":"Initech"}]},"lineItems":{"editor":null,"default":[{"name":"Consulting","quantity":"2","unitPrice":"$100.00","total":"$200.00"},{"name":"Support","quantity":"3","unitPrice":"$40.00","total":"$120.00"}]},"$preview":{"width":1280,"height":800}}'>
       class Component extends DCLogic {
       renderVals() {
       return { ...this.props };

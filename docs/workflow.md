@@ -29,6 +29,14 @@ claude.ai canvas  ──/design-sync──►  designs/  ──►  specs/  ─�
 - Text filter: `data-filters="<rows prop>"` on a field sets each row's `matches` to whether any string field contains the entered text, ignoring case. `data-filters="<rows prop>"` with `data-filter-field="<field>"` on a select sets `matches` by equality on that field (a belongs-to field compares the related record's name). Rows start with `matches: true`; the artboard hides rows with `sc-if` on `matches`.
 - Counts: top-level props hold every Derived count (`overdueTasks`, `unpaidInvoices`) at the scenario clock and `<state><EntityPlural>Count` for every machine state (`leadDealsCount`).
 - Belongs-to: a record or row exposes the related record's name as `<relation>` (`deal.company`) and its fields as `<relation>Record`.
+- Computed fields: the spec's product and sum invariants (`LineItem.total = quantity * unit price`, `Invoice.total = sum of LineItem.total`) are evaluated on every record before rendering and after every edit; money renders as `$200.00`.
+- Ordering: `<Entity> is listed by <Field> [newest first|oldest first]` in a Model section sorts every row list of that entity (list surfaces, has-many rows, `all<EntityPlural>`) by the field; oldest first is the default.
+- New records: a record starts in the first state of its machine and takes the next value of a declared sequence (`INV-001`, `INV-002`).
+- Natural key: a Given record that sets no required text field gives the entity's first required text field the Ref name (LineItem description, Invoice number, Task title).
+- Users: a belongs-to User relation left unset points at the user of the first actor in the scenario (a User named after the actor, holding its role); created records point at the actor on screen; datetime fields of created records take the scenario clock and date fields stay empty.
+- Immediate edits: on a record surface whose artboard has no `data-saves` element, `enters` and `selects` into a `data-field` apply to the record at once and re-render.
+- Name after save: a save that changes the natural-key field renames the record, so `name` and every relation to it follow the new value.
+- Supporting props: `all<EntityPlural>` (`allCompanies`, `allContacts`) holds every record as top-level rows for select options; `<field>Value` holds the raw input value (ISO date, plain number) beside the formatted `<field>`; `has<Count>` booleans (`hasOverdueTasks`, `hasLeadDeals`) accompany every Derived count and per-state count.
 - Per-state files remain valid; design mode picks the file named after the record's machine state, else `default`.
 - The canvas board paths mirror `designs/` (`project/pipeline/deal-page/qualified.dc.html`), so sync is a copy.
 - The canvas URL lives in `designs/canvas.json`.

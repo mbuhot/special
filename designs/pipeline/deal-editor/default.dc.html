@@ -301,20 +301,22 @@
               </div>
               <div style="display: flex; flex-direction: column; gap: 4px">
                 <label for="deal-close-date" style="font-size: 12px; color: #64748b">Close date</label>
-                <input id="deal-close-date" type="date" data-control="Close date" data-field="closeDate" value="{{ deal.closeDate }}" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; font-size: 14px; font-family: inherit; box-sizing: border-box;" />
+                <input id="deal-close-date" type="date" data-control="Close date" data-field="closeDate" value="{{ deal.closeDateValue }}" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; font-size: 14px; font-family: inherit; box-sizing: border-box;" />
               </div>
               <div style="display: flex; flex-direction: column; gap: 4px">
                 <label for="deal-company" style="font-size: 12px; color: #64748b">Company</label>
                 <select id="deal-company" data-control="Company" data-field="company" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; font-size: 14px; font-family: inherit; box-sizing: border-box;">
-                  <option>Acme</option>
-                  <option>Globex</option>
+                  <sc-for list="{{ allCompanies }}" as="option" hint-placeholder-count="2">
+                    <option>{{ option.name }}</option>
+                  </sc-for>
                 </select>
               </div>
               <div style="display: flex; flex-direction: column; gap: 4px">
                 <label for="deal-contact" style="font-size: 12px; color: #64748b">Contact</label>
                 <select id="deal-contact" data-control="Contact" data-field="contact" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; font-size: 14px; font-family: inherit; box-sizing: border-box;">
-                  <option>Ada Lovelace</option>
-                  <option>Grace Hopper</option>
+                  <sc-for list="{{ allContacts }}" as="option" hint-placeholder-count="2">
+                    <option>{{ option.name }}</option>
+                  </sc-for>
                 </select>
               </div>
               <div style="display: flex; gap: 8px"><button type="button" data-control="Save" data-saves style="padding: 8px 16px; border: 0; border-radius: 8px; background: #1d4ed8; color: #ffffff; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; text-decoration: none;">Save</button></div>
@@ -323,7 +325,7 @@
         </div>
       </div>
     </x-dc>
-    <script type="text/x-dc" data-dc-script data-props='{"isLead":{"editor":"boolean","default":true},"isQualified":{"editor":"boolean","default":false},"isProposal":{"editor":"boolean","default":false},"isWon":{"editor":"boolean","default":false},"isLost":{"editor":"boolean","default":false},"deal":{"editor":null,"default":{"name":"Big deal","amount":"$12,000.00","closeDate":"31 Mar 2026","company":"Acme","contact":"Ada Lovelace"}},"$preview":{"width":1280,"height":800}}'>
+    <script type="text/x-dc" data-dc-script data-props='{"isLead":{"editor":"boolean","default":true},"isQualified":{"editor":"boolean","default":false},"isProposal":{"editor":"boolean","default":false},"isWon":{"editor":"boolean","default":false},"isLost":{"editor":"boolean","default":false},"deal":{"editor":null,"default":{"name":"Big deal","amount":"$12,000.00","closeDate":"31 Mar 2026","closeDateValue":"2026-03-31","company":"Acme","contact":"Ada Lovelace"}},"allCompanies":{"editor":null,"default":[{"name":"Acme"},{"name":"Globex"}]},"allContacts":{"editor":null,"default":[{"name":"Ada Lovelace"},{"name":"Grace Hopper"}]},"$preview":{"width":1280,"height":800}}'>
       class Component extends DCLogic {
       renderVals() {
       return { ...this.props };

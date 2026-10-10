@@ -73,7 +73,8 @@ defmodule SpecDSL.Union do
       fields: Enum.uniq_by(left.fields ++ right.fields, & &1.name),
       relations: Enum.uniq(left.relations ++ right.relations),
       machines:
-        Map.merge(left.machines, right.machines, fn _field, a, b -> merge_machine(a, b) end)
+        Map.merge(left.machines, right.machines, fn _field, a, b -> merge_machine(a, b) end),
+      order: left.order || right.order
     }
   end
 

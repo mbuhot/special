@@ -26,9 +26,12 @@ import {
   editorEntity,
   entityOfPlural,
   ownedFields,
+  ensureActorUser,
   roleOfActor,
   saveRecord,
 } from "../design/records.js";
+import { assignDefaultUsers, withNaturalKey } from "../design/rules.js";
+import type { NewRecordContext } from "../design/rules.js";
 import { propDefaults, renderArtboard } from "../design/render.js";
 import type { Props } from "../design/render.js";
 import { durationMilliseconds } from "./web-app.js";
@@ -93,6 +96,7 @@ const SURFACE_KEY = "";
 interface ScenarioStore {
   entities: Map<string, GivenEntity>;
   now: Date;
+  firstActor?: string;
 }
 
 const viewByPage = new WeakMap<Page, View>();
@@ -265,7 +269,10 @@ export const designSteps: StepHandlers<WebAppStepArgs, DesignServices, WebAppCon
   },
   async "given-entity"(args, env) {
     const given = givenOf(env);
-    given.set(args.Ref, { entity: args.Entity, fields: fieldMap(args.pairs) });
+    given.set(args.Ref, {
+      entity: args.Entity,
+      fields: withNaturalKey(env.spec.model[args.Entity], args.Ref, fieldMap(args.pairs)),
+    });
     env.refs.declare(args.Ref, { entity: args.Entity, id: args.Ref });
   },
   async "has-field"() {},
@@ -325,13 +332,25 @@ function artboardLabel(page: Page): string {
 
 async function existing(env: Env, actorName: string, control: ResolvedControl): Promise<Locator> {
   const page = pageOf(env, actorName);
-  const located = page.locator(selectorOf(control)).first();
+  const located = (await controlMatches(page, control)).first();
   try {
     await located.waitFor({ state: "attached", timeout: CONTROL_TIMEOUT_MILLISECONDS });
   } catch {
     throw new Error(`control "${control.name}" is not in artboard ${artboardLabel(page)}`);
   }
   return located;
+}
+
+/** The matches of a control inside the open surface's region when it has any, else anywhere on the page. */
+async function controlMatches(page: Page, control: ResolvedControl): Promise<Locator> {
+  const surface = viewByPage.get(page)?.surface;
+  if (surface !== undefined) {
+    const scoped = page.locator(
+      `[data-surface="${surface.replace(/["\\]/g, "\\$&")}"] ${selectorOf(control)}`,
+    );
+    if ((await scoped.count()) > 0) return scoped;
+  }
+  return page.locator(selectorOf(control));
 }
 
 /** Among several matches of a control, the one on the card of the only record not yet in a final state, else the first. */
@@ -341,7 +360,7 @@ async function clickTarget(
   control: ResolvedControl,
   first: Locator,
 ): Promise<Locator> {
-  const matches = page.locator(selectorOf(control));
+  const matches = await controlMatches(page, control);
   if ((await matches.count()) < 2) return first;
   const open = openRecordRefs(env);
   if (open.length !== 1) return first;
@@ -367,9 +386,15 @@ async function tagOf(control: Locator): Promise<string> {
 
 async function textOf(control: Locator): Promise<string> {
   return control.evaluate((element) => {
-    const field = element as HTMLInputElement;
     const rendered = (element as HTMLElement).innerText ?? element.textContent ?? "";
-    return `${rendered}${field.value ?? ""}`.replace(/\s+/g, " ").trim();
+    const fields = [element, ...element.querySelectorAll("input, textarea, select")].filter(
+      (candidate): candidate is HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement =>
+        ["INPUT", "TEXTAREA", "SELECT"].includes(candidate.tagName),
+    );
+    const held = fields.map((field) =>
+      field instanceof HTMLSelectElement ? (field.selectedOptions[0]?.text ?? "") : field.value,
+    );
+    return [rendered, ...held].join(" ").replace(/\s+/g, " ").trim();
   });
 }
 
@@ -469,12 +494,22 @@ async function restoreInputs(page: Page): Promise<void> {
   }
 }
 
+function prepareUsers(env: Env, actorName: string): NewRecordContext {
+  const store = storeOf(env);
+  store.firstActor ??= actorName;
+  const firstUser = ensureActorUser(env.spec, store.entities, store.firstActor);
+  const viewerUser = ensureActorUser(env.spec, store.entities, actorName);
+  firstUser !== undefined && assignDefaultUsers(env.spec, store.entities, firstUser);
+  return { now: store.now.toISOString(), userRef: viewerUser };
+}
+
 function propsFor(env: Env, view: View, session: Session): Props {
   const today = storeOf(env).now.toISOString().slice(0, 10);
   const role = roleOfActor(env.spec, view.actor);
+  const context = prepareUsers(env, view.actor);
   const base =
     view.creating !== undefined
-      ? buildNewProps(env.spec, givenOf(env), view.creating, today, role)
+      ? buildNewProps(env.spec, givenOf(env), view.creating, today, role, context)
       : view.ref === undefined
         ? buildListProps(env.spec, givenOf(env), listedEntities(env, view.design), today, role)
         : buildProps(env.spec, givenOf(env), view.ref, today, role);
@@ -530,11 +565,52 @@ async function applyEdit(
   } else if (attributes.field !== null) {
     const view = viewOf(page);
     const key = attributes.record !== "" ? attributes.record : (view.ref ?? SURFACE_KEY);
+    if (
+      (await page.locator("[data-saves]").count()) === 0 &&
+      editsOwnField(env, view, key, attributes.field)
+    ) {
+      await applyImmediateEdit(env, actorName, view, key, attributes.field, value);
+      return;
+    }
     const pending = session.pending.get(key) ?? new Map<string, string>();
     pending.set(attributes.field, value);
     session.pending.set(key, pending);
     session.inputs.set(selector, { kind: "field", action, value });
   }
+}
+
+function editsOwnField(env: Env, view: View, key: string, field: string): boolean {
+  const entity = key === SURFACE_KEY ? view.creating : givenOf(env).get(key)?.entity;
+  return entity !== undefined && ownedFields(env.spec, entity, new Map([[field, ""]])).size > 0;
+}
+
+async function applyImmediateEdit(
+  env: Env,
+  actorName: string,
+  view: View,
+  key: string,
+  field: string,
+  value: string,
+): Promise<void> {
+  const records = givenOf(env);
+  const edit = new Map([[field, value]]);
+  let next = view;
+  if (key === SURFACE_KEY && view.creating !== undefined) {
+    const created = createRecord(
+      env.spec,
+      records,
+      view.creating,
+      edit,
+      undefined,
+      prepareUsers(env, actorName),
+    );
+    next = { ...view, ref: created, creating: undefined };
+  } else {
+    const saved = saveRecord(env.spec, records, key, edit);
+    next = key === view.ref ? { ...view, ref: saved } : view;
+  }
+  clearFieldInputs(sessionOf(pageOf(env, actorName)));
+  await load(env, actorName, next, true);
 }
 
 function sameFilterSlot(left: RowFilter, right: RowFilter): boolean {
@@ -560,15 +636,29 @@ async function applyMutation(
     record !== undefined && records.delete(record);
   } else if (mutation.kind === "saves") {
     if (record === undefined && view.creating !== undefined) {
-      const created = createRecord(env.spec, records, view.creating, pending);
+      const created = createRecord(
+        env.spec,
+        records,
+        view.creating,
+        pending,
+        undefined,
+        prepareUsers(env, actorName),
+      );
       next = { ...view, ref: created, creating: undefined };
     } else {
-      saveRecord(env.spec, records, targetKey, pending);
+      const saved = saveRecord(env.spec, records, targetKey, pending);
+      next = targetKey === view.ref ? { ...view, ref: saved } : view;
     }
     session.pending.delete(targetKey);
     clearFieldInputs(session);
   } else {
-    createFromPending(env, view, mutation.target, session.pending.get(surfaceKey) ?? pending);
+    createFromPending(
+      env,
+      view,
+      mutation.target,
+      session.pending.get(surfaceKey) ?? pending,
+      prepareUsers(env, actorName),
+    );
     session.pending.delete(surfaceKey);
     clearFieldInputs(session);
   }
@@ -580,20 +670,32 @@ function createFromPending(
   view: View,
   target: string,
   pending: ReadonlyMap<string, string>,
+  context: NewRecordContext,
 ): void {
   const parent = view.ref === undefined ? undefined : givenOf(env).get(view.ref);
   const child =
     parent === undefined ? undefined : childRelation(env.spec, parent.entity, camelCase(target));
   if (child !== undefined && view.ref !== undefined) {
-    createRecord(env.spec, givenOf(env), child.child, ownedFields(env.spec, child.child, pending), {
-      relation: child.owner,
-      ref: view.ref,
-    });
+    createRecord(
+      env.spec,
+      givenOf(env),
+      child.child,
+      ownedFields(env.spec, child.child, pending),
+      { relation: child.owner, ref: view.ref },
+      context,
+    );
     return;
   }
   const entity = entityOfPlural(env.spec, camelCase(target));
   entity !== undefined &&
-    createRecord(env.spec, givenOf(env), entity, ownedFields(env.spec, entity, pending));
+    createRecord(
+      env.spec,
+      givenOf(env),
+      entity,
+      ownedFields(env.spec, entity, pending),
+      undefined,
+      context,
+    );
 }
 
 function clearFieldInputs(session: Session): void {

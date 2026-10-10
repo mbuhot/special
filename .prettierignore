@@ -10,3 +10,4 @@ apps/*/_build/
 *.ast.json
 *.lock.json
 demo-output/
+designs/**/*.dc.html

@@ -1,5 +1,5 @@
 defmodule InvoicingWeb.DealLive.Board do
-  @moduledoc "Shows deals in a column per stage with a control per valid stage transition."
+  @moduledoc "Shows deals in a column per stage with a stage menu listing the stages the viewer may move each deal to."
 
   use InvoicingWeb, :live_view
 
@@ -19,13 +19,19 @@ defmodule InvoicingWeb.DealLive.Board do
   end
 
   @impl true
-  def handle_event("transition", %{"id" => id, "transition" => transition}, socket) do
+  def handle_event("move", %{"deal" => %{"id" => id, "stage" => stage}}, socket) do
     actor = socket.assigns.current_user
     deal = Pipeline.get_deal!(id, actor: actor)
+    transition = Pipeline.deal_transition_to(deal, String.to_existing_atom(stage))
+    {:noreply, move_deal(socket, deal, transition)}
+  end
 
-    case Pipeline.transition_deal(deal, Pipeline.parse_deal_transition(transition), actor: actor) do
-      {:ok, _moved_deal} -> {:noreply, assign_deals(socket)}
-      {:error, _error} -> {:noreply, put_flash(socket, :error, "Deal could not be moved")}
+  defp move_deal(socket, _deal, nil), do: assign_deals(socket)
+
+  defp move_deal(socket, deal, transition) do
+    case Pipeline.transition_deal(deal, transition, actor: socket.assigns.current_user) do
+      {:ok, _moved_deal} -> assign_deals(socket)
+      {:error, _error} -> put_flash(socket, :error, "Deal could not be moved")
     end
   end
 
@@ -39,13 +45,19 @@ defmodule InvoicingWeb.DealLive.Board do
 
     socket
     |> assign(:deals_by_stage, Enum.group_by(deals, & &1.stage))
-    |> assign(:permitted_transitions, Map.new(deals, &{&1.id, permitted_transitions(&1, socket)}))
+    |> assign(
+      :stage_options,
+      Map.new(deals, &{&1.id, stage_options(&1, socket.assigns.current_user)})
+    )
   end
 
-  defp permitted_transitions(deal, socket) do
-    deal.stage
-    |> Pipeline.deal_transitions_from()
-    |> Enum.filter(&Pipeline.can_transition_deal?(socket.assigns.current_user, deal, &1))
+  defp stage_options(deal, actor) do
+    next_stages =
+      actor
+      |> Pipeline.permitted_deal_transitions(deal)
+      |> Enum.map(&Pipeline.deal_transition_target/1)
+
+    Enum.map([deal.stage | next_stages], &{Format.label(&1), &1})
   end
 
   @impl true
@@ -82,19 +94,20 @@ defmodule InvoicingWeb.DealLive.Board do
             <.link navigate={~p"/deals/#{deal.id}"} class="font-medium">{deal.name}</.link>
             <p :if={deal.amount}>{Format.money(deal.amount)}</p>
             <p class="text-sm">{deal.company.name}</p>
-            <div class="flex flex-wrap gap-1">
-              <button
-                :for={transition <- Map.fetch!(@permitted_transitions, deal.id)}
-                type="button"
-                class="btn btn-xs"
-                data-transition={transition}
-                phx-click="transition"
-                phx-value-id={deal.id}
-                phx-value-transition={transition}
+            <form id={"deal-stage-form-#{deal.id}"} data-deal-stage phx-change="move">
+              <input type="hidden" name="deal[id]" value={deal.id} />
+              <select
+                name="deal[stage]"
+                data-deal-stage
+                aria-label={"Stage of #{deal.name}"}
+                class="select select-xs w-full"
               >
-                {Format.label(transition)}
-              </button>
-            </div>
+                {Phoenix.HTML.Form.options_for_select(
+                  Map.fetch!(@stage_options, deal.id),
+                  deal.stage
+                )}
+              </select>
+            </form>
           </article>
         </section>
       </div>

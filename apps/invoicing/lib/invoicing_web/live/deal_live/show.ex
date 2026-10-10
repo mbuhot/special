@@ -1,5 +1,5 @@
 defmodule InvoicingWeb.DealLive.Show do
-  @moduledoc "Shows a deal with its tasks, highlights overdue tasks and offers a form to add a task."
+  @moduledoc "Shows a deal with its tasks, flags overdue tasks and offers a form to add a task."
 
   use InvoicingWeb, :live_view
 
@@ -65,13 +65,7 @@ defmodule InvoicingWeb.DealLive.Show do
     socket
     |> assign(:deal, deal)
     |> assign(:can_update_deal, Pipeline.can_update_deal?(actor, deal))
-    |> assign(:transitions, permitted_transitions(deal, actor))
-  end
-
-  defp permitted_transitions(deal, actor) do
-    deal.stage
-    |> Pipeline.deal_transitions_from()
-    |> Enum.filter(&Pipeline.can_transition_deal?(actor, deal, &1))
+    |> assign(:transitions, Pipeline.permitted_deal_transitions(actor, deal))
   end
 
   defp add_params(%{assigns: %{form: form, deal: deal}}),
@@ -83,7 +77,7 @@ defmodule InvoicingWeb.DealLive.Show do
 
     socket
     |> assign(:tasks, tasks)
-    |> assign(:overdue_tasks, Enum.filter(tasks, &overdue?(&1, today)))
+    |> assign(:today, today)
   end
 
   defp overdue?(%Task{status: :open, due_date: due_date}, today),
@@ -164,17 +158,6 @@ defmodule InvoicingWeb.DealLive.Show do
         </.card>
 
         <div class="flex min-w-0 flex-col gap-5">
-          <section
-            :if={@overdue_tasks != []}
-            id="overdue-tasks"
-            class="rounded-lg border border-warning/40 bg-warning/10 p-5"
-          >
-            <h2 class="mb-2 text-base font-semibold">Overdue tasks</h2>
-            <ul class="text-sm">
-              <li :for={task <- @overdue_tasks}>{task.title}</li>
-            </ul>
-          </section>
-
           <.card title="Tasks">
             <.form
               :if={@can_change_tasks}
@@ -212,6 +195,13 @@ defmodule InvoicingWeb.DealLive.Show do
                     <time datetime={Date.to_iso8601(task.due_date)}>
                       {Format.date(task.due_date)}
                     </time>
+                    <span
+                      :if={overdue?(task, @today)}
+                      data-overdue-badge
+                      class="ml-2 rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-semibold text-red-700"
+                    >
+                      Overdue
+                    </span>
                   </td>
                   <td class="py-3 pr-3">
                     <.badge value={task.status} />
@@ -231,6 +221,14 @@ defmodule InvoicingWeb.DealLive.Show do
                 </tr>
               </tbody>
             </table>
+
+            <.link
+              id="view-all-my-tasks"
+              navigate={~p"/tasks"}
+              class="mt-3 text-sm font-semibold text-primary"
+            >
+              View all my tasks
+            </.link>
           </.card>
         </div>
       </div>

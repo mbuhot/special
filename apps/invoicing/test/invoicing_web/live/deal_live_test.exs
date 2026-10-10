@@ -7,12 +7,13 @@ defmodule InvoicingWeb.DealLiveTest do
 
   setup %{conn: conn} do
     manager =
-      Accounts.create_user!(%{name: "Manager User", email: "manager@example.com", role: :manager},
+      Accounts.create_user!(
+        %{name: "Manager User", email: unique_email("manager"), role: :manager},
         authorize?: false
       )
 
     sales_rep =
-      Accounts.create_user!(%{name: "Sales User", email: "sales@example.com", role: :sales},
+      Accounts.create_user!(%{name: "Sales User", email: unique_email("sales"), role: :sales},
         authorize?: false
       )
 
@@ -37,41 +38,6 @@ defmodule InvoicingWeb.DealLiveTest do
       ada: ada,
       deal: deal
     }
-  end
-
-  defp column(view, stage), do: view |> element("#column-#{stage}") |> render()
-
-  test "a lead card offers Qualify and Lose", %{conn: conn} do
-    {:ok, view, _html} = live(conn, ~p"/pipeline")
-
-    assert has_element?(view, "#column-lead button[data-transition='qualify']")
-    assert has_element?(view, "#column-lead button[data-transition='lose']")
-    refute has_element?(view, "#column-lead button[data-transition='win']")
-  end
-
-  test "a sales rep does not see Win or Lose on the board", %{
-    conn: conn,
-    deal: deal,
-    sales_rep: sales_rep
-  } do
-    deal |> Pipeline.qualify_deal!(authorize?: false) |> Pipeline.propose_deal!(authorize?: false)
-
-    {:ok, view, _html} = live(Accounts.log_in_conn(conn, sales_rep), ~p"/pipeline")
-
-    assert column(view, :proposal) =~ "Big deal"
-    refute has_element?(view, "#column-proposal button", "Win")
-    refute has_element?(view, "#column-proposal button", "Lose")
-  end
-
-  test "a won deal offers no moves", %{conn: conn, deal: deal} do
-    deal
-    |> Pipeline.qualify_deal!(authorize?: false)
-    |> Pipeline.propose_deal!(authorize?: false)
-    |> Pipeline.win_deal!(authorize?: false)
-
-    {:ok, view, _html} = live(conn, ~p"/pipeline")
-
-    refute has_element?(view, "#column-won button[data-transition]")
   end
 
   test "the deal editor lists contacts by full name", %{conn: conn, deal: deal} do

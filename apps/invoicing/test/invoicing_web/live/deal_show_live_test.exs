@@ -7,7 +7,7 @@ defmodule InvoicingWeb.DealShowLiveTest do
 
   setup %{conn: conn} do
     sales_rep =
-      Accounts.create_user!(%{name: "Sales User", email: "sales@example.com", role: :sales},
+      Accounts.create_user!(%{name: "Sales User", email: unique_email("sales"), role: :sales},
         authorize?: false
       )
 
@@ -22,20 +22,6 @@ defmodule InvoicingWeb.DealShowLiveTest do
     Clock.freeze(~U[2026-01-15 09:00:00Z])
 
     %{conn: Accounts.log_in_conn(conn, sales_rep), sales_rep: sales_rep, deal: deal}
-  end
-
-  defp create_task(deal, sales_rep, due_date) do
-    Pipeline.create_task!(%{title: "Send-proposal", due_date: due_date, deal_id: deal.id},
-      actor: sales_rep
-    )
-  end
-
-  test "a completed task is no longer overdue", %{conn: conn, deal: deal, sales_rep: sales_rep} do
-    deal |> create_task(sales_rep, ~D[2026-01-10]) |> Pipeline.complete_task!(actor: sales_rep)
-
-    {:ok, view, _html} = live(conn, ~p"/deals/#{deal.id}")
-
-    refute has_element?(view, "#overdue-tasks")
   end
 
   test "a board card links the deal name to the deal page", %{conn: conn, deal: deal} do

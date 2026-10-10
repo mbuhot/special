@@ -47,6 +47,12 @@ describe("invariants", () => {
     ]);
   });
 
+  it("reads a Markdown-escaped operator as the operator itself", () => {
+    expect(invariantsOf("- LineItem.total = quantity \\* unit price")).toEqual(
+      invariantsOf("- LineItem.total = quantity * unit price"),
+    );
+  });
+
   it("records a sum invariant over a has-many relation", () => {
     expect(invariantsOf("- Invoice.total = sum of LineItem.total")).toEqual([
       {

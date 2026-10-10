@@ -89,7 +89,11 @@ function rawText(
 ): string {
   const start = node.position?.start.offset ?? 0;
   const end = node.position?.end.offset ?? 0;
-  return source.slice(start, end);
+  return unescapePunctuation(source.slice(start, end));
+}
+
+function unescapePunctuation(text: string): string {
+  return text.replace(/\\([!-\/:-@[-`{-~])/g, "$1");
 }
 
 function headingText(node: Heading, source: string): string {

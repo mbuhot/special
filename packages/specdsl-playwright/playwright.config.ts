@@ -19,6 +19,7 @@ export default defineConfig({
     {
       name: "design",
       testMatch: "design.ts",
+      fullyParallel: true,
       timeout: 180_000,
       use: { ...devices["Desktop Chrome"], viewport: { width: 1280, height: 800 } },
     },

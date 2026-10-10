@@ -9,7 +9,10 @@ if (scenarioName !== undefined) environment.DESIGN_SCENARIO = scenarioName;
 
 environment.SPECDSL_STATIC_ONLY = "1";
 
-const result = spawnSync("playwright", ["test", "--project=design"], {
+const workersFlagIndex = argumentList.indexOf("--workers");
+const workers = workersFlagIndex === -1 ? "32" : argumentList[workersFlagIndex + 1];
+
+const result = spawnSync("playwright", ["test", "--project=design", `--workers=${workers}`], {
   stdio: "inherit",
   env: environment,
 });

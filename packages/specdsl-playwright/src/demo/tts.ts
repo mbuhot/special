@@ -1,6 +1,6 @@
 import { execFile } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync } from "node:fs";
+import { existsSync, mkdirSync, renameSync } from "node:fs";
 import { join } from "node:path";
 import { promisify } from "node:util";
 import { ttsCacheDirectory } from "../paths.js";
@@ -21,7 +21,16 @@ export async function synthesize(text: string): Promise<Clip> {
   const file = join(ttsCacheDirectory, `${createHash("sha256").update(text).digest("hex")}.wav`);
   mkdirSync(ttsCacheDirectory, { recursive: true });
   if (!existsSync(file)) {
-    await run(POCKET_TTS_BINARY, ["generate", "--text", text, "--output-path", file, "--quiet"]);
+    const partialFile = `${file}.${process.pid}.partial.wav`;
+    await run(POCKET_TTS_BINARY, [
+      "generate",
+      "--text",
+      text,
+      "--output-path",
+      partialFile,
+      "--quiet",
+    ]);
+    renameSync(partialFile, file);
   }
   return { text, file, seconds: await durationSeconds(file) };
 }

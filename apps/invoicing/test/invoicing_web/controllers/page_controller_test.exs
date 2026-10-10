@@ -11,7 +11,7 @@ defmodule InvoicingWeb.PageControllerTest do
 
   test "the root path sends a signed-in user to the dashboard", %{conn: conn} do
     user =
-      Accounts.create_user!(%{name: "Sales User", email: "sales@example.com", role: :sales},
+      Accounts.create_user!(%{name: "Sales User", email: unique_email("sales"), role: :sales},
         authorize?: false
       )
 

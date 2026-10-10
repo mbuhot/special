@@ -67,7 +67,7 @@ defmodule Invoicing.SpecSupport.FactoryTest do
   end
 
   test "creates a user with a role" do
-    user = Factory.create("User", %{"email" => "admin@example.com", "role" => "admin"})
+    user = Factory.create("User", %{"email" => unique_email("admin"), "role" => "admin"})
 
     assert Factory.reload("User", user.id)["role"] == "admin"
   end

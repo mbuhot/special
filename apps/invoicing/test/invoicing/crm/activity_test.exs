@@ -5,12 +5,12 @@ defmodule Invoicing.CRM.ActivityTest do
 
   setup do
     admin =
-      Accounts.create_user!(%{name: "Admin User", email: "admin@example.com", role: :admin},
+      Accounts.create_user!(%{name: "Admin User", email: unique_email("admin"), role: :admin},
         authorize?: false
       )
 
     sales_rep =
-      Accounts.create_user!(%{name: "Sales User", email: "sales@example.com", role: :sales},
+      Accounts.create_user!(%{name: "Sales User", email: unique_email("sales"), role: :sales},
         authorize?: false
       )
 

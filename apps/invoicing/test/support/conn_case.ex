@@ -29,6 +29,7 @@ defmodule InvoicingWeb.ConnCase do
       import Plug.Conn
       import Phoenix.ConnTest
       import InvoicingWeb.ConnCase
+      import Invoicing.DataCase, only: [unique_email: 1]
     end
   end
 

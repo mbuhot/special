@@ -5,18 +5,19 @@ defmodule Invoicing.Pipeline.DealTest do
 
   setup do
     admin =
-      Accounts.create_user!(%{name: "Admin User", email: "admin@example.com", role: :admin},
+      Accounts.create_user!(%{name: "Admin User", email: unique_email("admin"), role: :admin},
         authorize?: false
       )
 
     manager =
-      Accounts.create_user!(%{name: "Manager User", email: "manager@example.com", role: :manager},
+      Accounts.create_user!(
+        %{name: "Manager User", email: unique_email("manager"), role: :manager},
         authorize?: false
       )
 
     new_owner =
       Accounts.create_user!(
-        %{name: "New-owner User", email: "new-owner@example.com", role: :sales},
+        %{name: "New-owner User", email: unique_email("new-owner"), role: :sales},
         authorize?: false
       )
 

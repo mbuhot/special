@@ -17,14 +17,15 @@ defmodule InvoicingWeb.LoginLiveTest do
   end
 
   test "an existing user is logged in and sees the invoice list", %{conn: conn} do
-    Accounts.create_user!(
-      %{name: "Accounts User", email: "accounts@example.com", role: :accountant},
-      authorize?: false
-    )
+    accountant =
+      Accounts.create_user!(
+        %{name: "Accounts User", email: unique_email("accounts"), role: :accountant},
+        authorize?: false
+      )
 
     {:ok, view, _html} = live(conn, ~p"/login")
 
-    login_form = form(view, "#login-form", login: %{email: "accounts@example.com"})
+    login_form = form(view, "#login-form", login: %{email: accountant.email})
     render_submit(login_form)
     logged_in_conn = submit_form(login_form, conn)
 

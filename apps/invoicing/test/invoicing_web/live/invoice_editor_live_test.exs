@@ -8,7 +8,7 @@ defmodule InvoicingWeb.InvoiceEditorLiveTest do
   setup %{conn: conn} do
     accountant =
       Accounts.create_user!(
-        %{name: "Accounts User", email: "accounts@example.com", role: :accountant},
+        %{name: "Accounts User", email: unique_email("accounts"), role: :accountant},
         authorize?: false
       )
 

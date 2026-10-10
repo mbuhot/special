@@ -6,12 +6,12 @@ defmodule Invoicing.Accounts.UserTest do
   setup do
     accountant =
       Accounts.create_user!(
-        %{name: "Accounts User", email: "accounts@example.com", role: :accountant},
+        %{name: "Accounts User", email: unique_email("accounts"), role: :accountant},
         authorize?: false
       )
 
     admin =
-      Accounts.create_user!(%{name: "Admin User", email: "admin@example.com", role: :admin},
+      Accounts.create_user!(%{name: "Admin User", email: unique_email("admin"), role: :admin},
         authorize?: false
       )
 
@@ -21,19 +21,25 @@ defmodule Invoicing.Accounts.UserTest do
   test "an accountant cannot create a user", %{accountant: accountant} do
     assert {:error, %Ash.Error.Forbidden{}} =
              Accounts.create_user(
-               %{name: "New User", email: "new@example.com", role: :accountant},
+               %{name: "New User", email: unique_email("new"), role: :accountant},
                actor: accountant
              )
   end
 
   test "an admin can create a user", %{admin: admin} do
-    assert {:ok, %{email: "new@example.com"}} =
+    new_email = unique_email("new")
+
+    assert {:ok, %{email: ^new_email}} =
              Accounts.create_user(
-               %{name: "New User", email: "new@example.com", role: :accountant}, actor: admin)
+               %{name: "New User", email: new_email, role: :accountant},
+               actor: admin
+             )
   end
 
-  test "an accountant can read users", %{accountant: accountant} do
-    assert {:ok, %{email: "admin@example.com"}} =
-             Accounts.get_user_by_email("admin@example.com", actor: accountant)
+  test "an accountant can read users", %{accountant: accountant, admin: admin} do
+    assert {:ok, %{email: admin_email}} =
+             Accounts.get_user_by_email(admin.email, actor: accountant)
+
+    assert admin_email == admin.email
   end
 end

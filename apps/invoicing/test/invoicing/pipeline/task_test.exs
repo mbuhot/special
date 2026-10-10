@@ -5,12 +5,12 @@ defmodule Invoicing.Pipeline.TaskTest do
 
   setup do
     admin =
-      Accounts.create_user!(%{name: "Admin User", email: "admin@example.com", role: :admin},
+      Accounts.create_user!(%{name: "Admin User", email: unique_email("admin"), role: :admin},
         authorize?: false
       )
 
     sales_rep =
-      Accounts.create_user!(%{name: "Sales User", email: "sales@example.com", role: :sales},
+      Accounts.create_user!(%{name: "Sales User", email: unique_email("sales"), role: :sales},
         authorize?: false
       )
 
@@ -82,7 +82,7 @@ defmodule Invoicing.Pipeline.TaskTest do
   } do
     manager =
       Accounts.create_user!(
-        %{name: "Manager User", email: "manager@example.com", role: :manager},
+        %{name: "Manager User", email: unique_email("manager"), role: :manager},
         authorize?: false
       )
 
@@ -98,7 +98,7 @@ defmodule Invoicing.Pipeline.TaskTest do
   } do
     accountant =
       Accounts.create_user!(
-        %{name: "Accounts User", email: "accounts@example.com", role: :accountant},
+        %{name: "Accounts User", email: unique_email("accounts"), role: :accountant},
         authorize?: false
       )
 

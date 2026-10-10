@@ -6,12 +6,12 @@ defmodule Invoicing.Billing.InvoiceTest do
   setup do
     accountant =
       Accounts.create_user!(
-        %{name: "Accounts User", email: "accounts@example.com", role: :accountant},
+        %{name: "Accounts User", email: unique_email("accounts"), role: :accountant},
         authorize?: false
       )
 
     admin =
-      Accounts.create_user!(%{name: "Admin User", email: "admin@example.com", role: :admin},
+      Accounts.create_user!(%{name: "Admin User", email: unique_email("admin"), role: :admin},
         authorize?: false
       )
 
@@ -147,7 +147,7 @@ defmodule Invoicing.Billing.SentInvoiceEditingTest do
   setup do
     accountant =
       Accounts.create_user!(
-        %{name: "Accounts User", email: "accounts@example.com", role: :accountant},
+        %{name: "Accounts User", email: unique_email("accounts"), role: :accountant},
         authorize?: false
       )
 

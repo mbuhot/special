@@ -33,6 +33,9 @@ defmodule Invoicing.DataCase do
     :ok
   end
 
+  @doc "Returns an email address no other test shares, so concurrent tests never contend on the unique email."
+  def unique_email(prefix), do: "#{prefix}-#{System.unique_integer([:positive])}@example.com"
+
   @doc """
   Sets up the sandbox based on the test tags.
   """

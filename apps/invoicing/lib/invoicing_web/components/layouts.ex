@@ -153,6 +153,13 @@ defmodule InvoicingWeb.Layouts do
         prefixes: ["/pipeline", "/deals"]
       },
       %{
+        id: "nav-my-tasks",
+        path: ~p"/tasks",
+        icon: "hero-check-circle",
+        label: "My tasks",
+        prefixes: ["/tasks"]
+      },
+      %{
         id: "nav-invoices",
         path: ~p"/invoices",
         icon: "hero-document-text",

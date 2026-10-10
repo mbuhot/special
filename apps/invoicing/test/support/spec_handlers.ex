@@ -83,7 +83,7 @@ defmodule Invoicing.SpecHandlers do
   step "sees", %{actor: actor, text: text, control: control}, ctx do
     view = Ctx.view(ctx, actor)
 
-    assert has_element?(view, control.locators.lv, text),
+    assert has_element?(view, content_selector(control), text),
            "expected #{inspect(text)} in #{control.name}, found: #{element_text(view, control)}"
 
     ctx
@@ -106,7 +106,7 @@ defmodule Invoicing.SpecHandlers do
   end
 
   step "no-longer-sees", %{actor: actor, text: text, control: control}, ctx do
-    refute has_element?(Ctx.view(ctx, actor), control.locators.lv, text),
+    refute has_element?(Ctx.view(ctx, actor), content_selector(control), text),
            "expected #{inspect(text)} to be absent from #{control.name}"
 
     ctx
@@ -118,8 +118,12 @@ defmodule Invoicing.SpecHandlers do
   end
 
   step "given-entity", %{entity: entity, ref: ref_name, pairs: pairs}, ctx do
-    attributes = Map.new(pairs, fn [field, value] -> {field, resolve_value(ctx, value)} end)
-    record = Factory.create(entity, attributes, ref_name)
+    attributes =
+      pairs
+      |> Map.new(fn [field, value] -> {field, resolve_value(ctx, value)} end)
+      |> put_default_people(entity, ctx)
+
+    record = create_given(ctx, entity, ref_name, attributes)
     Ctx.put_ref(ctx, ref_name, %{entity: entity, id: record.id})
   end
 
@@ -162,7 +166,7 @@ defmodule Invoicing.SpecHandlers do
   end
 
   step "does-not-see", %{actor: actor, control: control}, ctx do
-    refute has_element?(Ctx.view(ctx, actor), control.locators.lv),
+    refute has_element?(Ctx.view(ctx, actor), content_selector(control)),
            "expected #{actor} not to see #{control.name}"
 
     ctx
@@ -175,6 +179,42 @@ defmodule Invoicing.SpecHandlers do
 
   step "job-runs", %{job: _job}, _ctx do
     raise "no jobs in this app"
+  end
+
+  defp create_given(ctx, "User", ref_name, attributes) do
+    case Map.fetch(Ctx.context(ctx, :data).users, ref_name) do
+      {:ok, actor_user} ->
+        actor_user
+
+      :error ->
+        Factory.create("User", Map.put_new(attributes, "email", actor_email(ref_name)), ref_name)
+    end
+  end
+
+  defp create_given(_ctx, entity, ref_name, attributes),
+    do: Factory.create(entity, attributes, ref_name)
+
+  defp put_default_people(attributes, entity, ctx) do
+    case {entity, first_actor_user(ctx)} do
+      {"Task", %{id: user_id}} -> put_new_person(attributes, "assignee", "assignee_id", user_id)
+      {"Deal", %{id: user_id}} -> put_new_person(attributes, "owner", "owner_id", user_id)
+      _entity_without_people -> attributes
+    end
+  end
+
+  defp put_new_person(attributes, spelling, key, user_id) do
+    if Map.has_key?(attributes, spelling),
+      do: attributes,
+      else: Map.put_new(attributes, key, user_id)
+  end
+
+  defp first_actor_user(%Ctx{scenario: nil}), do: nil
+
+  defp first_actor_user(%Ctx{scenario: scenario} = ctx) do
+    case Scenario.actors(scenario) do
+      [first_actor | _others] -> Map.fetch!(Ctx.context(ctx, :data).users, first_actor)
+      [] -> nil
+    end
   end
 
   defp frozen_instant(%{date_time: iso_instant}) do
@@ -211,8 +251,10 @@ defmodule Invoicing.SpecHandlers do
     %{user: user, conn: Accounts.log_in_conn(build_conn(), user)}
   end
 
-  defp actor_email(actor_name),
-    do: (actor_name |> String.downcase() |> String.replace(~r/\s+/, "-")) <> "@example.com"
+  defp actor_email(actor_name) do
+    slug = actor_name |> String.downcase() |> String.replace(~r/\s+/, "-")
+    "#{slug}-#{System.unique_integer([:positive])}@example.com"
+  end
 
   defp predicate_holds?(ctx, ref_name, predicate_name) do
     %{entity: entity, id: id} = Ctx.ref(ctx, ref_name)
@@ -319,8 +361,13 @@ defmodule Invoicing.SpecHandlers do
     end)
   end
 
+  defp content_selector(%{kind: :field, locators: %{lv: input_name, form: form}}),
+    do: ~s(#{form} [name="#{input_name}"])
+
+  defp content_selector(control), do: control.locators.lv
+
   defp element_text(view, control) do
-    view |> element(control.locators.lv) |> render()
+    view |> element(content_selector(control)) |> render()
   end
 
   defp strip_tags(html),

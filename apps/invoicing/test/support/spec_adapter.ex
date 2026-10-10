@@ -110,6 +110,11 @@ defmodule Invoicing.SpecAdapter do
   end
 
   @impl true
+  def can?(entity_name, "read", role) do
+    user = Factory.create("User", %{"role" => role})
+    Ash.can?({Factory.resource_for!(entity_name), :read}, user)
+  end
+
   def can?(entity_name, "create", role) do
     user = Factory.create("User", %{"role" => role})
     Ash.can?({Factory.resource_for!(entity_name), :create}, user)

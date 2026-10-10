@@ -52,6 +52,9 @@ defmodule InvoicingWeb.DashboardLive do
             {@overdue_tasks_count}
           </p>
           <p class="text-sm text-base-content/60">tasks past their due date</p>
+          <.link id="view-tasks" navigate={~p"/tasks"} class="text-sm font-semibold text-primary">
+            View tasks
+          </.link>
         </section>
 
         <section class="flex flex-col gap-3 rounded-lg border border-base-300 p-5">

@@ -70,6 +70,25 @@ defmodule Invoicing.SpecSupport.Factory do
     |> build(resource)
   end
 
+  @doc "Creates a record whose missing owner or assignee is the spec sales rep."
+  def create_with_default_people(entity_name, attrs, ref) do
+    create(entity_name, put_default_person(entity_name, attrs), ref)
+  end
+
+  defp put_default_person("Task", attrs),
+    do: put_default_person(attrs, ["assignee", "assignee_id"], "assignee_id")
+
+  defp put_default_person("Deal", attrs),
+    do: put_default_person(attrs, ["owner", "owner_id"], "owner_id")
+
+  defp put_default_person(_entity_name, attrs), do: attrs
+
+  defp put_default_person(attrs, spellings, key) do
+    if Enum.any?(spellings, &Map.has_key?(attrs, &1)),
+      do: attrs,
+      else: Map.put(attrs, key, default_sales_rep().id)
+  end
+
   @doc "Returns the record's fields, calculations included, as a string-keyed map."
   def reload(entity_name, id) do
     resource = resource_for!(entity_name)
@@ -136,7 +155,7 @@ defmodule Invoicing.SpecSupport.Factory do
     deal_attrs
     |> Map.put_new("name", "Deal #{System.unique_integer([:positive])}")
     |> Map.put_new_lazy("company_id", fn -> create("Company", %{}).id end)
-    |> Map.put_new_lazy("owner_id", fn -> default_sales_rep().id end)
+    |> Map.put_new_lazy("owner_id", fn -> create("User", %{"role" => "sales"}).id end)
     |> Pipeline.create_deal!(authorize?: false)
     |> put_stage(stage)
   end
@@ -157,7 +176,7 @@ defmodule Invoicing.SpecSupport.Factory do
     |> Map.put_new("title", "Task #{System.unique_integer([:positive])}")
     |> Map.put_new("due_date", "2026-02-01")
     |> Map.put_new_lazy("deal_id", fn -> create("Deal", %{}).id end)
-    |> Map.put_new_lazy("assignee_id", fn -> default_sales_rep().id end)
+    |> Map.put_new_lazy("assignee_id", fn -> create("User", %{"role" => "sales"}).id end)
     |> Pipeline.create_task!(authorize?: false)
     |> put_status(status)
   end

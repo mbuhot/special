@@ -48,6 +48,7 @@ defmodule InvoicingWeb.Router do
       live "/deals/new/edit", DealLive.Edit, :new
       live "/deals/:id/edit", DealLive.Edit, :edit
       live "/deals/:id", DealLive.Show
+      live "/tasks", TaskLive.Index
     end
   end
 

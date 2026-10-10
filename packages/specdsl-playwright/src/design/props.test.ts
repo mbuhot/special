@@ -9,6 +9,8 @@ import {
   clearViewFlag,
   closeRowOverlays,
   emptyViewState,
+  formatOption,
+  formatPercent,
   listEntities,
   selectedRefs,
   toggleAllViewFlag,
@@ -198,6 +200,14 @@ test("belongs-to relation exposes the related record's name and object", () => {
 test("list surface is a plural prop with no singular record prop", () => {
   expect(listEntities(spec, ["deals", "canCreateDeal"])).toEqual(["Deal"]);
   expect(listEntities(spec, ["deals", "deal"])).toEqual([]);
+});
+
+test("list surface stays a list when it also declares the signed-in user", () => {
+  const withUser = {
+    ...spec,
+    model: { ...spec.model, User: { fields: [], relations: [], machines: {} } },
+  } as unknown as SpecAst;
+  expect(listEntities(withUser, ["user", "deals"])).toEqual(["Deal"]);
 });
 
 test("editor for a new record starts empty and the entity comes from the surface name", () => {
@@ -831,4 +841,35 @@ test("a role that reads only its own tasks lists only the tasks assigned to the 
 
 test("a role without a read scope lists every task", () => {
   expect(listedTitles("admin", "Morgan")).toEqual(["Call Ada", "Draft"]);
+});
+
+test("an invoice with no prices chosen computes as if prices exclude GST", () => {
+  const entities = invoice("exclude gst");
+  entities.get("INV-1")?.fields.delete("prices");
+  expect(flattened(entities)).toMatchObject({ gst: "$11.00", subtotal: "$150.00", total: "$161.00" });
+});
+
+test("a line with no tax code is not taxable", () => {
+  const entities = invoice("exclude gst");
+  entities.get("Widget")?.fields.delete("tax code");
+  expect(flattened(entities)).toMatchObject({ taxable: "$0.00", gst: "$0.00", total: "$150.00" });
+});
+
+test("enum fields show as labels and rate fields as percentages", () => {
+  expect(formatOption("exclude gst")).toBe("Exclude GST");
+  expect(formatOption("gst")).toBe("GST");
+  expect(formatOption("gst-free")).toBe("GST-free");
+  expect(formatPercent("10")).toBe("10%");
+  const props = buildProps(computedSpec, invoice("exclude gst"), "INV-1", "2026-01-15", "admin");
+  expect(props["invoice"]).toMatchObject({ prices: "Exclude GST", gstRate: "10%", gstRateValue: "10" });
+  expect((props["lineItems"] as Record<string, unknown>[])[0]).toMatchObject({ taxCode: "GST" });
+});
+
+test("a role that reads all tasks lists a task assigned to another user", () => {
+  expect(listedTitles("admin", "Sam")).toContain("Draft");
+});
+
+test("a machine field keeps its state value while other enum fields show labels", () => {
+  const props = buildProps(billing, invoiceRecords(), "INV-001", TODAY);
+  expect(props["invoice"]).toMatchObject({ status: "draft" });
 });

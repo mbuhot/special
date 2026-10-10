@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import type { SpecAst } from "@special/specdsl-core";
-import { applyEffects, stateNamed } from "./records.js";
+import { applyEffects, saveRecord, stateNamed } from "./records.js";
 import type { Records } from "./records.js";
 
 const spec: SpecAst = {
@@ -98,4 +98,12 @@ test("a stage select names the machine state by value or label", () => {
   expect(stateNamed(spec, "Invoice", "status", "Paid")).toBe("paid");
   expect(stateNamed(spec, "Invoice", "status", "paid")).toBe("paid");
   expect(stateNamed(spec, "Invoice", "number", "paid")).toBeUndefined();
+});
+
+test("saving a relation chosen by display name points at the record's ref", () => {
+  const held = records();
+  held.get("Acme")?.fields.set("name", "Acme Holdings");
+  held.set("Globex", { entity: "Company", fields: new Map([["name", "Globex Corp"]]) });
+  saveRecord(spec, held, "INV-001", new Map([["company", "Globex Corp"]]));
+  expect(held.get("INV-001")?.fields.get("company")).toBe("Globex");
 });

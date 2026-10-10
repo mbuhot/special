@@ -49,12 +49,34 @@ export function saveRecord(
   const record = records.get(refName);
   if (record === undefined) return refName;
   const model = spec.model[record.entity];
-  for (const [field, value] of pending) record.fields.set(fieldKey(model, field), value);
+  for (const [field, value] of pending) {
+    const key = fieldKey(model, field);
+    record.fields.set(key, relationRef(spec, records, model, key, value));
+  }
   const key = naturalKeyField(model);
   const renamed = key === undefined ? undefined : record.fields.get(key);
   return renamed === undefined || renamed === "" || renamed === refName || records.has(renamed)
     ? refName
     : renameRecord(spec, records, refName, renamed);
+}
+
+/** The ref a belongs-to select value names: the value itself when it is a record's ref, else the target record whose own `name` field shows it (a user listed by display name); other fields keep the value. */
+export function relationRef(
+  spec: SpecAst,
+  records: Records,
+  model: EntityNode | undefined,
+  key: string,
+  value: string,
+): string {
+  const relation = (model?.relations ?? []).find(
+    (candidate) => candidate.kind === "belongs-to" && candidate.name.toLowerCase() === key,
+  );
+  if (relation === undefined || records.has(value)) return value;
+  const named = [...records].find(
+    ([, candidate]) =>
+      candidate.entity === relation.entity && candidate.fields.get("name") === value,
+  );
+  return named?.[0] ?? value;
 }
 
 /** Re-keys a record under `newRef`, keeping its position and repointing every belongs-to relation that held the old ref. */
@@ -107,7 +129,10 @@ export function createRecord(
 ): string {
   const model = spec.model[entity];
   const fields = initialFields(spec, records, entity, context);
-  for (const [field, value] of pending) fields.set(fieldKey(model, field), value);
+  for (const [field, value] of pending) {
+    const key = fieldKey(model, field);
+    fields.set(key, relationRef(spec, records, model, key, value));
+  }
   if (owner !== undefined) fields.set(owner.relation.toLowerCase(), owner.ref);
   const refName = uniqueRef(records, preferredRef(spec, entity, fields));
   records.set(refName, { entity, fields });

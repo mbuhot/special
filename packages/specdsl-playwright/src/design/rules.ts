@@ -87,7 +87,7 @@ function applyFormula(
     if (parent.entity !== invariant.entity) continue;
     const applies =
       invariant.when === undefined ||
-      holds(invariant.when, Object.fromEntries(parent.fields), NO_DATE);
+      holds(invariant.when, withOptionDefaults(spec, parent), NO_DATE);
     const amount = applies
       ? evaluateFormula(invariant.expression, formulaScope(spec, records, parentRef, parent))
       : undefined;
@@ -97,6 +97,18 @@ function applyFormula(
         stored(money ? roundToCent(amount) : amount),
       );
   }
+}
+
+/** Fields of the record where an unset one-of field reads as its first option, so a `when prices is exclude gst` condition holds before the user chooses. */
+function withOptionDefaults(spec: SpecAst, record: GivenEntity): Record<string, string> {
+  const defaults = (spec.model[record.entity]?.fields ?? []).flatMap((field) => {
+    const first = field.values?.[0];
+    return first === undefined ? [] : [[field.name.toLowerCase(), first] as [string, string]];
+  });
+  return {
+    ...Object.fromEntries(defaults),
+    ...Object.fromEntries([...record.fields].filter(([, value]) => value !== "")),
+  };
 }
 
 function formulaScope(

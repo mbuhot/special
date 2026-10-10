@@ -14,6 +14,9 @@ type Entities = ReadonlyMap<string, GivenEntity>;
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const ISO_DATE = /^(\d{4})-(\d{2})-(\d{2})/;
 const ISO_DATE_LENGTH = 10;
+const ACRONYMS = new Set(["gst", "abn"]);
+const RATE_FIELD = /\brate$/i;
+const SIGNED_IN_USER_ENTITY = "User";
 
 /** Props for an artboard of the record `refName`: its fields, has-many rows, machine states, state flags and predicates, named after the model. */
 export function buildProps(
@@ -219,10 +222,12 @@ function withRowViewFlags(row: Props, view: ViewState): Props {
   };
 }
 
-/** Entities whose plural (`deals`) is declared in `declared` and which have no singular record prop (`deal`) declared: a list surface. */
+/** Entities whose plural (`deals`) is declared in `declared` and which have no singular record prop (`deal`) declared: a list surface. The signed-in `user` prop is ambient and never marks a record surface. */
 export function listEntities(spec: SpecAst, declared: readonly string[]): string[] {
   const entityNames = Object.keys(spec.model);
-  const isRecordSurface = entityNames.some((entity) => declared.includes(camelCase(entity)));
+  const isRecordSurface = entityNames.some(
+    (entity) => entity !== SIGNED_IN_USER_ENTITY && declared.includes(camelCase(entity)),
+  );
   return isRecordSurface
     ? []
     : entityNames.filter((entity) => declared.includes(pluralCamelCase(entity)));
@@ -525,7 +530,7 @@ function displayFields(model: EntityNode | undefined, refName: string, record: G
     ...Object.fromEntries(
       [...record.fields].map(([field, value]) => [
         camelCase(field),
-        displayValue(typeOf(field), value),
+        displayValue(isMachineField(model, field) ? undefined : typeOf(field), value),
       ]),
     ),
     ...Object.fromEntries(
@@ -536,6 +541,10 @@ function displayFields(model: EntityNode | undefined, refName: string, record: G
     ),
     name: refName,
   };
+}
+
+function isMachineField(model: EntityNode | undefined, field: string): boolean {
+  return Object.keys(model?.machines ?? {}).some((machine) => machine.toLowerCase() === field);
 }
 
 /** The value an input holds: ISO date for date fields, plain number for numeric fields; undefined for other types. */
@@ -552,7 +561,28 @@ function rawValue(field: FieldNode | undefined, value: string): string | undefin
 function displayValue(field: FieldNode | undefined, value: string): string {
   if (field?.type === "date" || field?.type === "datetime") return formatDate(value);
   if (field?.type === "money") return formatMoney(value);
+  if (field?.values !== undefined) return formatOption(value);
+  if (field?.type === "decimal" && RATE_FIELD.test(field.name)) return formatPercent(value);
   return value;
+}
+
+/** `exclude gst` as `Exclude GST`, `gst-free` as `GST-free`: the first word capitalised and known acronyms upper case. */
+export function formatOption(value: string): string {
+  return value
+    .split(/([ -])/)
+    .map((word, position) =>
+      ACRONYMS.has(word.toLowerCase())
+        ? word.toUpperCase()
+        : position === 0
+          ? word.charAt(0).toUpperCase() + word.slice(1)
+          : word,
+    )
+    .join("");
+}
+
+/** `10` as `10%` for decimal fields named as rates. */
+export function formatPercent(value: string): string {
+  return value === "" || Number.isNaN(Number(value)) ? value : `${Number(value)}%`;
 }
 
 /** `2026-01-20` as `20 Jan 2026`. */

@@ -106,6 +106,7 @@ specs/
 | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Install                | `pnpm install`                                                                                                                                                  |
 | Set up the app         | `cd apps/invoicing && mix setup`                                                                                                                                |
+| Load demo data         | `cd apps/invoicing && mix run priv/repo/demo_seeds.exs` (4 companies, 6 contacts, 7 deals, 6 tasks, 5 invoices; runs once)                                      |
 | Run the app            | `cd apps/invoicing && mix phx.server`, then http://localhost:4000; sign in as sales@example.com, manager@example.com, accounts@example.com or admin@example.com |
 | Bind and lint specs    | `pnpm bind`                                                                                                                                                     |
 | Regenerate the lock    | `pnpm lock`                                                                                                                                                     |

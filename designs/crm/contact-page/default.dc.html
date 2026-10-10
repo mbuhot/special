@@ -61,7 +61,7 @@
           </div>
           <div style="display: flex; flex-direction: column; gap: 4px">
             <a
-              href="#"
+              href="../../dashboard/dashboard/default.dc.html"
               data-control="Dashboard"
               style="
                 display: flex;
@@ -95,7 +95,7 @@
               <span>Dashboard</span>
             </a>
             <a
-              href="#"
+              href="../../crm/contact-list/default.dc.html"
               data-control="Contacts"
               aria-current="page"
               style="
@@ -129,7 +129,7 @@
               <span>Contacts</span>
             </a>
             <a
-              href="#"
+              href="../../crm/company-list/default.dc.html"
               data-control="Companies"
               style="
                 display: flex;
@@ -162,7 +162,7 @@
               <span>Companies</span>
             </a>
             <a
-              href="#"
+              href="../../pipeline/pipeline-board/default.dc.html"
               data-control="Pipeline"
               style="
                 display: flex;
@@ -193,7 +193,7 @@
               <span>Pipeline</span>
             </a>
             <a
-              href="#"
+              href="../../invoicing/invoice-list/default.dc.html"
               data-control="Invoices"
               style="
                 display: flex;
@@ -278,11 +278,10 @@
               data-control="Contact name"
               style="margin: 0; font-size: 24px; font-weight: 600; color: #0f172a"
             >
-              Ada Lovelace
+              {{ contact.firstName }} {{ contact.lastName }}
             </h1>
-            <button
-              type="button"
-              data-control="Edit contact"
+            <sc-if value="{{ canUpdate }}">
+            <a href="../contact-editor/default.dc.html" data-control="Edit contact"
               style="
                 padding: 8px 16px;
                 border: 0;
@@ -293,10 +292,10 @@
                 font-weight: 600;
                 font-family: inherit;
                 cursor: pointer;
+              text-decoration: none;
               "
-            >
-              Edit contact
-            </button>
+            >Edit contact</a>
+            </sc-if>
           </header>
           <main
             data-surface="Contact page"
@@ -336,7 +335,7 @@
                 "
               >
                 <span style="font-size: 13px; color: #64748b">Email</span>
-                <span style="font-size: 14px; color: #0f172a">ada@acme.example</span>
+                <span style="font-size: 14px; color: #0f172a">{{ contact.email }}</span>
               </div>
               <div
                 style="
@@ -349,7 +348,7 @@
                 "
               >
                 <span style="font-size: 13px; color: #64748b">Phone</span>
-                <span style="font-size: 14px; color: #0f172a">555-0100</span>
+                <span style="font-size: 14px; color: #0f172a">{{ contact.phone }}</span>
               </div>
               <div
                 style="
@@ -363,26 +362,14 @@
               >
                 <span style="font-size: 13px; color: #64748b">Company</span>
                 <a
-                  href="#"
+                  href="../company-page/default.dc.html"
+                  data-record="{{ contact.company }}"
                   data-control="Company link"
                   style="font-size: 14px; text-decoration: none"
-                  >Acme</a
+                  >{{ contact.company }}</a
                 >
               </div>
-              <div
-                style="
-                  display: flex;
-                  align-items: center;
-                  justify-content: space-between;
-                  gap: 16px;
-                  padding: 12px 0;
-                  border-top: 1px solid #e2e8f0;
-                "
-              >
-                <span style="font-size: 13px; color: #64748b">Created</span>
-                <span style="font-size: 14px; color: #0f172a">10 Jan 2026</span>
-              </div>
-            </section>
+              </section>
             <div style="display: flex; flex-direction: column; gap: 20px; min-width: 0">
               <section
                 style="
@@ -459,78 +446,14 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <tr>
-                      <td style="padding: 12px 12px 12px 0; border-top: 1px solid #e2e8f0">
-                        <a href="#" style="text-decoration: none; font-weight: 600">Big deal</a>
-                      </td>
-                      <td style="padding: 12px 12px 12px 0; border-top: 1px solid #e2e8f0">
-                        <span
-                          style="
-                            padding: 2px 10px;
-                            border-radius: 9999px;
-                            background: #eff6ff;
-                            color: #1d4ed8;
-                            font-size: 12px;
-                            font-weight: 600;
-                          "
-                          >Qualified</span
-                        >
-                      </td>
-                      <td
-                        style="
-                          padding: 12px 12px 12px 0;
-                          border-top: 1px solid #e2e8f0;
-                          text-align: right;
-                        "
-                      >
-                        12,000.00
-                      </td>
-                      <td
-                        style="
-                          padding: 12px 0 12px 12px;
-                          border-top: 1px solid #e2e8f0;
-                          color: #334155;
-                        "
-                      >
-                        31 Mar 2026
-                      </td>
-                    </tr>
-                    <tr>
-                      <td style="padding: 12px 12px 12px 0; border-top: 1px solid #e2e8f0">
-                        <a href="#" style="text-decoration: none; font-weight: 600">Renewal</a>
-                      </td>
-                      <td style="padding: 12px 12px 12px 0; border-top: 1px solid #e2e8f0">
-                        <span
-                          style="
-                            padding: 2px 10px;
-                            border-radius: 9999px;
-                            background: #fef3c7;
-                            color: #b45309;
-                            font-size: 12px;
-                            font-weight: 600;
-                          "
-                          >Proposal</span
-                        >
-                      </td>
-                      <td
-                        style="
-                          padding: 12px 12px 12px 0;
-                          border-top: 1px solid #e2e8f0;
-                          text-align: right;
-                        "
-                      >
-                        8,500.00
-                      </td>
-                      <td
-                        style="
-                          padding: 12px 0 12px 12px;
-                          border-top: 1px solid #e2e8f0;
-                          color: #334155;
-                        "
-                      >
-                        30 Jun 2026
-                      </td>
-                    </tr>
+                    <sc-for list="{{ deals }}" as="row" hint-placeholder-count="2">
+                      <tr>
+                        <td style="padding: 12px 12px 12px 0; border-top: 1px solid #e2e8f0"><a href="../../pipeline/deal-page/default.dc.html" data-record="{{ row.name }}" style="text-decoration: none; font-weight: 600">{{ row.name }}</a></td>
+                        <td style="padding: 12px 12px 12px 0; border-top: 1px solid #e2e8f0"><span style="padding: 2px 10px; border-radius: 9999px; background: #eff6ff; color: #1d4ed8; font-size: 12px; font-weight: 600; text-transform: capitalize;">{{ row.stage }}</span></td>
+                        <td style="padding: 12px 12px 12px 0; border-top: 1px solid #e2e8f0; text-align: right">{{ row.amount }}</td>
+                        <td style="padding: 12px 0 12px 12px; border-top: 1px solid #e2e8f0; color: #334155">{{ row.closeDate }}</td>
+                      </tr>
+                    </sc-for>
                   </tbody>
                 </table>
               </section>
@@ -554,7 +477,7 @@
                     <label for="activity-kind" style="font-size: 12px; color: #64748b">Kind</label>
                     <select
                       id="activity-kind"
-                      data-control="Activity kind"
+                      data-control="Activity kind" data-field="kind"
                       style="
                         width: 104px;
                         padding: 8px 12px;
@@ -567,10 +490,10 @@
                         box-sizing: border-box;
                       "
                     >
-                      <option>Note</option>
-                      <option>Call</option>
-                      <option>Email</option>
-                      <option>Meeting</option>
+                      <option value="note">Note</option>
+                      <option value="call">Call</option>
+                      <option value="email">Email</option>
+                      <option value="meeting">Meeting</option>
                     </select>
                   </div>
                   <div
@@ -582,7 +505,7 @@
                     <input
                       id="activity-body"
                       type="text"
-                      data-control="Activity body"
+                      data-control="Activity body" data-field="body"
                       placeholder="What happened?"
                       style="
                         width: 100%;
@@ -597,9 +520,8 @@
                       "
                     />
                   </div>
-                  <button
-                    type="button"
-                    data-control="Log activity"
+                  <sc-if value="{{ canUpdate }}">
+                  <button type="button" data-control="Log activity" data-creates="activities"
                     style="
                       padding: 8px 16px;
                       border: 0;
@@ -611,112 +533,30 @@
                       font-family: inherit;
                       cursor: pointer;
                     "
-                  >
-                    Log activity
-                  </button>
+                  >Log activity</button>
+                  </sc-if>
                 </div>
-                <div
-                  style="
-                    display: grid;
-                    grid-template-columns: 72px 1fr;
-                    align-items: start;
-                    gap: 16px;
-                    padding: 12px 0;
-                    border-top: 1px solid #e2e8f0;
-                    font-size: 14px;
-                  "
-                >
-                  <span
-                    style="
-                      justify-self: start;
-                      padding: 2px 10px;
-                      border-radius: 9999px;
-                      background: #eff6ff;
-                      color: #1d4ed8;
-                      font-size: 12px;
-                      font-weight: 600;
-                    "
-                    >Call</span
-                  >
-                  <div style="display: flex; flex-direction: column; gap: 2px">
-                    <span style="color: #0f172a">Discussed renewal terms and next steps</span>
-                    <div style="display: flex; gap: 12px; font-size: 13px; color: #64748b">
-                      <span>by Sales rep</span><span>10 Jan 2026 10:00</span>
+                <sc-for list="{{ activities }}" as="row" hint-placeholder-count="3">
+                  <div style="display: grid; grid-template-columns: 72px 1fr; align-items: start; gap: 16px; padding: 12px 0; border-top: 1px solid #e2e8f0; font-size: 14px;">
+                    <span style="justify-self: start; padding: 2px 10px; border-radius: 9999px; background: #eff6ff; color: #1d4ed8; font-size: 12px; font-weight: 600; text-transform: capitalize;">{{ row.kind }}</span>
+                    <div style="display: flex; flex-direction: column; gap: 2px">
+                      <span style="color: #0f172a">{{ row.body }}</span>
+                      <div style="display: flex; gap: 12px; font-size: 13px; color: #64748b">
+                        <span>by {{ row.author }}</span><span>{{ row.occurredAt }}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div
-                  style="
-                    display: grid;
-                    grid-template-columns: 72px 1fr;
-                    align-items: start;
-                    gap: 16px;
-                    padding: 12px 0;
-                    border-top: 1px solid #e2e8f0;
-                    font-size: 14px;
-                  "
-                >
-                  <span
-                    style="
-                      justify-self: start;
-                      padding: 2px 10px;
-                      border-radius: 9999px;
-                      background: #eff6ff;
-                      color: #1d4ed8;
-                      font-size: 12px;
-                      font-weight: 600;
-                    "
-                    >Email</span
-                  >
-                  <div style="display: flex; flex-direction: column; gap: 2px">
-                    <span style="color: #0f172a"
-                      >Sent revised proposal for the onboarding package</span
-                    >
-                    <div style="display: flex; gap: 12px; font-size: 13px; color: #64748b">
-                      <span>by Sales rep</span><span>10 Jan 2026 10:00</span>
-                    </div>
-                  </div>
-                </div>
-                <div
-                  style="
-                    display: grid;
-                    grid-template-columns: 72px 1fr;
-                    align-items: start;
-                    gap: 16px;
-                    padding: 12px 0 0;
-                    border-top: 1px solid #e2e8f0;
-                    font-size: 14px;
-                  "
-                >
-                  <span
-                    style="
-                      justify-self: start;
-                      padding: 2px 10px;
-                      border-radius: 9999px;
-                      background: #eff6ff;
-                      color: #1d4ed8;
-                      font-size: 12px;
-                      font-weight: 600;
-                    "
-                    >Note</span
-                  >
-                  <div style="display: flex; flex-direction: column; gap: 2px">
-                    <span style="color: #0f172a">Prefers invoices sent to accounts payable</span>
-                    <div style="display: flex; gap: 12px; font-size: 13px; color: #64748b">
-                      <span>by Sales rep</span><span>10 Jan 2026 10:00</span>
-                    </div>
-                  </div>
-                </div>
+                </sc-for>
               </section>
             </div>
           </main>
         </div>
       </div>
     </x-dc>
-    <script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
+    <script type="text/x-dc" data-dc-script data-props='{"contact":{"editor":null,"default":{"name":"Ada Lovelace","firstName":"Ada","lastName":"Lovelace","email":"ada@acme.example","phone":"555-0100","company":"Acme"}},"canUpdate":{"editor":"boolean","default":true},"deals":{"editor":null,"default":[{"name":"Big deal","stage":"qualified","amount":"$12,000.00","closeDate":"31 Mar 2026"},{"name":"Renewal","stage":"proposal","amount":"$8,500.00","closeDate":"30 Jun 2026"}]},"activities":{"editor":null,"default":[{"name":"Intro call","kind":"call","body":"Discussed renewal terms and next steps","author":"Sales rep","occurredAt":"10 Jan 2026"},{"name":"Follow up","kind":"email","body":"Sent revised proposal for the onboarding package","author":"Sales rep","occurredAt":"10 Jan 2026"}]},"$preview":{"width":1280,"height":800}}'>
       class Component extends DCLogic {
       renderVals() {
-      return {};
+      return { ...this.props };
       }
       }
     </script>

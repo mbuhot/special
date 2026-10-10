@@ -61,7 +61,7 @@
           </div>
           <div style="display: flex; flex-direction: column; gap: 4px">
             <a
-              href="#"
+              href="../../dashboard/dashboard/default.dc.html"
               data-control="Dashboard"
               style="
                 display: flex;
@@ -95,7 +95,7 @@
               <span>Dashboard</span>
             </a>
             <a
-              href="#"
+              href="../../crm/contact-list/default.dc.html"
               data-control="Contacts"
               aria-current="page"
               style="
@@ -129,7 +129,7 @@
               <span>Contacts</span>
             </a>
             <a
-              href="#"
+              href="../../crm/company-list/default.dc.html"
               data-control="Companies"
               style="
                 display: flex;
@@ -162,7 +162,7 @@
               <span>Companies</span>
             </a>
             <a
-              href="#"
+              href="../../pipeline/pipeline-board/default.dc.html"
               data-control="Pipeline"
               style="
                 display: flex;
@@ -193,7 +193,7 @@
               <span>Pipeline</span>
             </a>
             <a
-              href="#"
+              href="../../invoicing/invoice-list/default.dc.html"
               data-control="Invoices"
               style="
                 display: flex;
@@ -280,43 +280,43 @@
         </nav>
         <div style="flex: 1; min-width: 0; display: flex; flex-direction: column">
           <header style="display: flex; align-items: center; justify-content: space-between; gap: 16px; height: 72px; box-sizing: border-box; flex: none; padding: 0 32px; border-bottom: 1px solid #e2e8f0;">
-            <h1 data-control="Contact name" style="margin: 0; font-size: 24px; font-weight: 600; color: #0f172a">Ada Lovelace</h1>
+            <h1 data-control="Contact name" style="margin: 0; font-size: 24px; font-weight: 600; color: #0f172a">{{ contact.firstName }} {{ contact.lastName }}</h1>
           </header>
           <main data-surface="Contact editor" style="flex: 1; display: flex; flex-direction: column; align-items: flex-start; padding: 32px; background: #ffffff;">
             <form style="display: flex; flex-direction: column; gap: 16px; width: 480px; display: flex; flex-direction: column; box-sizing: border-box; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px; background: #ffffff;">
               <div style="display: flex; flex-direction: column; gap: 4px">
                 <label for="contact-first-name" style="font-size: 12px; color: #64748b">First name</label>
-                <input id="contact-first-name" type="text" data-control="First name" value="Ada" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; font-size: 14px; font-family: inherit; box-sizing: border-box;" />
+                <input id="contact-first-name" type="text" data-control="First name" data-field="firstName" value="{{ contact.firstName }}" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; font-size: 14px; font-family: inherit; box-sizing: border-box;" />
               </div>
               <div style="display: flex; flex-direction: column; gap: 4px">
                 <label for="contact-last-name" style="font-size: 12px; color: #64748b">Last name</label>
-                <input id="contact-last-name" type="text" data-control="Last name" value="Lovelace" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; font-size: 14px; font-family: inherit; box-sizing: border-box;" />
+                <input id="contact-last-name" type="text" data-control="Last name" data-field="lastName" value="{{ contact.lastName }}" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; font-size: 14px; font-family: inherit; box-sizing: border-box;" />
               </div>
               <div style="display: flex; flex-direction: column; gap: 4px">
                 <label for="contact-email" style="font-size: 12px; color: #64748b">Email</label>
-                <input id="contact-email" type="email" data-control="Email" value="ada@acme.example" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; font-size: 14px; font-family: inherit; box-sizing: border-box;" />
+                <input id="contact-email" type="email" data-control="Email" data-field="email" value="{{ contact.email }}" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; font-size: 14px; font-family: inherit; box-sizing: border-box;" />
               </div>
               <div style="display: flex; flex-direction: column; gap: 4px">
                 <label for="contact-phone" style="font-size: 12px; color: #64748b">Phone</label>
-                <input id="contact-phone" type="text" data-control="Phone" value="555-0100" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; font-size: 14px; font-family: inherit; box-sizing: border-box;" />
+                <input id="contact-phone" type="text" data-control="Phone" data-field="phone" value="{{ contact.phone }}" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; font-size: 14px; font-family: inherit; box-sizing: border-box;" />
               </div>
               <div style="display: flex; flex-direction: column; gap: 4px">
                 <label for="contact-company" style="font-size: 12px; color: #64748b">Company</label>
-                <select id="contact-company" data-control="Company" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; font-size: 14px; font-family: inherit; box-sizing: border-box;">
+                <select id="contact-company" data-control="Company" data-field="company" value="{{ contact.company }}" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; font-size: 14px; font-family: inherit; box-sizing: border-box;">
                   <option>Acme</option>
                   <option>Globex</option>
                 </select>
               </div>
-              <div style="display: flex; gap: 8px"><button type="button" data-control="Save" style="padding: 8px 16px; border: 0; border-radius: 8px; background: #1d4ed8; color: #ffffff; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; text-decoration: none;">Save</button></div>
+              <div style="display: flex; gap: 8px"><button type="button" data-control="Save" data-saves style="padding: 8px 16px; border: 0; border-radius: 8px; background: #1d4ed8; color: #ffffff; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; text-decoration: none;">Save</button></div>
             </form>
           </main>
         </div>
       </div>
     </x-dc>
-    <script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
+    <script type="text/x-dc" data-dc-script data-props='{"contact":{"editor":null,"default":{"name":"Ada Lovelace","firstName":"Ada","lastName":"Lovelace","email":"ada@acme.example","phone":"555-0100","company":"Acme"}},"$preview":{"width":1280,"height":800}}'>
       class Component extends DCLogic {
       renderVals() {
-      return {};
+      return { ...this.props };
       }
       }
     </script>

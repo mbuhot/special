@@ -61,7 +61,7 @@
           </div>
           <div style="display: flex; flex-direction: column; gap: 4px">
             <a
-              href="#"
+              href="../../dashboard/dashboard/default.dc.html"
               data-control="Dashboard"
               style="
                 display: flex;
@@ -95,7 +95,7 @@
               <span>Dashboard</span>
             </a>
             <a
-              href="#"
+              href="../../crm/contact-list/default.dc.html"
               data-control="Contacts"
               style="
                 display: flex;
@@ -127,7 +127,7 @@
               <span>Contacts</span>
             </a>
             <a
-              href="#"
+              href="../../crm/company-list/default.dc.html"
               data-control="Companies"
               style="
                 display: flex;
@@ -160,7 +160,7 @@
               <span>Companies</span>
             </a>
             <a
-              href="#"
+              href="../../pipeline/pipeline-board/default.dc.html"
               data-control="Pipeline"
               aria-current="page"
               style="
@@ -193,7 +193,7 @@
               <span>Pipeline</span>
             </a>
             <a
-              href="#"
+              href="../../invoicing/invoice-list/default.dc.html"
               data-control="Invoices"
               style="
                 display: flex;
@@ -281,48 +281,52 @@
         <div style="flex: 1; min-width: 0; display: flex; flex-direction: column">
           <header style="display: flex; align-items: center; justify-content: space-between; gap: 16px; height: 72px; box-sizing: border-box; flex: none; padding: 0 32px; border-bottom: 1px solid #e2e8f0;">
             <div style="display: flex; align-items: center; gap: 12px">
-              <h1 data-control="Deal name" style="margin: 0; font-size: 24px; font-weight: 600; color: #0f172a">Big deal</h1>
-              <span data-control="Stage" style="padding: 2px 10px; border-radius: 9999px; background: #eff6ff; color: #1d4ed8; font-size: 12px; font-weight: 600;">Lead</span>
+              <h1 data-control="Deal name" style="margin: 0; font-size: 24px; font-weight: 600; color: #0f172a">{{ deal.name }}</h1>
+              <sc-if value="{{ isLead }}" hint-placeholder-val="{{ true }}"><span data-control="Stage" style="padding: 2px 10px; border-radius: 9999px; font-size: 12px; font-weight: 600; background: #f1f5f9; color: #334155;">Lead</span></sc-if>
+              <sc-if value="{{ isQualified }}" hint-placeholder-val="{{ false }}"><span data-control="Stage" style="padding: 2px 10px; border-radius: 9999px; font-size: 12px; font-weight: 600; background: #eff6ff; color: #1d4ed8;">Qualified</span></sc-if>
+              <sc-if value="{{ isProposal }}" hint-placeholder-val="{{ false }}"><span data-control="Stage" style="padding: 2px 10px; border-radius: 9999px; font-size: 12px; font-weight: 600; background: #eff6ff; color: #1d4ed8;">Proposal</span></sc-if>
+              <sc-if value="{{ isWon }}" hint-placeholder-val="{{ false }}"><span data-control="Stage" style="padding: 2px 10px; border-radius: 9999px; font-size: 12px; font-weight: 600; background: #dcfce7; color: #15803d;">Won</span></sc-if>
+              <sc-if value="{{ isLost }}" hint-placeholder-val="{{ false }}"><span data-control="Stage" style="padding: 2px 10px; border-radius: 9999px; font-size: 12px; font-weight: 600; background: #fee2e2; color: #b91c1c;">Lost</span></sc-if>
             </div>
           </header>
           <main data-surface="Deal editor" style="flex: 1; display: flex; flex-direction: column; align-items: flex-start; padding: 32px; background: #ffffff;">
             <form style="display: flex; flex-direction: column; gap: 16px; width: 480px; display: flex; flex-direction: column; box-sizing: border-box; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px; background: #ffffff;">
               <div style="display: flex; flex-direction: column; gap: 4px">
                 <label for="deal-name" style="font-size: 12px; color: #64748b">Name</label>
-                <input id="deal-name" type="text" data-control="Name" value="Big deal" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; font-size: 14px; font-family: inherit; box-sizing: border-box;" />
+                <input id="deal-name" type="text" data-control="Name" data-field="name" value="{{ deal.name }}" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; font-size: 14px; font-family: inherit; box-sizing: border-box;" />
               </div>
               <div style="display: flex; flex-direction: column; gap: 4px">
                 <label for="deal-amount" style="font-size: 12px; color: #64748b">Amount</label>
-                <input id="deal-amount" type="text" data-control="Amount" value="12000" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; font-size: 14px; font-family: inherit; box-sizing: border-box;" />
+                <input id="deal-amount" type="text" data-control="Amount" data-field="amount" value="{{ deal.amount }}" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; font-size: 14px; font-family: inherit; box-sizing: border-box;" />
               </div>
               <div style="display: flex; flex-direction: column; gap: 4px">
                 <label for="deal-close-date" style="font-size: 12px; color: #64748b">Close date</label>
-                <input id="deal-close-date" type="date" data-control="Close date" value="2026-03-31" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; font-size: 14px; font-family: inherit; box-sizing: border-box;" />
+                <input id="deal-close-date" type="date" data-control="Close date" data-field="closeDate" value="{{ deal.closeDate }}" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; font-size: 14px; font-family: inherit; box-sizing: border-box;" />
               </div>
               <div style="display: flex; flex-direction: column; gap: 4px">
                 <label for="deal-company" style="font-size: 12px; color: #64748b">Company</label>
-                <select id="deal-company" data-control="Company" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; font-size: 14px; font-family: inherit; box-sizing: border-box;">
+                <select id="deal-company" data-control="Company" data-field="company" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; font-size: 14px; font-family: inherit; box-sizing: border-box;">
                   <option>Acme</option>
                   <option>Globex</option>
                 </select>
               </div>
               <div style="display: flex; flex-direction: column; gap: 4px">
                 <label for="deal-contact" style="font-size: 12px; color: #64748b">Contact</label>
-                <select id="deal-contact" data-control="Contact" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; font-size: 14px; font-family: inherit; box-sizing: border-box;">
+                <select id="deal-contact" data-control="Contact" data-field="contact" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; font-size: 14px; font-family: inherit; box-sizing: border-box;">
                   <option>Ada Lovelace</option>
                   <option>Grace Hopper</option>
                 </select>
               </div>
-              <div style="display: flex; gap: 8px"><button type="button" data-control="Save" style="padding: 8px 16px; border: 0; border-radius: 8px; background: #1d4ed8; color: #ffffff; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; text-decoration: none;">Save</button></div>
+              <div style="display: flex; gap: 8px"><button type="button" data-control="Save" data-saves style="padding: 8px 16px; border: 0; border-radius: 8px; background: #1d4ed8; color: #ffffff; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; text-decoration: none;">Save</button></div>
             </form>
           </main>
         </div>
       </div>
     </x-dc>
-    <script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
+    <script type="text/x-dc" data-dc-script data-props='{"isLead":{"editor":"boolean","default":true},"isQualified":{"editor":"boolean","default":false},"isProposal":{"editor":"boolean","default":false},"isWon":{"editor":"boolean","default":false},"isLost":{"editor":"boolean","default":false},"deal":{"editor":null,"default":{"name":"Big deal","amount":"$12,000.00","closeDate":"31 Mar 2026","company":"Acme","contact":"Ada Lovelace"}},"$preview":{"width":1280,"height":800}}'>
       class Component extends DCLogic {
       renderVals() {
-      return {};
+      return { ...this.props };
       }
       }
     </script>

@@ -61,7 +61,7 @@
           </div>
           <div style="display: flex; flex-direction: column; gap: 4px">
             <a
-              href="#"
+              href="../../dashboard/dashboard/default.dc.html"
               data-control="Dashboard"
               style="
                 display: flex;
@@ -95,7 +95,7 @@
               <span>Dashboard</span>
             </a>
             <a
-              href="#"
+              href="../../crm/contact-list/default.dc.html"
               data-control="Contacts"
               style="
                 display: flex;
@@ -127,7 +127,7 @@
               <span>Contacts</span>
             </a>
             <a
-              href="#"
+              href="../../crm/company-list/default.dc.html"
               data-control="Companies"
               style="
                 display: flex;
@@ -160,7 +160,7 @@
               <span>Companies</span>
             </a>
             <a
-              href="#"
+              href="../../pipeline/pipeline-board/default.dc.html"
               data-control="Pipeline"
               aria-current="page"
               style="
@@ -193,7 +193,7 @@
               <span>Pipeline</span>
             </a>
             <a
-              href="#"
+              href="../../invoicing/invoice-list/default.dc.html"
               data-control="Invoices"
               style="
                 display: flex;
@@ -281,7 +281,7 @@
         <div style="flex: 1; min-width: 0; display: flex; flex-direction: column">
           <header style="display: flex; align-items: center; justify-content: space-between; gap: 16px; height: 72px; box-sizing: border-box; flex: none; padding: 0 32px; border-bottom: 1px solid #e2e8f0;">
             <h1 style="margin: 0; font-size: 24px; font-weight: 600; color: #0f172a">Pipeline</h1>
-            <a href="../deal-editor/default.dc.html" data-control="New deal" style="padding: 8px 16px; border: 0; border-radius: 8px; background: #1d4ed8; color: #ffffff; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; text-decoration: none;">New deal</a>
+            <sc-if value="{{ canCreateDeal }}" hint-placeholder-val="{{ true }}"><a href="../deal-editor/default.dc.html" data-control="New deal" style="padding: 8px 16px; border: 0; border-radius: 8px; background: #1d4ed8; color: #ffffff; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; text-decoration: none;">New deal</a></sc-if>
           </header>
           <main data-surface="Pipeline board" style="flex: 1; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; align-items: start; padding: 32px; background: #ffffff;">
             <section data-control="Lead column" style="display: flex; flex-direction: column; gap: 12px; box-sizing: border-box; min-height: 400px; padding: 16px; border: 1px solid #e2e8f0; border-radius: 8px; background: #f8fafc;">
@@ -289,12 +289,12 @@
               <sc-for list="{{ deals }}" as="deal">
                 <sc-if value="{{ deal.isLead }}">
               <div style="display: flex; flex-direction: column; gap: 8px; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; background: #ffffff;">
-                <a href="../deal-page/default.dc.html" style="font-size: 14px; font-weight: 600; text-decoration: none">{{ deal.name }}</a>
+                <a href="../deal-page/default.dc.html" data-record="{{ deal.name }}" style="font-size: 14px; font-weight: 600; text-decoration: none">{{ deal.name }}</a>
                 <span style="font-size: 13px; color: #64748b">{{ deal.company }}</span>
                 <span style="font-size: 13px; color: #0f172a">{{ deal.amount }}</span>
                 <div style="display: flex; gap: 8px">
-                  <button type="button" data-control="Qualify" data-record="{{ deal.name }}" data-next-state="qualified" style="padding: 8px 16px; border: 0; border-radius: 8px; background: #1d4ed8; color: #ffffff; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; text-decoration: none; padding: 4px 12px; font-size: 13px;">Qualify</button>
-                  <button type="button" data-control="Lose" data-record="{{ deal.name }}" data-next-state="lost" style="padding: 8px 16px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #334155; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; text-decoration: none; padding: 4px 12px; font-size: 13px;">Lose</button>
+                  <sc-if value="{{ deal.canQualify }}" hint-placeholder-val="{{ true }}"><button type="button" data-control="Qualify" data-record="{{ deal.name }}" data-next-state="qualified" style="padding: 8px 16px; border: 0; border-radius: 8px; background: #1d4ed8; color: #ffffff; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; text-decoration: none; padding: 4px 12px; font-size: 13px;">Qualify</button></sc-if>
+                  <sc-if value="{{ deal.canLose }}" hint-placeholder-val="{{ true }}"><button type="button" data-control="Lose" data-record="{{ deal.name }}" data-next-state="lost" style="padding: 8px 16px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #334155; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; text-decoration: none; padding: 4px 12px; font-size: 13px;">Lose</button></sc-if>
                 </div>
               </div>
                 </sc-if>
@@ -305,12 +305,12 @@
               <sc-for list="{{ deals }}" as="deal">
                 <sc-if value="{{ deal.isQualified }}">
               <div style="display: flex; flex-direction: column; gap: 8px; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; background: #ffffff;">
-                <a href="../deal-page/default.dc.html" style="font-size: 14px; font-weight: 600; text-decoration: none">{{ deal.name }}</a>
+                <a href="../deal-page/default.dc.html" data-record="{{ deal.name }}" style="font-size: 14px; font-weight: 600; text-decoration: none">{{ deal.name }}</a>
                 <span style="font-size: 13px; color: #64748b">{{ deal.company }}</span>
                 <span style="font-size: 13px; color: #0f172a">{{ deal.amount }}</span>
                 <div style="display: flex; gap: 8px">
-                  <button type="button" data-control="Propose" data-record="{{ deal.name }}" data-next-state="proposal" style="padding: 8px 16px; border: 0; border-radius: 8px; background: #1d4ed8; color: #ffffff; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; text-decoration: none; padding: 4px 12px; font-size: 13px;">Propose</button>
-                  <button type="button" data-control="Lose" data-record="{{ deal.name }}" data-next-state="lost" style="padding: 8px 16px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #334155; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; text-decoration: none; padding: 4px 12px; font-size: 13px;">Lose</button>
+                  <sc-if value="{{ deal.canPropose }}" hint-placeholder-val="{{ true }}"><button type="button" data-control="Propose" data-record="{{ deal.name }}" data-next-state="proposal" style="padding: 8px 16px; border: 0; border-radius: 8px; background: #1d4ed8; color: #ffffff; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; text-decoration: none; padding: 4px 12px; font-size: 13px;">Propose</button></sc-if>
+                  <sc-if value="{{ deal.canLose }}" hint-placeholder-val="{{ true }}"><button type="button" data-control="Lose" data-record="{{ deal.name }}" data-next-state="lost" style="padding: 8px 16px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #334155; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; text-decoration: none; padding: 4px 12px; font-size: 13px;">Lose</button></sc-if>
                 </div>
               </div>
                 </sc-if>
@@ -321,12 +321,12 @@
               <sc-for list="{{ deals }}" as="deal">
                 <sc-if value="{{ deal.isProposal }}">
               <div style="display: flex; flex-direction: column; gap: 8px; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; background: #ffffff;">
-                <a href="../deal-page/default.dc.html" style="font-size: 14px; font-weight: 600; text-decoration: none">{{ deal.name }}</a>
+                <a href="../deal-page/default.dc.html" data-record="{{ deal.name }}" style="font-size: 14px; font-weight: 600; text-decoration: none">{{ deal.name }}</a>
                 <span style="font-size: 13px; color: #64748b">{{ deal.company }}</span>
                 <span style="font-size: 13px; color: #0f172a">{{ deal.amount }}</span>
                 <div style="display: flex; gap: 8px">
-                  <button type="button" data-control="Win" data-record="{{ deal.name }}" data-next-state="won" style="padding: 8px 16px; border: 0; border-radius: 8px; background: #1d4ed8; color: #ffffff; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; text-decoration: none; padding: 4px 12px; font-size: 13px;">Win</button>
-                  <button type="button" data-control="Lose" data-record="{{ deal.name }}" data-next-state="lost" style="padding: 8px 16px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #334155; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; text-decoration: none; padding: 4px 12px; font-size: 13px;">Lose</button>
+                  <sc-if value="{{ deal.canWin }}" hint-placeholder-val="{{ true }}"><button type="button" data-control="Win" data-record="{{ deal.name }}" data-next-state="won" style="padding: 8px 16px; border: 0; border-radius: 8px; background: #1d4ed8; color: #ffffff; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; text-decoration: none; padding: 4px 12px; font-size: 13px;">Win</button></sc-if>
+                  <sc-if value="{{ deal.canLose }}" hint-placeholder-val="{{ true }}"><button type="button" data-control="Lose" data-record="{{ deal.name }}" data-next-state="lost" style="padding: 8px 16px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #334155; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; text-decoration: none; padding: 4px 12px; font-size: 13px;">Lose</button></sc-if>
                 </div>
               </div>
                 </sc-if>
@@ -337,7 +337,7 @@
               <sc-for list="{{ deals }}" as="deal">
                 <sc-if value="{{ deal.isWon }}">
               <div style="display: flex; flex-direction: column; gap: 8px; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; background: #ffffff;">
-                <a href="../deal-page/default.dc.html" style="font-size: 14px; font-weight: 600; text-decoration: none">{{ deal.name }}</a>
+                <a href="../deal-page/default.dc.html" data-record="{{ deal.name }}" style="font-size: 14px; font-weight: 600; text-decoration: none">{{ deal.name }}</a>
                 <span style="font-size: 13px; color: #64748b">{{ deal.company }}</span>
                 <span style="font-size: 13px; color: #0f172a">{{ deal.amount }}</span>
               </div>
@@ -349,7 +349,7 @@
               <sc-for list="{{ deals }}" as="deal">
                 <sc-if value="{{ deal.isLost }}">
               <div style="display: flex; flex-direction: column; gap: 8px; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; background: #ffffff;">
-                <a href="../deal-page/default.dc.html" style="font-size: 14px; font-weight: 600; text-decoration: none">{{ deal.name }}</a>
+                <a href="../deal-page/default.dc.html" data-record="{{ deal.name }}" style="font-size: 14px; font-weight: 600; text-decoration: none">{{ deal.name }}</a>
                 <span style="font-size: 13px; color: #64748b">{{ deal.company }}</span>
                 <span style="font-size: 13px; color: #0f172a">{{ deal.amount }}</span>
               </div>
@@ -360,10 +360,10 @@
         </div>
       </div>
     </x-dc>
-    <script type="text/x-dc" data-dc-script data-props='{"deals":{"editor":null,"default":[{"name":"Big deal","company":"Acme","amount":"$12,000.00","isLead":true,"isQualified":false,"isProposal":false,"isWon":false,"isLost":false},{"name":"Website rebuild","company":"Globex","amount":"$8,500.00","isLead":true,"isQualified":false,"isProposal":false,"isWon":false,"isLost":false},{"name":"Support retainer","company":"Initech","amount":"$4,200.00","isLead":false,"isQualified":true,"isProposal":false,"isWon":false,"isLost":false},{"name":"Platform licence","company":"Acme","amount":"$30,000.00","isLead":false,"isQualified":false,"isProposal":true,"isWon":false,"isLost":false},{"name":"Training package","company":"Globex","amount":"$2,400.00","isLead":false,"isQualified":false,"isProposal":false,"isWon":true,"isLost":false},{"name":"Pilot project","company":"Initech","amount":"$6,000.00","isLead":false,"isQualified":false,"isProposal":false,"isWon":false,"isLost":true}]},"$preview":{"width":1280,"height":800}}'>
+    <script type="text/x-dc" data-dc-script data-props='{"canCreateDeal":{"editor":"boolean","default":true},"deals":{"editor":null,"default":[{"name":"Big deal","canQualify":true,"canPropose":true,"canWin":true,"canLose":true,"company":"Acme","amount":"$12,000.00","isLead":true,"isQualified":false,"isProposal":false,"isWon":false,"isLost":false},{"name":"Website rebuild","canQualify":true,"canPropose":true,"canWin":true,"canLose":true,"company":"Globex","amount":"$8,500.00","isLead":true,"isQualified":false,"isProposal":false,"isWon":false,"isLost":false},{"name":"Support retainer","canQualify":true,"canPropose":true,"canWin":true,"canLose":true,"company":"Initech","amount":"$4,200.00","isLead":false,"isQualified":true,"isProposal":false,"isWon":false,"isLost":false},{"name":"Platform licence","canQualify":true,"canPropose":true,"canWin":true,"canLose":true,"company":"Acme","amount":"$30,000.00","isLead":false,"isQualified":false,"isProposal":true,"isWon":false,"isLost":false},{"name":"Training package","canQualify":true,"canPropose":true,"canWin":true,"canLose":true,"company":"Globex","amount":"$2,400.00","isLead":false,"isQualified":false,"isProposal":false,"isWon":true,"isLost":false},{"name":"Pilot project","canQualify":true,"canPropose":true,"canWin":true,"canLose":true,"company":"Initech","amount":"$6,000.00","isLead":false,"isQualified":false,"isProposal":false,"isWon":false,"isLost":true}]},"$preview":{"width":1280,"height":800}}'>
       class Component extends DCLogic {
       renderVals() {
-      return {};
+      return { ...this.props };
       }
       }
     </script>

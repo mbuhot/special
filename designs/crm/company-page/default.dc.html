@@ -61,7 +61,7 @@
           </div>
           <div style="display: flex; flex-direction: column; gap: 4px">
             <a
-              href="#"
+              href="../../dashboard/dashboard/default.dc.html"
               data-control="Dashboard"
               style="
                 display: flex;
@@ -95,7 +95,7 @@
               <span>Dashboard</span>
             </a>
             <a
-              href="#"
+              href="../../crm/contact-list/default.dc.html"
               data-control="Contacts"
               style="
                 display: flex;
@@ -127,7 +127,7 @@
               <span>Contacts</span>
             </a>
             <a
-              href="#"
+              href="../../crm/company-list/default.dc.html"
               data-control="Companies"
               aria-current="page"
               style="
@@ -162,7 +162,7 @@
               <span>Companies</span>
             </a>
             <a
-              href="#"
+              href="../../pipeline/pipeline-board/default.dc.html"
               data-control="Pipeline"
               style="
                 display: flex;
@@ -193,7 +193,7 @@
               <span>Pipeline</span>
             </a>
             <a
-              href="#"
+              href="../../invoicing/invoice-list/default.dc.html"
               data-control="Invoices"
               style="
                 display: flex;
@@ -278,11 +278,10 @@
               data-control="Company name"
               style="margin: 0; font-size: 24px; font-weight: 600; color: #0f172a"
             >
-              Acme
+              {{ company.name }}
             </h1>
-            <button
-              type="button"
-              data-control="Edit company"
+            <sc-if value="{{ canUpdate }}">
+            <a href="../company-editor/default.dc.html" data-control="Edit company"
               style="
                 padding: 8px 16px;
                 border: 0;
@@ -293,10 +292,10 @@
                 font-weight: 600;
                 font-family: inherit;
                 cursor: pointer;
+              text-decoration: none;
               "
-            >
-              Edit company
-            </button>
+            >Edit company</a>
+            </sc-if>
           </header>
           <main
             data-surface="Company page"
@@ -336,7 +335,7 @@
                 "
               >
                 <span style="font-size: 13px; color: #64748b">Domain</span>
-                <a href="#" style="font-size: 14px; text-decoration: none">acme.example</a>
+                <a href="#" style="font-size: 14px; text-decoration: none">{{ company.domain }}</a>
               </div>
               <div
                 style="
@@ -349,22 +348,9 @@
                 "
               >
                 <span style="font-size: 13px; color: #64748b">Industry</span>
-                <span style="font-size: 14px; color: #0f172a">Software</span>
+                <span style="font-size: 14px; color: #0f172a">{{ company.industry }}</span>
               </div>
-              <div
-                style="
-                  display: flex;
-                  align-items: center;
-                  justify-content: space-between;
-                  gap: 16px;
-                  padding: 12px 0;
-                  border-top: 1px solid #e2e8f0;
-                "
-              >
-                <span style="font-size: 13px; color: #64748b">Created</span>
-                <span style="font-size: 14px; color: #0f172a">10 Jan 2026</span>
-              </div>
-            </section>
+              </section>
             <div style="display: flex; flex-direction: column; gap: 20px; min-width: 0">
               <section
                 style="
@@ -428,52 +414,13 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <tr>
-                      <td style="padding: 12px 12px 12px 0; border-top: 1px solid #e2e8f0">
-                        <a href="#" style="text-decoration: none; font-weight: 600">Ada Lovelace</a>
-                      </td>
-                      <td
-                        style="
-                          padding: 12px 12px 12px 0;
-                          border-top: 1px solid #e2e8f0;
-                          color: #334155;
-                        "
-                      >
-                        ada@acme.example
-                      </td>
-                      <td
-                        style="
-                          padding: 12px 0 12px 12px;
-                          border-top: 1px solid #e2e8f0;
-                          color: #334155;
-                        "
-                      >
-                        555-0100
-                      </td>
-                    </tr>
-                    <tr>
-                      <td style="padding: 12px 12px 12px 0; border-top: 1px solid #e2e8f0">
-                        <a href="#" style="text-decoration: none; font-weight: 600">Grace Hopper</a>
-                      </td>
-                      <td
-                        style="
-                          padding: 12px 12px 12px 0;
-                          border-top: 1px solid #e2e8f0;
-                          color: #334155;
-                        "
-                      >
-                        grace@acme.example
-                      </td>
-                      <td
-                        style="
-                          padding: 12px 0 12px 12px;
-                          border-top: 1px solid #e2e8f0;
-                          color: #334155;
-                        "
-                      >
-                        555-0101
-                      </td>
-                    </tr>
+                    <sc-for list="{{ contacts }}" as="row" hint-placeholder-count="2">
+                      <tr>
+                        <td style="padding: 12px 12px 12px 0; border-top: 1px solid #e2e8f0"><a href="../contact-page/default.dc.html" data-record="{{ row.name }}" style="text-decoration: none; font-weight: 600">{{ row.firstName }} {{ row.lastName }}</a></td>
+                        <td style="padding: 12px 12px 12px 0; border-top: 1px solid #e2e8f0; color: #334155">{{ row.email }}</td>
+                        <td style="padding: 12px 12px 12px 0; border-top: 1px solid #e2e8f0; color: #334155">{{ row.phone }}</td>
+                      </tr>
+                    </sc-for>
                   </tbody>
                 </table>
               </section>
@@ -552,78 +499,14 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <tr>
-                      <td style="padding: 12px 12px 12px 0; border-top: 1px solid #e2e8f0">
-                        <a href="#" style="text-decoration: none; font-weight: 600">Big deal</a>
-                      </td>
-                      <td style="padding: 12px 12px 12px 0; border-top: 1px solid #e2e8f0">
-                        <span
-                          style="
-                            padding: 2px 10px;
-                            border-radius: 9999px;
-                            background: #eff6ff;
-                            color: #1d4ed8;
-                            font-size: 12px;
-                            font-weight: 600;
-                          "
-                          >Qualified</span
-                        >
-                      </td>
-                      <td
-                        style="
-                          padding: 12px 12px 12px 0;
-                          border-top: 1px solid #e2e8f0;
-                          text-align: right;
-                        "
-                      >
-                        12,000.00
-                      </td>
-                      <td
-                        style="
-                          padding: 12px 0 12px 12px;
-                          border-top: 1px solid #e2e8f0;
-                          color: #334155;
-                        "
-                      >
-                        31 Mar 2026
-                      </td>
-                    </tr>
-                    <tr>
-                      <td style="padding: 12px 12px 12px 0; border-top: 1px solid #e2e8f0">
-                        <a href="#" style="text-decoration: none; font-weight: 600">Renewal</a>
-                      </td>
-                      <td style="padding: 12px 12px 12px 0; border-top: 1px solid #e2e8f0">
-                        <span
-                          style="
-                            padding: 2px 10px;
-                            border-radius: 9999px;
-                            background: #fef3c7;
-                            color: #b45309;
-                            font-size: 12px;
-                            font-weight: 600;
-                          "
-                          >Proposal</span
-                        >
-                      </td>
-                      <td
-                        style="
-                          padding: 12px 12px 12px 0;
-                          border-top: 1px solid #e2e8f0;
-                          text-align: right;
-                        "
-                      >
-                        8,500.00
-                      </td>
-                      <td
-                        style="
-                          padding: 12px 0 12px 12px;
-                          border-top: 1px solid #e2e8f0;
-                          color: #334155;
-                        "
-                      >
-                        30 Jun 2026
-                      </td>
-                    </tr>
+                    <sc-for list="{{ deals }}" as="row" hint-placeholder-count="2">
+                      <tr>
+                        <td style="padding: 12px 12px 12px 0; border-top: 1px solid #e2e8f0"><a href="../../pipeline/deal-page/default.dc.html" data-record="{{ row.name }}" style="text-decoration: none; font-weight: 600">{{ row.name }}</a></td>
+                        <td style="padding: 12px 12px 12px 0; border-top: 1px solid #e2e8f0"><span style="padding: 2px 10px; border-radius: 9999px; background: #eff6ff; color: #1d4ed8; font-size: 12px; font-weight: 600; text-transform: capitalize;">{{ row.stage }}</span></td>
+                        <td style="padding: 12px 12px 12px 0; border-top: 1px solid #e2e8f0; text-align: right">{{ row.amount }}</td>
+                        <td style="padding: 12px 0 12px 12px; border-top: 1px solid #e2e8f0; color: #334155">{{ row.closeDate }}</td>
+                      </tr>
+                    </sc-for>
                   </tbody>
                 </table>
               </section>
@@ -689,60 +572,13 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <tr>
-                      <td style="padding: 12px 12px 12px 0; border-top: 1px solid #e2e8f0">
-                        <a href="#" style="text-decoration: none; font-weight: 600">INV-0001</a>
-                      </td>
-                      <td style="padding: 12px 12px 12px 0; border-top: 1px solid #e2e8f0">
-                        <span
-                          style="
-                            padding: 2px 10px;
-                            border-radius: 9999px;
-                            background: #dcfce7;
-                            color: #15803d;
-                            font-size: 12px;
-                            font-weight: 600;
-                          "
-                          >Paid</span
-                        >
-                      </td>
-                      <td
-                        style="
-                          padding: 12px 0 12px 12px;
-                          border-top: 1px solid #e2e8f0;
-                          text-align: right;
-                        "
-                      >
-                        4,200.00
-                      </td>
-                    </tr>
-                    <tr>
-                      <td style="padding: 12px 12px 12px 0; border-top: 1px solid #e2e8f0">
-                        <a href="#" style="text-decoration: none; font-weight: 600">INV-0002</a>
-                      </td>
-                      <td style="padding: 12px 12px 12px 0; border-top: 1px solid #e2e8f0">
-                        <span
-                          style="
-                            padding: 2px 10px;
-                            border-radius: 9999px;
-                            background: #eff6ff;
-                            color: #1d4ed8;
-                            font-size: 12px;
-                            font-weight: 600;
-                          "
-                          >Sent</span
-                        >
-                      </td>
-                      <td
-                        style="
-                          padding: 12px 0 12px 12px;
-                          border-top: 1px solid #e2e8f0;
-                          text-align: right;
-                        "
-                      >
-                        1,800.00
-                      </td>
-                    </tr>
+                    <sc-for list="{{ invoices }}" as="row" hint-placeholder-count="2">
+                      <tr>
+                        <td style="padding: 12px 12px 12px 0; border-top: 1px solid #e2e8f0"><a href="../../invoicing/invoice-editor/default.dc.html" data-record="{{ row.name }}" style="text-decoration: none; font-weight: 600">{{ row.name }}</a></td>
+                        <td style="padding: 12px 12px 12px 0; border-top: 1px solid #e2e8f0"><span style="padding: 2px 10px; border-radius: 9999px; background: #eff6ff; color: #1d4ed8; font-size: 12px; font-weight: 600; text-transform: capitalize;">{{ row.status }}</span></td>
+                        <td style="padding: 12px 12px 12px 0; border-top: 1px solid #e2e8f0; text-align: right">{{ row.total }}</td>
+                      </tr>
+                    </sc-for>
                   </tbody>
                 </table>
               </section>
@@ -751,10 +587,10 @@
         </div>
       </div>
     </x-dc>
-    <script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
+    <script type="text/x-dc" data-dc-script data-props='{"company":{"editor":null,"default":{"name":"Acme","domain":"acme.example","industry":"Software"}},"canUpdate":{"editor":"boolean","default":true},"contacts":{"editor":null,"default":[{"name":"Ada Lovelace","firstName":"Ada","lastName":"Lovelace","email":"ada@acme.example","phone":"555-0100"},{"name":"Grace Hopper","firstName":"Grace","lastName":"Hopper","email":"grace@acme.example","phone":"555-0101"}]},"deals":{"editor":null,"default":[{"name":"Big deal","stage":"qualified","amount":"$12,000.00","closeDate":"31 Mar 2026"},{"name":"Renewal","stage":"proposal","amount":"$8,500.00","closeDate":"30 Jun 2026"}]},"invoices":{"editor":null,"default":[{"name":"INV-0001","status":"paid","total":"$4,200.00"},{"name":"INV-0002","status":"sent","total":"$1,800.00"}]},"$preview":{"width":1280,"height":800}}'>
       class Component extends DCLogic {
       renderVals() {
-      return {};
+      return { ...this.props };
       }
       }
     </script>

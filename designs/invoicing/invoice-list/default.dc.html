@@ -61,7 +61,7 @@
           </div>
           <div style="display: flex; flex-direction: column; gap: 4px">
             <a
-              href="#"
+              href="../../dashboard/dashboard/default.dc.html"
               data-control="Dashboard"
               style="
                 display: flex;
@@ -95,7 +95,7 @@
               <span>Dashboard</span>
             </a>
             <a
-              href="#"
+              href="../../crm/contact-list/default.dc.html"
               data-control="Contacts"
               style="
                 display: flex;
@@ -127,7 +127,7 @@
               <span>Contacts</span>
             </a>
             <a
-              href="#"
+              href="../../crm/company-list/default.dc.html"
               data-control="Companies"
               style="
                 display: flex;
@@ -160,7 +160,7 @@
               <span>Companies</span>
             </a>
             <a
-              href="#"
+              href="../../pipeline/pipeline-board/default.dc.html"
               data-control="Pipeline"
               style="
                 display: flex;
@@ -191,7 +191,7 @@
               <span>Pipeline</span>
             </a>
             <a
-              href="#"
+              href="../../invoicing/invoice-list/default.dc.html"
               data-control="Invoices"
               aria-current="page"
               style="
@@ -275,8 +275,9 @@
             "
           >
             <h1 style="margin: 0; font-size: 24px; font-weight: 600; color: #0f172a">Invoices</h1>
+            <sc-if value="{{ canCreateInvoice }}" hint-placeholder-val="{{ true }}">
             <a
-              href="../invoice-editor/draft.dc.html"
+              href="../invoice-editor/default.dc.html"
               data-control="New invoice"
               style="
                 padding: 8px 16px;
@@ -293,6 +294,7 @@
             >
               New invoice
             </a>
+            </sc-if>
           </header>
           <main
             data-surface="Invoice list"
@@ -403,226 +405,109 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <td style="padding: 12px 12px 12px 0; border-top: 1px solid #e2e8f0">
-                      <a href="#" style="font-weight: 600; text-decoration: none">INV-001</a>
-                    </td>
-                    <td
-                      style="
-                        padding: 12px 12px 12px 0;
-                        border-top: 1px solid #e2e8f0;
-                        color: #0f172a;
-                      "
-                    >
-                      Acme
-                    </td>
-                    <td
-                      style="
-                        padding: 12px 12px 12px 0;
-                        border-top: 1px solid #e2e8f0;
-                        color: #334155;
-                      "
-                    >
-                      15 Jan 2026
-                    </td>
-                    <td
-                      style="
-                        padding: 12px 12px 12px 0;
-                        border-top: 1px solid #e2e8f0;
-                        color: #334155;
-                      "
-                    >
-                      14 Feb 2026
-                    </td>
-                    <td style="padding: 12px 12px 12px 0; border-top: 1px solid #e2e8f0">
-                      <span
+                  <sc-for list="{{ invoices }}" as="inv" hint-placeholder-count="4">
+                    <tr>
+                      <td style="padding: 12px 12px 12px 0; border-top: 1px solid #e2e8f0">
+                        <a
+                          href="../invoice-editor/default.dc.html"
+                          data-record="{{ inv.name }}"
+                          style="font-weight: 600; text-decoration: none"
+                          >{{ inv.number }}</a
+                        >
+                      </td>
+                      <td
                         style="
-                          padding: 2px 10px;
-                          border-radius: 9999px;
-                          background: #f1f5f9;
-                          color: #475569;
-                          font-size: 12px;
-                          font-weight: 600;
+                          padding: 12px 12px 12px 0;
+                          border-top: 1px solid #e2e8f0;
+                          color: #0f172a;
                         "
-                        >Draft</span
                       >
-                    </td>
-                    <td
-                      style="
-                        padding: 12px 0 12px 12px;
-                        border-top: 1px solid #e2e8f0;
-                        text-align: right;
-                        color: #0f172a;
-                      "
-                    >
-                      $320.00
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="padding: 12px 12px 12px 0; border-top: 1px solid #e2e8f0">
-                      <a href="#" style="font-weight: 600; text-decoration: none">INV-002</a>
-                    </td>
-                    <td
-                      style="
-                        padding: 12px 12px 12px 0;
-                        border-top: 1px solid #e2e8f0;
-                        color: #0f172a;
-                      "
-                    >
-                      Globex
-                    </td>
-                    <td
-                      style="
-                        padding: 12px 12px 12px 0;
-                        border-top: 1px solid #e2e8f0;
-                        color: #334155;
-                      "
-                    >
-                      10 Jan 2026
-                    </td>
-                    <td
-                      style="
-                        padding: 12px 12px 12px 0;
-                        border-top: 1px solid #e2e8f0;
-                        color: #334155;
-                      "
-                    >
-                      9 Feb 2026
-                    </td>
-                    <td style="padding: 12px 12px 12px 0; border-top: 1px solid #e2e8f0">
-                      <span
+                        {{ inv.company }}
+                      </td>
+                      <td
                         style="
-                          padding: 2px 10px;
-                          border-radius: 9999px;
-                          background: #eff6ff;
-                          color: #1d4ed8;
-                          font-size: 12px;
-                          font-weight: 600;
+                          padding: 12px 12px 12px 0;
+                          border-top: 1px solid #e2e8f0;
+                          color: #334155;
                         "
-                        >Sent</span
                       >
-                    </td>
-                    <td
-                      style="
-                        padding: 12px 0 12px 12px;
-                        border-top: 1px solid #e2e8f0;
-                        text-align: right;
-                        color: #0f172a;
-                      "
-                    >
-                      $1,800.00
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="padding: 12px 12px 12px 0; border-top: 1px solid #e2e8f0">
-                      <a href="#" style="font-weight: 600; text-decoration: none">INV-003</a>
-                    </td>
-                    <td
-                      style="
-                        padding: 12px 12px 12px 0;
-                        border-top: 1px solid #e2e8f0;
-                        color: #0f172a;
-                      "
-                    >
-                      Acme
-                    </td>
-                    <td
-                      style="
-                        padding: 12px 12px 12px 0;
-                        border-top: 1px solid #e2e8f0;
-                        color: #334155;
-                      "
-                    >
-                      2 Jan 2026
-                    </td>
-                    <td
-                      style="
-                        padding: 12px 12px 12px 0;
-                        border-top: 1px solid #e2e8f0;
-                        color: #334155;
-                      "
-                    >
-                      1 Feb 2026
-                    </td>
-                    <td style="padding: 12px 12px 12px 0; border-top: 1px solid #e2e8f0">
-                      <span
+                        {{ inv.issueDate }}
+                      </td>
+                      <td
                         style="
-                          padding: 2px 10px;
-                          border-radius: 9999px;
-                          background: #dcfce7;
-                          color: #15803d;
-                          font-size: 12px;
-                          font-weight: 600;
+                          padding: 12px 12px 12px 0;
+                          border-top: 1px solid #e2e8f0;
+                          color: #334155;
                         "
-                        >Paid</span
                       >
-                    </td>
-                    <td
-                      style="
-                        padding: 12px 0 12px 12px;
-                        border-top: 1px solid #e2e8f0;
-                        text-align: right;
-                        color: #0f172a;
-                      "
-                    >
-                      $4,200.00
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="padding: 12px 12px 12px 0; border-top: 1px solid #e2e8f0">
-                      <a href="#" style="font-weight: 600; text-decoration: none">INV-004</a>
-                    </td>
-                    <td
-                      style="
-                        padding: 12px 12px 12px 0;
-                        border-top: 1px solid #e2e8f0;
-                        color: #0f172a;
-                      "
-                    >
-                      Initech
-                    </td>
-                    <td
-                      style="
-                        padding: 12px 12px 12px 0;
-                        border-top: 1px solid #e2e8f0;
-                        color: #334155;
-                      "
-                    >
-                      5 Jan 2026
-                    </td>
-                    <td
-                      style="
-                        padding: 12px 12px 12px 0;
-                        border-top: 1px solid #e2e8f0;
-                        color: #334155;
-                      "
-                    >
-                      4 Feb 2026
-                    </td>
-                    <td style="padding: 12px 12px 12px 0; border-top: 1px solid #e2e8f0">
-                      <span
+                        {{ inv.dueDate }}
+                      </td>
+                      <td style="padding: 12px 12px 12px 0; border-top: 1px solid #e2e8f0">
+                        <sc-if value="{{ inv.isDraft }}" hint-placeholder-val="{{ true }}">
+                          <span
+                            style="
+                              padding: 2px 10px;
+                              border-radius: 9999px;
+                              background: #f1f5f9;
+                              color: #475569;
+                              font-size: 12px;
+                              font-weight: 600;
+                            "
+                            >Draft</span
+                          >
+                        </sc-if>
+                        <sc-if value="{{ inv.isSent }}" hint-placeholder-val="{{ false }}">
+                          <span
+                            style="
+                              padding: 2px 10px;
+                              border-radius: 9999px;
+                              background: #eff6ff;
+                              color: #1d4ed8;
+                              font-size: 12px;
+                              font-weight: 600;
+                            "
+                            >Sent</span
+                          >
+                        </sc-if>
+                        <sc-if value="{{ inv.isPaid }}" hint-placeholder-val="{{ false }}">
+                          <span
+                            style="
+                              padding: 2px 10px;
+                              border-radius: 9999px;
+                              background: #dcfce7;
+                              color: #15803d;
+                              font-size: 12px;
+                              font-weight: 600;
+                            "
+                            >Paid</span
+                          >
+                        </sc-if>
+                        <sc-if value="{{ inv.isVoid }}" hint-placeholder-val="{{ false }}">
+                          <span
+                            style="
+                              padding: 2px 10px;
+                              border-radius: 9999px;
+                              background: #fef2f2;
+                              color: #b91c1c;
+                              font-size: 12px;
+                              font-weight: 600;
+                            "
+                            >Void</span
+                          >
+                        </sc-if>
+                      </td>
+                      <td
                         style="
-                          padding: 2px 10px;
-                          border-radius: 9999px;
-                          background: #fef2f2;
-                          color: #b91c1c;
-                          font-size: 12px;
-                          font-weight: 600;
+                          padding: 12px 0 12px 12px;
+                          border-top: 1px solid #e2e8f0;
+                          text-align: right;
+                          color: #0f172a;
                         "
-                        >Void</span
                       >
-                    </td>
-                    <td
-                      style="
-                        padding: 12px 0 12px 12px;
-                        border-top: 1px solid #e2e8f0;
-                        text-align: right;
-                        color: #0f172a;
-                      "
-                    >
-                      $0.00
-                    </td>
-                  </tr>
+                        {{ inv.total }}
+                      </td>
+                    </tr>
+                  </sc-for>
                 </tbody>
               </table>
             </section>
@@ -630,10 +515,10 @@
         </div>
       </div>
     </x-dc>
-    <script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
+    <script type="text/x-dc" data-dc-script data-props='{"canCreateInvoice":{"editor":"boolean","default":true},"invoices":{"editor":null,"default":[{"name":"INV-001","number":"INV-001","company":"Acme","issueDate":"15 Jan 2026","dueDate":"14 Feb 2026","total":"$320.00","isDraft":true,"isSent":false,"isPaid":false,"isVoid":false},{"name":"INV-002","number":"INV-002","company":"Acme","issueDate":"20 Jan 2026","dueDate":"19 Feb 2026","total":"$540.00","isDraft":false,"isSent":true,"isPaid":false,"isVoid":false},{"name":"INV-003","number":"INV-003","company":"Globex","issueDate":"2 Dec 2025","dueDate":"1 Jan 2026","total":"$1,250.00","isDraft":false,"isSent":false,"isPaid":true,"isVoid":false},{"name":"INV-004","number":"INV-004","company":"Initech","issueDate":"4 Jan 2026","dueDate":"3 Feb 2026","total":"$0.00","isDraft":false,"isSent":false,"isPaid":false,"isVoid":true}]},"$preview":{"width":1280,"height":800}}'>
       class Component extends DCLogic {
       renderVals() {
-      return {};
+      return { ...this.props };
       }
       }
     </script>

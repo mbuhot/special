@@ -61,7 +61,7 @@
           </div>
           <div style="display: flex; flex-direction: column; gap: 4px">
             <a
-              href="#"
+              href="../../dashboard/dashboard/default.dc.html"
               data-control="Dashboard"
               aria-current="page"
               style="
@@ -97,7 +97,7 @@
               <span>Dashboard</span>
             </a>
             <a
-              href="#"
+              href="../../crm/contact-list/default.dc.html"
               data-control="Contacts"
               style="
                 display: flex;
@@ -129,7 +129,7 @@
               <span>Contacts</span>
             </a>
             <a
-              href="#"
+              href="../../crm/company-list/default.dc.html"
               data-control="Companies"
               style="
                 display: flex;
@@ -162,7 +162,7 @@
               <span>Companies</span>
             </a>
             <a
-              href="#"
+              href="../../pipeline/pipeline-board/default.dc.html"
               data-control="Pipeline"
               style="
                 display: flex;
@@ -193,7 +193,7 @@
               <span>Pipeline</span>
             </a>
             <a
-              href="#"
+              href="../../invoicing/invoice-list/default.dc.html"
               data-control="Invoices"
               style="
                 display: flex;
@@ -330,7 +330,7 @@
                       color: #0f172a;
                     "
                   >
-                    <span>Lead</span><span style="font-weight: 600">2</span>
+                    <span>lead</span> <span style="font-weight: 600">{{ leadDealsCount }}</span>
                   </div>
                   <div
                     style="
@@ -341,7 +341,7 @@
                       color: #0f172a;
                     "
                   >
-                    <span>Qualified</span><span style="font-weight: 600">0</span>
+                    <span>qualified</span> <span style="font-weight: 600">{{ qualifiedDealsCount }}</span>
                   </div>
                   <div
                     style="
@@ -352,11 +352,11 @@
                       color: #0f172a;
                     "
                   >
-                    <span>Proposal</span><span style="font-weight: 600">1</span>
+                    <span>proposal</span> <span style="font-weight: 600">{{ proposalDealsCount }}</span>
                   </div>
                 </div>
                 <a
-                  href="#"
+                  href="../../pipeline/pipeline-board/default.dc.html"
                   data-control="View pipeline"
                   style="font-size: 14px; font-weight: 600; text-decoration: none"
                   >View pipeline</a
@@ -377,7 +377,7 @@
               >
                 <div style="font-size: 14px; font-weight: 600; color: #334155">Overdue tasks</div>
                 <div style="font-size: 36px; font-weight: 600; line-height: 1.1; color: #0f172a">
-                  1
+                  {{ overdueTasks }}
                 </div>
                 <div style="font-size: 14px; color: #64748b">tasks past their due date</div>
               </div>
@@ -396,11 +396,11 @@
               >
                 <div style="font-size: 14px; font-weight: 600; color: #334155">Unpaid invoices</div>
                 <div style="font-size: 36px; font-weight: 600; line-height: 1.1; color: #0f172a">
-                  2
+                  {{ unpaidInvoices }}
                 </div>
                 <div style="font-size: 14px; color: #64748b">sent or draft</div>
                 <a
-                  href="#"
+                  href="../../invoicing/invoice-list/default.dc.html"
                   data-control="View invoices"
                   style="font-size: 14px; font-weight: 600; text-decoration: none"
                   >View invoices</a
@@ -423,96 +423,45 @@
               <h2 style="margin: 0 0 8px; font-size: 16px; font-weight: 600; color: #0f172a">
                 Recent activity
               </h2>
-              <div
-                style="
-                  display: grid;
-                  grid-template-columns: 72px 1fr 160px 96px;
-                  align-items: center;
-                  gap: 16px;
-                  padding: 12px 0;
-                  border-top: 1px solid #e2e8f0;
-                  font-size: 14px;
-                "
-              >
-                <span
+              <sc-for list="{{ activities }}" as="activity" hint-placeholder-count="3">
+                <div
                   style="
-                    justify-self: start;
-                    padding: 2px 10px;
-                    border-radius: 9999px;
-                    background: #eff6ff;
-                    color: #1d4ed8;
-                    font-size: 12px;
-                    font-weight: 600;
+                    display: grid;
+                    grid-template-columns: 72px 1fr 160px 96px;
+                    align-items: center;
+                    gap: 16px;
+                    padding: 12px 0;
+                    border-top: 1px solid #e2e8f0;
+                    font-size: 14px;
                   "
-                  >Call</span
                 >
-                <span style="color: #0f172a">Discussed renewal terms and next steps</span>
-                <span style="color: #334155">Priya Nair</span>
-                <span style="color: #64748b">8 Oct 2026</span>
-              </div>
-              <div
-                style="
-                  display: grid;
-                  grid-template-columns: 72px 1fr 160px 96px;
-                  align-items: center;
-                  gap: 16px;
-                  padding: 12px 0;
-                  border-top: 1px solid #e2e8f0;
-                  font-size: 14px;
-                "
-              >
-                <span
-                  style="
-                    justify-self: start;
-                    padding: 2px 10px;
-                    border-radius: 9999px;
-                    background: #eff6ff;
-                    color: #1d4ed8;
-                    font-size: 12px;
-                    font-weight: 600;
-                  "
-                  >Email</span
-                >
-                <span style="color: #0f172a">Sent revised proposal for the onboarding package</span>
-                <span style="color: #334155">Daniel Okoye</span>
-                <span style="color: #64748b">7 Oct 2026</span>
-              </div>
-              <div
-                style="
-                  display: grid;
-                  grid-template-columns: 72px 1fr 160px 96px;
-                  align-items: center;
-                  gap: 16px;
-                  padding: 12px 0;
-                  border-top: 1px solid #e2e8f0;
-                  font-size: 14px;
-                "
-              >
-                <span
-                  style="
-                    justify-self: start;
-                    padding: 2px 10px;
-                    border-radius: 9999px;
-                    background: #eff6ff;
-                    color: #1d4ed8;
-                    font-size: 12px;
-                    font-weight: 600;
-                  "
-                  >Note</span
-                >
-                <span style="color: #0f172a">Prefers invoices sent to accounts payable</span>
-                <span style="color: #334155">Mei Tan</span>
-                <span style="color: #64748b">5 Oct 2026</span>
-              </div>
+                  <span
+                    style="
+                      justify-self: start;
+                      padding: 2px 10px;
+                      border-radius: 9999px;
+                      background: #eff6ff;
+                      color: #1d4ed8;
+                      font-size: 12px;
+                      font-weight: 600;
+                      text-transform: capitalize;
+                    "
+                    >{{ activity.kind }}</span
+                  >
+                  <span style="color: #0f172a">{{ activity.body }}</span>
+                  <span style="color: #334155">{{ activity.contact }}</span>
+                  <span style="color: #64748b">{{ activity.occurredAt }}</span>
+                </div>
+              </sc-for>
             </section>
           </main>
         </div>
       </div>
     </x-dc>
-    <script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
+    <script type="text/x-dc" data-dc-script data-props='{"leadDealsCount":{"editor":null,"default":2},"qualifiedDealsCount":{"editor":null,"default":0},"proposalDealsCount":{"editor":null,"default":1},"overdueTasks":{"editor":null,"default":1},"unpaidInvoices":{"editor":null,"default":2},"activities":{"editor":null,"default":[{"kind":"call","body":"Discussed renewal terms and next steps","contact":"Priya Nair","occurredAt":"8 Oct 2026"},{"kind":"email","body":"Sent revised proposal for the onboarding package","contact":"Daniel Okoye","occurredAt":"7 Oct 2026"},{"kind":"note","body":"Prefers invoices sent to accounts payable","contact":"Mei Tan","occurredAt":"5 Oct 2026"}]},"$preview":{"width":1280,"height":800}}'>
       class Component extends DCLogic {
       renderVals() {
-      return {};
+      return { ...this.props };
       }
       }
     </script>

@@ -61,7 +61,7 @@
           </div>
           <div style="display: flex; flex-direction: column; gap: 4px">
             <a
-              href="#"
+              href="../../dashboard/dashboard/default.dc.html"
               data-control="Dashboard"
               style="
                 display: flex;
@@ -95,7 +95,7 @@
               <span>Dashboard</span>
             </a>
             <a
-              href="#"
+              href="../../crm/contact-list/default.dc.html"
               data-control="Contacts"
               style="
                 display: flex;
@@ -127,7 +127,7 @@
               <span>Contacts</span>
             </a>
             <a
-              href="#"
+              href="../../crm/company-list/default.dc.html"
               data-control="Companies"
               aria-current="page"
               style="
@@ -162,7 +162,7 @@
               <span>Companies</span>
             </a>
             <a
-              href="#"
+              href="../../pipeline/pipeline-board/default.dc.html"
               data-control="Pipeline"
               style="
                 display: flex;
@@ -193,7 +193,7 @@
               <span>Pipeline</span>
             </a>
             <a
-              href="#"
+              href="../../invoicing/invoice-list/default.dc.html"
               data-control="Invoices"
               style="
                 display: flex;
@@ -281,12 +281,14 @@
         <div style="flex: 1; min-width: 0; display: flex; flex-direction: column">
           <header style="display: flex; align-items: center; justify-content: space-between; gap: 16px; height: 72px; box-sizing: border-box; flex: none; padding: 0 32px; border-bottom: 1px solid #e2e8f0;">
             <h1 style="margin: 0; font-size: 24px; font-weight: 600; color: #0f172a">Companies</h1>
+            <sc-if value="{{ canCreateCompany }}">
             <a href="../company-editor/default.dc.html" data-control="New company" style="padding: 8px 16px; border: 0; border-radius: 8px; background: #1d4ed8; color: #ffffff; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; text-decoration: none;">New company</a>
+            </sc-if>
           </header>
           <main data-surface="Company list" style="flex: 1; display: flex; flex-direction: column; gap: 20px; padding: 32px; background: #ffffff;">
             <div style="display: flex; flex-direction: column; gap: 4px">
               <label for="company-search" style="font-size: 12px; color: #64748b">Search</label>
-              <input id="company-search" type="text" data-control="Search" placeholder="Search companies" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; font-size: 14px; font-family: inherit; box-sizing: border-box;" />
+              <input id="company-search" type="text" data-control="Search" data-filters="companies" placeholder="Search companies" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; font-size: 14px; font-family: inherit; box-sizing: border-box;" />
             </div>
             <section style="display: flex; flex-direction: column; box-sizing: border-box; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px; background: #ffffff;">
               <table data-control="Companies" style="width: 100%; border-collapse: collapse; font-size: 14px">
@@ -298,16 +300,15 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <td style="padding: 8px 12px 8px 0; border-top: 1px solid #e2e8f0; color: #334155;"><a href="../company-page/default.dc.html" style="text-decoration: none">Acme</a></td>
-                    <td style="padding: 8px 12px 8px 0; border-top: 1px solid #e2e8f0; color: #334155;">acme.example</td>
-                    <td style="padding: 8px 12px 8px 0; border-top: 1px solid #e2e8f0; color: #334155;">Software</td>
-                  </tr>
-                  <tr>
-                    <td style="padding: 8px 12px 8px 0; border-top: 1px solid #e2e8f0; color: #334155;"><a href="../company-page/default.dc.html" style="text-decoration: none">Globex</a></td>
-                    <td style="padding: 8px 12px 8px 0; border-top: 1px solid #e2e8f0; color: #334155;">globex.example</td>
-                    <td style="padding: 8px 12px 8px 0; border-top: 1px solid #e2e8f0; color: #334155;">Manufacturing</td>
-                  </tr>
+                  <sc-for list="{{ companies }}" as="row" hint-placeholder-count="2">
+                    <sc-if value="{{ row.matches }}">
+                      <tr>
+                        <td style="padding: 8px 12px 8px 0; border-top: 1px solid #e2e8f0; color: #334155;"><a href="../company-page/default.dc.html" data-record="{{ row.name }}" style="text-decoration: none">{{ row.name }}</a></td>
+                        <td style="padding: 8px 12px 8px 0; border-top: 1px solid #e2e8f0; color: #334155;">{{ row.domain }}</td>
+                        <td style="padding: 8px 12px 8px 0; border-top: 1px solid #e2e8f0; color: #334155;">{{ row.industry }}</td>
+                      </tr>
+                    </sc-if>
+                  </sc-for>
                 </tbody>
               </table>
             </section>
@@ -315,10 +316,10 @@
         </div>
       </div>
     </x-dc>
-    <script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
+    <script type="text/x-dc" data-dc-script data-props='{"companies":{"editor":null,"default":[{"name":"Acme","domain":"acme.example","industry":"Software","matches":true},{"name":"Globex","domain":"globex.example","industry":"Manufacturing","matches":true}]},"canCreateCompany":{"editor":"boolean","default":true},"$preview":{"width":1280,"height":800}}'>
       class Component extends DCLogic {
       renderVals() {
-      return {};
+      return { ...this.props };
       }
       }
     </script>

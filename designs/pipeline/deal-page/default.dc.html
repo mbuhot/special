@@ -61,7 +61,7 @@
           </div>
           <div style="display: flex; flex-direction: column; gap: 4px">
             <a
-              href="#"
+              href="../../dashboard/dashboard/default.dc.html"
               data-control="Dashboard"
               style="
                 display: flex;
@@ -95,7 +95,7 @@
               <span>Dashboard</span>
             </a>
             <a
-              href="#"
+              href="../../crm/contact-list/default.dc.html"
               data-control="Contacts"
               style="
                 display: flex;
@@ -127,7 +127,7 @@
               <span>Contacts</span>
             </a>
             <a
-              href="#"
+              href="../../crm/company-list/default.dc.html"
               data-control="Companies"
               style="
                 display: flex;
@@ -160,7 +160,7 @@
               <span>Companies</span>
             </a>
             <a
-              href="#"
+              href="../../pipeline/pipeline-board/default.dc.html"
               data-control="Pipeline"
               aria-current="page"
               style="
@@ -193,7 +193,7 @@
               <span>Pipeline</span>
             </a>
             <a
-              href="#"
+              href="../../invoicing/invoice-list/default.dc.html"
               data-control="Invoices"
               style="
                 display: flex;
@@ -354,6 +354,7 @@
             </div>
             <div style="display: flex; align-items: center; gap: 8px">
               <sc-if value="{{ isLead }}" hint-placeholder-val="{{ true }}">
+                <sc-if value="{{ deal.canQualify }}" hint-placeholder-val="{{ true }}">
                 <button
                   type="button"
                   data-control="Qualify"
@@ -372,6 +373,8 @@
                 >
                   Qualify
                 </button>
+                </sc-if>
+                <sc-if value="{{ deal.canLose }}" hint-placeholder-val="{{ true }}">
                 <button
                   type="button"
                   data-control="Lose"
@@ -390,8 +393,10 @@
                 >
                   Lose
                 </button>
+                </sc-if>
               </sc-if>
               <sc-if value="{{ isQualified }}" hint-placeholder-val="{{ false }}">
+                <sc-if value="{{ deal.canPropose }}" hint-placeholder-val="{{ true }}">
                 <button
                   type="button"
                   data-control="Propose"
@@ -410,6 +415,8 @@
                 >
                   Propose
                 </button>
+                </sc-if>
+                <sc-if value="{{ deal.canLose }}" hint-placeholder-val="{{ true }}">
                 <button
                   type="button"
                   data-control="Lose"
@@ -428,8 +435,10 @@
                 >
                   Lose
                 </button>
+                </sc-if>
               </sc-if>
               <sc-if value="{{ isProposal }}" hint-placeholder-val="{{ false }}">
+                <sc-if value="{{ deal.canWin }}" hint-placeholder-val="{{ true }}">
                 <button
                   type="button"
                   data-control="Win"
@@ -448,6 +457,8 @@
                 >
                   Win
                 </button>
+                </sc-if>
+                <sc-if value="{{ deal.canLose }}" hint-placeholder-val="{{ true }}">
                 <button
                   type="button"
                   data-control="Lose"
@@ -466,6 +477,7 @@
                 >
                   Lose
                 </button>
+                </sc-if>
               </sc-if>
             </div>
           </header>
@@ -534,7 +546,8 @@
               >
                 <span style="font-size: 13px; color: #64748b">Company</span>
                 <a
-                  href="#"
+                  href="../../crm/company-page/default.dc.html"
+                  data-record="{{ deal.company }}"
                   data-control="Company link"
                   style="font-size: 14px; text-decoration: none"
                   >{{ deal.company }}</a
@@ -552,7 +565,8 @@
               >
                 <span style="font-size: 13px; color: #64748b">Contact</span>
                 <a
-                  href="#"
+                  href="../../crm/contact-page/default.dc.html"
+                  data-record="{{ deal.contact }}"
                   data-control="Contact link"
                   style="font-size: 14px; text-decoration: none"
                   >{{ deal.contact }}</a
@@ -596,6 +610,7 @@
                       id="task-title"
                       type="text"
                       data-control="Task title"
+                      data-field="title"
                       placeholder="What needs doing?"
                       style="
                         width: 100%;
@@ -618,6 +633,7 @@
                       id="task-due-date"
                       type="date"
                       data-control="Task due date"
+                      data-field="dueDate"
                       style="
                         width: 150px;
                         padding: 8px 12px;
@@ -634,6 +650,7 @@
                   <button
                     type="button"
                     data-control="Add task"
+                    data-creates="tasks"
                     style="
                       padding: 8px 16px;
                       border: 0;
@@ -837,18 +854,10 @@
         </div>
       </div>
     </x-dc>
-    <script type="text/x-dc" data-dc-script data-props='{"stage":{"editor":"enum","options":["lead","qualified","proposal","won","lost"],"default":"lead"},"anyOverdue":{"editor":"boolean","default":true},"deal":{"editor":null,"default":{"name":"Big deal","amount":"12,000.00","closeDate":"31 Mar 2026","company":"Acme","contact":"Ada Lovelace"}},"tasks":{"editor":null,"default":[{"name":"Confirm decision maker","title":"Confirm decision maker","dueDate":"2 Feb 2026","isOpen":true,"isDone":false,"overdue":true},{"name":"Send proposal draft","title":"Send proposal draft","dueDate":"14 Mar 2026","isOpen":true,"isDone":false,"overdue":false},{"name":"Qualify budget","title":"Qualify budget","dueDate":"20 Jan 2026","isOpen":false,"isDone":true,"overdue":false}]},"isLead":{"editor":null,"default":true},"isQualified":{"editor":null,"default":false},"isProposal":{"editor":null,"default":false},"isWon":{"editor":null,"default":false},"isLost":{"editor":null,"default":false},"$preview":{"width":1280,"height":800}}'>
+    <script type="text/x-dc" data-dc-script data-props='{"isLead":{"editor":"boolean","default":true},"isQualified":{"editor":"boolean","default":false},"isProposal":{"editor":"boolean","default":false},"isWon":{"editor":"boolean","default":false},"isLost":{"editor":"boolean","default":false},"anyOverdue":{"editor":"boolean","default":true},"deal":{"editor":null,"default":{"name":"Big deal","amount":"$12,000.00","closeDate":"31 Mar 2026","company":"Acme","contact":"Ada Lovelace","canQualify":true,"canPropose":true,"canWin":true,"canLose":true}},"tasks":{"editor":null,"default":[{"name":"Confirm decision maker","title":"Confirm decision maker","dueDate":"2 Feb 2026","isOpen":true,"isDone":false,"overdue":true},{"name":"Send proposal draft","title":"Send proposal draft","dueDate":"14 Mar 2026","isOpen":true,"isDone":false,"overdue":false},{"name":"Qualify budget","title":"Qualify budget","dueDate":"20 Jan 2026","isOpen":false,"isDone":true,"overdue":false}]},"$preview":{"width":1280,"height":800}}'>
       class Component extends DCLogic {
       renderVals() {
-      const stage = this.props.stage;
-      return {
-      ...this.props,
-      isLead: stage === "lead",
-      isQualified: stage === "qualified",
-      isProposal: stage === "proposal",
-      isWon: stage === "won",
-      isLost: stage === "lost",
-      };
+      return { ...this.props };
       }
       }
     </script>

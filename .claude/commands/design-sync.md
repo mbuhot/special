@@ -15,7 +15,7 @@ Canvas: $ARGUMENTS if given, else every URL in `designs/canvas.json` (`{"canvase
    - control on a surface but in no artboard: a design removal or rename. Ask the user whether the spec should drop it or the design should restore it; do not guess.
    - surface without a design directory: report it.
      Re-run `pnpm bind` until it reports no errors and no design-lint warnings.
-5. Walk the designs: `pnpm design`. Every scenario must pass. Summarise mismatches from `design-output/*/report.json` (step, expected, found); a mismatch means the artboard and the scenario disagree on visible text, so fix whichever is wrong and say which.
+5. Walk the designs: `pnpm design`. Every scenario must pass. The run ends with a "Design mismatches" summary (also `design-output/mismatches.json`): each line is a step where the artboard and the scenario disagree on visible text or presence. List every mismatch in the final report, grouped by scenario. Do not fix them in this command: for each, say whether the artboard or the scenario looks wrong, and leave the decision to the user.
 6. Find implementation gaps: `pnpm e2e` and `cd apps/invoicing && mix test`. Failing scenarios are the implementation work the design change implies. List them by scenario name with the first failing step.
 7. Commit in two units with explicit `git add`: the designs, then the spec and surface-map changes. Do not commit generated files (`*.ast.json`, `*.lock.json`, `design-output/`).
-8. Report: comment threads read, artboards changed, spec changes, design run result, failing scenarios. Stop there; implementing the gaps is a separate request.
+8. Report: comment threads read, artboards changed, spec changes, design run result with the mismatch count and the list of mismatches, failing scenarios. A sync with mismatches is not clean; say so in the first line. Stop there; implementing the gaps is a separate request.

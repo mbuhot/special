@@ -1,199 +1,134 @@
 # special
 
-One Markdown spec, three uses: acceptance criteria in a Linear ticket (an agent copies it into the repo), executable tests in two runtimes, and a narrated demo video.
+A prototype of spec-first development with AI agents. Product and design write a Markdown spec and design artboards; agents build the system from them; the spec checks the designs and the code on every commit for as long as the system lives.
 
 ```
-specs/**/*.md ──► pnpm bind ──► specs/<project>/<feature>.ast.json
-                                              │
-                        ┌─────────────────────┼─────────────────────┐
-                        ▼                     ▼                     ▼
-               ExUnit + LiveViewTest   Playwright (browser)   Playwright demo mode
-               apps/invoicing/test     pnpm e2e               pnpm demo → demo-output/*.mp4
+             claude.ai design canvas  ◄── comments from designer and product
+                       │
+                 /design-sync
+                       ▼
+ designs/*.dc.html ◄── design-lint ──► specs/**/*.md ◄── conformance, scenarios ──► apps/invoicing
+        │                                   │                                          │
+   pnpm design                          pnpm bind                            mix test, pnpm e2e
+   walkthrough video                    AST JSON                             pnpm demo
+   over the artboards                                                        narrated app video
 ```
 
-## The sample app
+The sample system is a small CRM with invoicing: companies, contacts, activities, a deals pipeline, tasks, invoices and a dashboard, for four roles (sales rep, sales manager, accounts, admin).
 
-A CRM: companies, contacts, activities, a deals pipeline, tasks, invoicing and a dashboard. Four roles use it: sales rep, sales manager, accounts, admin.
+## The lifecycle
 
+| Stop           | Who                        | What happens                                                                                                                | Check                  |
+| -------------- | -------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
+| 1. Ticket      | Product                    | A story is written as a scenario: `Story:` line, steps, `Narrate:` lines. An agent copies it from the ticket into `specs/`. | `pnpm bind`            |
+| 2. Design      | Designer and product       | Artboards on the claude.ai canvas show each state of each screen. Comments sent to Claude become artboard edits.            | canvas review          |
+| 3. Sync        | Agent                      | `/design-sync` pulls the canvas into `designs/`, reconciles the specs with it, and reports what changed.                    | design-lint            |
+| 4. Walkthrough | Agent, reviewed by product | Every scenario plays over the static artboards, filled with the scenario's data, as narrated video.                         | `pnpm design`          |
+| 5. Gaps        | Agent                      | Scenarios that fail against the app are the implementation work.                                                            | `mix test`, `pnpm e2e` |
+| 6. Build       | Agent                      | The agent implements until the scenarios pass, using the artboards as the visual reference.                                 | all gates              |
+| 7. Demo        | Agent                      | Every scenario is recorded against the running app as narrated video.                                                       | `pnpm demo`            |
+
+Detail: `docs/workflow.md`. The plan and its history: `docs/plans/ui.md`.
+
+## What is checked against what
+
+| Pair              | Checked                                                                                                                                                         | Not checked                                             |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| Designs and specs | Control names on each surface; every control a scenario uses exists in the artboard; the text a scenario expects appears in that state                          | Layout and styling                                      |
+| Specs and code    | Every scenario, in-process and in a browser; model fields, types and relations; the role-by-action matrix; invariants and derived rules as generated properties | Anything no spec states                                 |
+| Designs and code  | Through the shared scenarios only                                                                                                                               | Layout and styling; the artboards steer the implementer |
+
+## What a spec holds
+
+Base files declare structure once and cascade from `specs/` down into each project directory. Feature files hold scenarios.
+
+| Section         | Example                                                                                                                         |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `## Model`      | `- Deal: name (text, required), amount (money), close date (date), stage. Belongs to Company. Belongs to User as owner.`        |
+|                 | `- Deal.stage: lead -> qualified -> proposal -> won, lead -> lost`                                                              |
+|                 | `- Activity is listed by occurred at newest first`                                                                              |
+| `## Surfaces`   | `- Deal page: design pipeline/deal-page, region "Deal name", region "Stage", button "Qualify", table "Tasks"`                   |
+| `## Actors`     | `- Sales rep: role sales`                                                                                                       |
+| `## Policies`   | `- Deal: sales may read, create, update, qualify, propose`                                                                      |
+| `## Invariants` | `- Invoice.total = sum of LineItem.total`                                                                                       |
+| `## Derived`    | `- Task is overdue when status is open and due date is before today`                                                            |
+| `## Effects`    | `- When Invoice mark paid: create Activity for the first Contact of its company with kind "note", body "Invoice {number} paid"` |
+| `## Steps`      | Composite steps with optional data slots, expanded before binding                                                               |
+| `## Scenario`   | `Story:`, `Given` / `When` / `Then` steps, `Narrate:` lines                                                                     |
+
+A scenario:
+
+```markdown
+## Scenario: A task becomes overdue as time advances
+
+Story: As the sales rep, I need to see Send proposal listed as overdue once its due date has passed, so that I notice work that is late.
+Given a Company "Acme"
+Given a Deal "Big deal" with stage lead, company Acme
+Given a Task "Send proposal" with title Send-proposal, due date 2026-01-16, deal Big deal, status open
+And Send proposal is not overdue
+When Sales rep opens Deal page for Big deal
+Narrate: The deal page for Big deal lists the task Send proposal, due on the sixteenth of January.
+Then Sales rep does not see "Overdue tasks"
+Narrate: The page has no overdue tasks region.
+When time advances 2 days
+Narrate: Two days pass. The due date is now behind.
+And Send proposal is overdue
+And Sales rep opens Deal page for Big deal
+Then Sales rep sees "Send-proposal" in "Overdue tasks"
+Narrate: An overdue tasks region appears. It lists the task Send-proposal.
 ```
-specs/
-├── company.md  contact.md  user.md  actors.md    shared entities and roles
-├── crm/         uses invoicing                   companies, contacts, activities
-├── pipeline/                                     deals, tasks
-├── invoicing/   uses crm                         invoices
-└── dashboard/   uses pipeline, invoicing         home page counts
-```
+
+- Every line matches one step shape. Unknown words fail at bind time with a line number.
+- Quoted names are controls declared on a surface. Their locators live in the per-project surface maps in `dialects/`, so specs never contain selectors.
+- Engineers own the vocabulary (`dialects/web-app.ts`) and the surface maps. Product and agents write specs.
+
+Syntax reference: `docs/design.md`.
+
+## Designs
+
+Artboards live at `designs/<project>/<surface>/default.dc.html` and mirror the canvas. They show states and contain no logic.
+
+- Data comes in as props: the record, its rows, counts, permission flags (`canWin`), state flags (`isLead`), predicates (`overdue`). Design mode fills them from the scenario and the spec's rules; on the canvas they are tweaks with sample defaults.
+- Interactions change state: `data-next-state` moves a record, `data-field` and `data-saves` edit, `data-creates` and `data-removes` add and delete rows, `data-filters` filters a list.
+- Every element a spec names carries `data-control` with the spec's name.
+
+Conventions: `designs/README.md`.
 
 ## Layout
 
-| Path                          | Holds                                                                                            |
-| ----------------------------- | ------------------------------------------------------------------------------------------------ |
-| `dialects/`                   | The vocabulary, as TypeScript: sections, step patterns, contexts, surfaces with locators, checks |
-| `specs/`                      | Specs in Markdown: shared base files at the root, one directory per project, bound ASTs          |
-| `packages/specdsl-core`       | Parse, bind, lint, lock. CLI `specdsl`                                                           |
-| `packages/specdsl-playwright` | Browser runtime: test mode and demo mode                                                         |
-| `elixir/spec_dsl`             | Elixir runtime: AST loader, `SpecDSL.Case`, `SpecDSL.Handlers`                                   |
-| `apps/invoicing`              | Sample Phoenix + Ash CRM, the system under test                                                  |
-| `docs/design.md`              | Design                                                                                           |
-
-## Scenarios
-
-`pnpm demo:reel` joins every video in spec order into `demo-output/reel.mp4`, one chapter per scenario, and writes `demo-output/reel.m3u8`. Each scenario produces `demo-output/<slug>/demo.mp4`. The slug is the lowercase scenario name with runs of non-alphanumerics collapsed to hyphens. A scenario with two actors produces `demo-<actor-slug>.mp4` per actor.
-
-### crm
-
-| Scenario                                     | The video shows                                                                           |
-| -------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| Timeline shows a contact's activities        | A contact page with a timeline, newest activity first.                                    |
-| Logging a note on a contact                  | A note logged on a contact appears in the timeline with today's date.                     |
-| Activity timeline advances with the clock    | After two days pass, a logged meeting appears in the timeline with the later date.        |
-| Company list shows every company             | The company table lists Acme and Globex.                                                  |
-| Searching companies by name                  | Searching narrows the company table to Globex.                                            |
-| Creating a company                           | A new company is saved and its page shows the name Initech.                               |
-| Editing a company                            | The company name changes to Acme-Corp.                                                    |
-| Company page lists its contacts and invoices | The company page shows the name, its contact, its invoice and an edit button.             |
-| Contact list shows every contact             | The contact table lists Ada Lovelace and Grace Hopper.                                    |
-| Searching contacts by name                   | Searching narrows the contact table to Grace Hopper.                                      |
-| Filtering contacts by company                | Filtering by company narrows the contact table to the contacts of Acme.                   |
-| Creating a contact                           | A new contact is saved and shows the name Ada Lovelace.                                   |
-| Editing a contact                            | The contact name changes to Ada-Byron Lovelace.                                           |
-| Who may edit contacts                        | A sales rep may edit a contact. Accounts may only read it. Both roles may edit a company. |
-
-### pipeline
-
-| Scenario                                        | The video shows                                                          |
-| ----------------------------------------------- | ------------------------------------------------------------------------ |
-| Who may move a deal through the pipeline        | The sales rep's board has no Win button. Only the sales manager may win. |
-| Who may complete a task                         | A sales rep may complete a task. Accounts may not.                       |
-| Pipeline board shows a deal in its stage column | The board lists Big deal in the lead column.                             |
-| Qualifying a lead                               | Big deal moves from the lead column to the qualified column.             |
-| Proposing a qualified deal                      | Big deal moves from the qualified column to the proposal column.         |
-| Winning a proposal                              | Big deal moves from the proposal column to the won column.               |
-| Losing a lead                                   | Big deal moves from the lead column to the lost column.                  |
-| Losing a qualified deal                         | Big deal moves from the qualified column to the lost column.             |
-| Losing a proposal                               | Big deal moves from the proposal column to the lost column.              |
-| Creating a deal                                 | A new deal is saved and shows the name Big-deal in stage lead.           |
-| Adding a task to a deal                         | The deal page lists the new task with its due date in the task table.    |
-| Completing a task                               | The task status changes to done.                                         |
-| A task becomes overdue as time advances         | Two days later the task appears in the overdue tasks region.             |
-
-### invoicing
-
-| Scenario                                                     | The video shows                                                                       |
-| ------------------------------------------------------------ | ------------------------------------------------------------------------------------- |
-| Invoice list shows every invoice                             | The invoice table lists INV-001 and INV-002.                                          |
-| Creating an invoice from the list                            | A new draft invoice opens in the editor.                                              |
-| Line total updates as quantity changes                       | The line total updates as the quantity and the unit price change.                     |
-| Who may send and settle invoices                             | The sales rep's editor has no Send button. Accounts may send. Only an admin may void. |
-| Sending a draft invoice marks it sent                        | The invoice status changes to sent.                                                   |
-| A manager sees an invoice once it is sent                    | Accounts sends the invoice, then the admin opens it and sees status sent. Two videos. |
-| Marking a sent invoice paid                                  | The invoice status changes to paid.                                                   |
-| Voiding a draft invoice                                      | The invoice status changes to void.                                                   |
-| Only an admin can void or mark an invoice paid               | The accountant's editor shows Send and no Void or Mark paid.                          |
-| Marking an invoice paid logs a note on the company's contact | The invoice becomes paid. The contact's timeline shows the note Invoice INV-001 paid. |
-
-### dashboard
-
-| Scenario                              | The video shows                                                                  |
-| ------------------------------------- | -------------------------------------------------------------------------------- |
-| Dashboard counts open deals per stage | The dashboard lists two deals in lead and one in proposal. Won deals are absent. |
-| Dashboard counts overdue tasks        | The dashboard shows one overdue task.                                            |
-| Dashboard counts unpaid invoices      | The dashboard shows two unpaid invoices. Paid invoices are absent.               |
+| Path                              | Holds                                                                                                            |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `specs/`                          | The specs tree                                                                                                   |
+| `designs/`                        | Artboards mirrored from the canvas; `canvas.json` names the canvas                                               |
+| `dialects/`                       | Vocabulary and per-project surface maps                                                                          |
+| `packages/specdsl-core`           | Parse, bind, lint, design-lint, lock. CLI `specdsl`                                                              |
+| `packages/specdsl-playwright`     | Browser runtime: test, demo and design modes                                                                     |
+| `elixir/spec_dsl`                 | Elixir runtime: scenario cases and the model, policy, invariant and derived conformance suites behind an adapter |
+| `apps/invoicing`                  | The sample Phoenix + Ash application                                                                             |
+| `.claude/commands/design-sync.md` | The `/design-sync` command                                                                                       |
+| `docs/`                           | Design of the spec language, the workflow, the plan, reviews                                                     |
 
 ## Commands
 
-| Task                   | Command                                                                                                                                                         |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Install                | `pnpm install`                                                                                                                                                  |
-| Set up the app         | `cd apps/invoicing && mix setup`                                                                                                                                |
-| Load demo data         | `cd apps/invoicing && mix run priv/repo/demo_seeds.exs` (4 companies, 6 contacts, 7 deals, 6 tasks, 5 invoices; runs once)                                      |
-| Run the app            | `cd apps/invoicing && mix phx.server`, then http://localhost:4000; sign in as sales@example.com, manager@example.com, accounts@example.com or admin@example.com |
-| Bind and lint specs    | `pnpm bind`                                                                                                                                                     |
-| Regenerate the lock    | `pnpm lock`                                                                                                                                                     |
-| Core tests             | `pnpm --filter @special/specdsl-core test`                                                                                                                      |
-| Scenarios in ExUnit    | `cd apps/invoicing && mix test`                                                                                                                                 |
-| Scenarios in a browser | `pnpm e2e`                                                                                                                                                      |
-| Demo videos            | `pnpm demo`                                                                                                                                                     |
-| One reel with chapters | `pnpm demo:reel`                                                                                                                                                |
+| Task                                  | Command                                                                                                                                                |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Install                               | `pnpm install`                                                                                                                                         |
+| Set up the app                        | `cd apps/invoicing && mix setup`                                                                                                                       |
+| Load demo data                        | `cd apps/invoicing && mix run priv/repo/demo_seeds.exs`                                                                                                |
+| Run the app                           | `cd apps/invoicing && mix phx.server`, then http://localhost:4000 as sales@example.com, manager@example.com, accounts@example.com or admin@example.com |
+| Bind and lint specs and designs       | `pnpm bind`                                                                                                                                            |
+| Spec language tests                   | `pnpm --filter @special/specdsl-core test`                                                                                                             |
+| Scenarios and conformance, in-process | `cd apps/invoicing && mix test`                                                                                                                        |
+| Scenarios in a browser                | `pnpm e2e`                                                                                                                                             |
+| Design walkthrough                    | `pnpm design [-- --scenario "<name>"]`                                                                                                                 |
+| App demo videos                       | `pnpm demo`, then `pnpm demo:reel`                                                                                                                     |
+| Sync the canvas                       | `/design-sync` in Claude Code                                                                                                                          |
+
+Run `pnpm bind` before the others: the bound AST files are generated, not committed.
 
 ## Prerequisites
 
 - Node 26, pnpm 11, Elixir 1.20, Erlang 29 (see `.tool-versions`)
 - Postgres on localhost:5432, user `postgres`, password `postgres`
-- `ffmpeg`, `ffprobe`, `pocket-tts` on PATH for demo mode
+- `ffmpeg`, `ffprobe` and `pocket-tts` on PATH for the demo and design videos
 - `cd apps/invoicing && mix setup && MIX_ENV=e2e mix ash.setup && MIX_ENV=e2e mix assets.build`
-
-## Writing a spec
-
-A directory holding `specdsl.json` (`{ "dialect": "../dialects/invoicing.ts" }`) is the root of a specs tree. A file without a `## Scenario` section is a base file and holds `## Model`, `## Surfaces`, `## Actors` and `## Policies`. A file with scenarios is a feature file. `specdsl bind-all <root>` lints the whole tree and writes `<feature>.ast.json` beside each feature file.
-
-A feature file binds against the base files of the root, then of each directory down to its own, then itself. Models shared between projects live once at a higher level and cascade down.
-
-```
-specs/
-├── specdsl.json
-├── customer.md                            shared base file
-└── invoicing/
-    ├── model.md  surfaces.md  policies.md     project base files
-    └── line-totals.md  sending.md  ...        feature files ──► line-totals.ast.json  sending.ast.json  ...
-```
-
-A single file may hold every section. Bound with `specdsl bind`, it is its own base:
-
-```markdown
-# Invoicing
-
-## Model
-
-- Invoice: number (text, required), status, total (money). Belongs to Customer. Has many LineItem.
-- Invoice.status: draft -> sent -> paid, draft -> void
-
-## Surfaces
-
-- Invoice editor: field "Quantity", region "Totals", button "Send"
-
-## Actors
-
-- Accounts: role accountant
-
-## Scenario: Line total updates as quantity changes
-
-Story: As accounts, I need the line total to follow the quantity, so that the customer is billed the correct amount.
-Given a Customer "Acme"
-Given an Invoice "INV-001" with status draft, customer Acme
-Given a LineItem "Consulting" with invoice INV-001, quantity 1, unit price 100
-When Accounts opens Invoice editor for INV-001
-And Accounts enters 3 into "Quantity"
-Then Accounts sees "300.00" in "Totals"
-Narrate: The line total updates as the quantity changes.
-```
-
-- Every step matches one pattern from the dialect. Unknown words fail at bind time with a line number.
-- Nouns come from `## Model`, `## Surfaces` and `## Actors`. Quoted names are controls on the surface the actor has open, or on a surface marked `(shared)`.
-- A field may carry a type and `required`: text, email, phone, url, money, integer, decimal, date, datetime, boolean, or `one of a, b, c`. A relation may be named: `Belongs to User as author`. Conformance tests hold the Ash resources to these.
-- `## Derived` in a base file names predicates (`Task is overdue when status is open and due date is before today`) and counts over them (`Overdue tasks counts Task that are overdue`). Conditions join `<Field> is [not|before|after] <Value>` with `and` / `or`. A scenario asserts one with `Then Send proposal is overdue`.
-- `## Effects` in a base file declares what an action creates elsewhere, in one closed shape: `When Invoice mark paid: create Activity for the first Contact of its company with kind "note", body "Invoice {number} paid"`. `{field}` is filled from the triggering record; unknown names are bind errors.
-- `Story:` is the first line of every scenario: "As <who>, I need <what>, so that <why>." Demo mode speaks it over the opening card, and lint warns when it is missing.
-- `Narrate:` applies to the step above it and is used by demo mode only.
-- A composite step is declared in `## Steps` as `- <header pattern> means` with nested child steps. Header slots are substituted into the children. A slot in `[ ... ]` is optional: children that mention an omitted slot are dropped, so a composite fills every field it is given and the scenario adds further steps after it.
-
-  ```markdown
-  - <Actor> creates a deal <Name=Text> for <Company=Ref> [with amount <Amount=Value>] means
-    - <Actor> opens Pipeline board
-    - <Actor> clicks "New deal"
-    - <Actor> enters <Name> into "Name"
-    - <Actor> enters <Amount> into "Amount"
-  ```
-
-- A `Narrate:` line after a composite step is spoken after its last child. A `Narrate:` child inside a composite is spoken in place.
-
-## Adding vocabulary
-
-| Change                  | Where                                                                                                                                              |
-| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| A new screen or control | `surface(...)` in the project dialect with `css`, `lv` and `form` locators                                                                         |
-| A new step shape        | `step(pattern, ...)` in the dialect, a handler in `packages/specdsl-playwright/src/handlers` and in `apps/invoicing/test/support/spec_handlers.ex` |
-| A new context           | `context(...)` in the dialect, setup and teardown in both runtimes                                                                                 |
-| A composite step        | `## Steps` section of the spec                                                                                                                     |
-
-Runtimes check handler coverage against `dialects/<name>.lock.json`.

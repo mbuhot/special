@@ -8,8 +8,8 @@ Given a Company "Acme"
 Given an Invoice "INV-001" with status draft, company Acme, supplier Ledger Studio
 When Accounts opens Invoice editor for INV-001
 Narrate: The invoice editor for INV-001 has a supplier block at the top of the details.
-Then Accounts sees "Ledger-Studio" in "Supplier"
-Narrate: The supplier block shows the business name Ledger-Studio.
+Then Accounts sees "Ledger Studio" in "Supplier"
+Narrate: The supplier block shows the business name Ledger Studio.
 And Accounts sees "51824753556" in "Supplier"
 Narrate: It shows the ABN.
 

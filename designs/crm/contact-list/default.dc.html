@@ -340,8 +340,9 @@
                 <label for="contact-company" style="font-size: 12px; color: #64748b">Company</label>
                 <select id="contact-company" data-control="Company filter" data-filters="contacts" data-filter-field="company" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #0f172a; font-size: 14px; font-family: inherit; box-sizing: border-box;">
                   <option value="" selected>All companies</option>
-                  <option>Acme</option>
-                  <option>Globex</option>
+                  <sc-for list="{{ allCompanies }}" as="option" hint-placeholder-count="2">
+                    <option>{{ option.name }}</option>
+                  </sc-for>
                 </select>
               </div>
             </div>
@@ -373,7 +374,7 @@
         </div>
       </div>
     </x-dc>
-    <script type="text/x-dc" data-dc-script data-props='{"user":{"editor":null,"default":{"name":"Sam Rivera"}},"contacts":{"editor":null,"default":[{"name":"Ada Lovelace","firstName":"Ada","lastName":"Lovelace","email":"ada@acme.example","phone":"555-0100","company":"Acme","matches":true},{"name":"Grace Hopper","firstName":"Grace","lastName":"Hopper","email":"grace@acme.example","phone":"555-0101","company":"Acme","matches":true}]},"canCreateContact":{"editor":"boolean","default":true},"$preview":{"width":1280,"height":800}}'>
+    <script type="text/x-dc" data-dc-script data-props='{"user":{"editor":null,"default":{"name":"Sam Rivera"}},"contacts":{"editor":null,"default":[{"name":"Ada Lovelace","firstName":"Ada","lastName":"Lovelace","email":"ada@acme.example","phone":"555-0100","company":"Acme","matches":true},{"name":"Grace Hopper","firstName":"Grace","lastName":"Hopper","email":"grace@acme.example","phone":"555-0101","company":"Acme","matches":true}]},"canCreateContact":{"editor":"boolean","default":true},"allCompanies":{"editor":null,"default":[{"name":"Acme"},{"name":"Globex"}]},"$preview":{"width":1280,"height":800}}'>
       class Component extends DCLogic {
       renderVals() {
       return { ...this.props };

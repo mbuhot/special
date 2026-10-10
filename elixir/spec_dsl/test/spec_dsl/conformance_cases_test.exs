@@ -154,7 +154,9 @@ defmodule SpecDSL.ConformanceCasesTest do
   end
 
   test "a derived test names the entity and predicate the app counts wrongly" do
-    FakeAdapter.install(world(%{app_count: fn _entity, _predicate, _today, _records -> 0 end}))
+    FakeAdapter.install(
+      world(%{app_count: fn _entity, _predicate, _today, records -> length(records) + 1 end})
+    )
 
     message =
       failure_message(

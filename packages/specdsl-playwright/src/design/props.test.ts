@@ -2,10 +2,17 @@ import { expect, test } from "@playwright/test";
 import type { SpecAst } from "@special/specdsl-core";
 import {
   applyRowFilters,
+  applyViewState,
   buildListProps,
   buildNewProps,
   buildProps,
+  clearViewFlag,
+  closeRowOverlays,
+  emptyViewState,
   listEntities,
+  selectedRefs,
+  toggleAllViewFlag,
+  toggleViewFlag,
 } from "./props.js";
 import type { GivenEntity } from "./props.js";
 import { createRecord, editorEntity, ensureActorUser, roleOfActor, saveRecord } from "./records.js";
@@ -423,6 +430,41 @@ test("an actor's user record carries the declared name when the model's User has
   expect(unnamed.get("Sales rep")?.fields.has("name")).toBe(false);
 });
 
+test("a Given user named after an actor takes the actor's role and display name", () => {
+  const user = billing.model["User"] as SpecAst["model"][string];
+  const named: SpecAst = {
+    ...billing,
+    actors: { "Sales rep": { Role: "sales", Name: "Sam Rivera", extra: {} } },
+    model: {
+      ...billing.model,
+      User: { ...user, fields: [...user.fields, { name: "name", type: "text" }] },
+    },
+  };
+  const records: Records = new Map([["Sales rep", { entity: "User", fields: new Map() }]]);
+  ensureActorUser(named, records, "Sales rep");
+  expect(records.get("Sales rep")?.fields.get("name")).toBe("Sam Rivera");
+  expect(records.get("Sales rep")?.fields.get("role")).toBe("sales");
+});
+
+test("a belongs-to relation to a user shows the user's display name", () => {
+  const user = billing.model["User"] as SpecAst["model"][string];
+  const named: SpecAst = {
+    ...billing,
+    actors: { "Sales rep": { Role: "sales", Name: "Sam Rivera", extra: {} } },
+    model: {
+      ...billing.model,
+      User: { ...user, fields: [...user.fields, { name: "name", type: "text" }] },
+    },
+  };
+  const records = timeline();
+  const userRef = ensureActorUser(named, records, "Sales rep") as string;
+  assignDefaultUsers(named, records, userRef);
+  const row = (
+    buildProps(named, records, "Ada", TODAY)["activities"] as Record<string, unknown>[]
+  )[0];
+  expect(row?.["author"]).toBe("Sam Rivera");
+});
+
 test("unset user relations point at the first actor's user", () => {
   const records = timeline();
   const user = ensureActorUser(billing, records, "Sales rep");
@@ -477,4 +519,68 @@ test("flag filter keeps rows whose named flag is true, and an empty flag keeps e
     true,
     true,
   ]);
+});
+
+const taskRows = () => ({
+  tasks: [{ name: "One" }, { name: "Two" }, { name: "Three", matches: false }],
+});
+
+const rowFlags = (props: Record<string, unknown>, flag: string) =>
+  (props["tasks"] as Record<string, unknown>[]).map((row) => row[flag]);
+
+test("a row toggle flips that row's flag and survives re-render", () => {
+  const view = toggleViewFlag(emptyViewState(), "selected", "Two");
+  expect(rowFlags(applyViewState(taskRows(), view), "selected")).toEqual([false, true, false]);
+  expect(rowFlags(applyViewState(taskRows(), view), "notSelected")).toEqual([true, false, true]);
+  const flipped = toggleViewFlag(view, "selected", "Two");
+  expect(rowFlags(applyViewState(taskRows(), flipped), "selected")).toEqual([false, false, false]);
+});
+
+test("a toggle without a record flips a top-level flag and its inverse", () => {
+  const props = applyViewState({}, toggleViewFlag(emptyViewState(), "filtersOpen"));
+  expect(props["filtersOpen"]).toBe(true);
+  expect(props["notFiltersOpen"]).toBe(false);
+});
+
+test("opening one row's menu closes every other row's menu", () => {
+  const first = toggleViewFlag(emptyViewState(), "menuOpen", "One");
+  const second = toggleViewFlag(first, "menuOpen", "Two");
+  expect(rowFlags(applyViewState(taskRows(), second), "menuOpen")).toEqual([false, true, false]);
+});
+
+test("opening a dialog from a menu closes that row's menu", () => {
+  const menu = toggleViewFlag(emptyViewState(), "menuOpen", "One");
+  const dialog = toggleViewFlag(menu, "reassignOpen", "One");
+  const props = applyViewState(taskRows(), dialog);
+  expect(rowFlags(props, "menuOpen")).toEqual([false, false, false]);
+  expect(rowFlags(props, "reassignOpen")).toEqual([true, false, false]);
+  const closed = applyViewState(taskRows(), closeRowOverlays(dialog, "One"));
+  expect(rowFlags(closed, "reassignOpen")).toEqual([false, false, false]);
+});
+
+test("predicate flags carry an inverse", () => {
+  const row = (
+    buildListProps(spec, records(), ["Task"], TODAY)["tasks"] as Record<string, unknown>[]
+  )[0];
+  expect(row?.["overdue"]).toBe(true);
+  expect(row?.["notOverdue"]).toBe(false);
+});
+
+test("select all sets selected on matching rows, then clears when all are on", () => {
+  const on = toggleAllViewFlag(taskRows(), emptyViewState(), "selected", "tasks");
+  expect(rowFlags(applyViewState(taskRows(), on), "selected")).toEqual([true, true, false]);
+  const withOn = applyViewState(taskRows(), on);
+  const off = toggleAllViewFlag(withOn, on, "selected", "tasks");
+  expect(rowFlags(applyViewState(taskRows(), off), "selected")).toEqual([false, false, false]);
+});
+
+test("selection count and any-selected follow the selected rows of the selection prop", () => {
+  const view = { ...toggleViewFlag(emptyViewState(), "selected", "One"), selection: "tasks" };
+  const props = applyViewState(taskRows(), view);
+  expect(props["anySelected"]).toBe(true);
+  expect(props["selectedCount"]).toBe(1);
+  expect(selectedRefs(props, "tasks")).toEqual(["One"]);
+  const cleared = applyViewState(taskRows(), clearViewFlag(props, view, "selected", "tasks"));
+  expect(cleared["anySelected"]).toBe(false);
+  expect(cleared["selectedCount"]).toBe(0);
 });

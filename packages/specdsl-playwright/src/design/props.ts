@@ -88,6 +88,136 @@ function rowMatches(row: Props, filter: RowFilter): boolean {
   );
 }
 
+/** View state held by design mode for one opened surface: flags toggled by clicks, never written to records. */
+export interface ViewState {
+  top: Record<string, boolean>;
+  rows: Record<string, Record<string, boolean>>;
+  selection?: string | undefined;
+}
+
+const SELECTED = "selected";
+const MENU_OPEN = "menuOpen";
+const ROW_VIEW_FLAGS = [SELECTED, MENU_OPEN, "reassignOpen"];
+const SELECTION_ATTRIBUTE = /\bdata-selection="([^"]+)"/;
+
+export function emptyViewState(): ViewState {
+  return { top: {}, rows: {} };
+}
+
+/** The rows prop named by the first `data-selection` attribute of an artboard, if any. */
+export function selectionPropOf(artboardHtml: string): string | undefined {
+  return SELECTION_ATTRIBUTE.exec(artboardHtml)?.[1];
+}
+
+/** `not<Flag>`: the inverse flag name (`selected` gives `notSelected`). */
+export function inverseName(flag: string): string {
+  return `not${pascalCase(flag)}`;
+}
+
+/** Flips `flag` on the row `record`, or the top-level flag when no record is given. Opening `menuOpen` closes every other row's menu; opening any other flag except `selected` closes that row's menu. */
+export function toggleViewFlag(view: ViewState, flag: string, record?: string): ViewState {
+  if (record === undefined)
+    return { ...view, top: { ...view.top, [flag]: view.top[flag] !== true } };
+  const opening = view.rows[record]?.[flag] !== true;
+  const base = withRowFlag(view, record, flag, opening);
+  if (!opening || flag === SELECTED) return base;
+  return flag === MENU_OPEN
+    ? closeOtherMenus(base, record)
+    : withRowFlag(base, record, MENU_OPEN, false);
+}
+
+/** Closes the menu and every other overlay flag on one row. */
+export function closeRowOverlays(view: ViewState, record: string): ViewState {
+  return ROW_VIEW_FLAGS.filter((flag) => flag !== SELECTED).reduce(
+    (next, flag) => withRowFlag(next, record, flag, false),
+    view,
+  );
+}
+
+function withRowFlag(view: ViewState, record: string, flag: string, value: boolean): ViewState {
+  return { ...view, rows: { ...view.rows, [record]: { ...view.rows[record], [flag]: value } } };
+}
+
+function closeOtherMenus(view: ViewState, record: string): ViewState {
+  return Object.keys(view.rows)
+    .filter((other) => other !== record)
+    .reduce((next, other) => withRowFlag(next, other, MENU_OPEN, false), view);
+}
+
+function rowsOf(props: Props, prop: string): Props[] {
+  const value = props[prop];
+  return Array.isArray(value) ? (value as Props[]) : [];
+}
+
+/** Sets `flag` on every row of `prop` whose `matches` is true: all on when any is off, else all off. */
+export function toggleAllViewFlag(
+  props: Props,
+  view: ViewState,
+  flag: string,
+  prop: string,
+): ViewState {
+  const matching = rowsOf(props, prop).filter((row) => row["matches"] !== false);
+  const turnOn = matching.some((row) => row[flag] !== true);
+  return matching.reduce((next, row) => withRowFlag(next, String(row["name"]), flag, turnOn), view);
+}
+
+/** Turns `flag` off on every row of `prop`. */
+export function clearViewFlag(
+  props: Props,
+  view: ViewState,
+  flag: string,
+  prop: string,
+): ViewState {
+  return rowsOf(props, prop).reduce(
+    (next, row) => withRowFlag(next, String(row["name"]), flag, false),
+    view,
+  );
+}
+
+/** Names of the rows of `prop` whose `selected` flag is on. */
+export function selectedRefs(props: Props, prop: string): string[] {
+  return rowsOf(props, prop)
+    .filter((row) => row[SELECTED] === true)
+    .map((row) => String(row["name"]));
+}
+
+/** Overlays view state on props: every row gets `selected`, `menuOpen`, `reassignOpen` and their `not` inverses; top-level flags and their inverses; `anySelected` and `selectedCount` from the rows of `view.selection`. */
+export function applyViewState(props: Props, view: ViewState): Props {
+  const withFlags = Object.fromEntries(
+    Object.entries(props).map(([prop, value]) => [
+      prop,
+      Array.isArray(value) ? value.map((row: Props) => withRowViewFlags(row, view)) : value,
+    ]),
+  );
+  const selected =
+    view.selection === undefined ? 0 : selectedRefs(withFlags, view.selection).length;
+  return {
+    ...withFlags,
+    ...Object.fromEntries(
+      Object.entries(view.top).flatMap(([flag, value]) => [
+        [flag, value],
+        [inverseName(flag), !value],
+      ]),
+    ),
+    anySelected: selected > 0,
+    selectedCount: selected,
+  };
+}
+
+function withRowViewFlags(row: Props, view: ViewState): Props {
+  if (typeof row !== "object" || row === null || typeof row["name"] !== "string") return row;
+  const held = view.rows[row["name"]] ?? {};
+  return {
+    ...row,
+    ...Object.fromEntries(
+      ROW_VIEW_FLAGS.flatMap((flag) => [
+        [flag, held[flag] === true],
+        [inverseName(flag), held[flag] !== true],
+      ]),
+    ),
+  };
+}
+
 /** Entities whose plural (`deals`) is declared in `declared` and which have no singular record prop (`deal`) declared: a list surface. */
 export function listEntities(spec: SpecAst, declared: readonly string[]): string[] {
   const entityNames = Object.keys(spec.model);
@@ -142,9 +272,24 @@ function allProps(spec: SpecAst, entities: Entities, today: string, role?: strin
   return Object.fromEntries(
     Object.keys(spec.model).map((entity) => [
       `all${pascalCase(pluralCamelCase(entity))}`,
-      entityRows(spec, entities, entity, today, role),
+      optionRows(spec, entities, entity, today, role),
     ]),
   );
+}
+
+/** Rows for select options: a record holding its own `name` field is listed under that display name. */
+function optionRows(
+  spec: SpecAst,
+  entities: Entities,
+  entity: string,
+  today: string,
+  role?: string,
+): Props[] {
+  const entries = [...entities].filter(([, record]) => record.entity === entity);
+  return orderEntries(spec, entity, entries).map(([refName, record]) => ({
+    ...rowFor(spec, entities, refName, record, today, role),
+    name: record.fields.get("name") ?? refName,
+  }));
 }
 
 function rowFor(
@@ -241,9 +386,27 @@ function recordOf(
     });
   return {
     ...displayFields(model, refName, record),
+    ...relationNames(model, entities, record),
     ...Object.fromEntries(related),
     ...permissionProps(spec, record.entity, role),
   };
+}
+
+/** `<relation>` as the related record's own `name` field, for belongs-to targets that hold one. */
+function relationNames(
+  model: EntityNode | undefined,
+  entities: Entities,
+  record: GivenEntity,
+): Props {
+  return Object.fromEntries(
+    (model?.relations ?? [])
+      .filter((relation) => relation.kind === "belongs-to")
+      .flatMap((relation): [string, string][] => {
+        const target = entities.get(record.fields.get(relation.name.toLowerCase()) ?? "");
+        const targetName = target?.fields.get("name");
+        return targetName === undefined ? [] : [[camelCase(relation.name), targetName]];
+      }),
+  );
 }
 
 /** Booleans and states of one record: machine fields, `is<State>` flags and `<predicate>` results. */
@@ -276,12 +439,16 @@ function stateProps(model: EntityNode | undefined, record: GivenEntity): Props {
   );
 }
 
+/** `<predicate>` and its inverse `not<Predicate>` for every Derived predicate of the record's entity. */
 function predicateProps(spec: SpecAst, record: GivenEntity, today: string): Props {
   return Object.fromEntries(
-    predicatesOf(spec, record.entity).map((predicate) => [
-      camelCase(predicate.name),
-      holds(predicate, Object.fromEntries(record.fields), today),
-    ]),
+    predicatesOf(spec, record.entity).flatMap((predicate) => {
+      const holding = holds(predicate, Object.fromEntries(record.fields), today);
+      return [
+        [camelCase(predicate.name), holding],
+        [inverseName(predicate.name), !holding],
+      ];
+    }),
   );
 }
 

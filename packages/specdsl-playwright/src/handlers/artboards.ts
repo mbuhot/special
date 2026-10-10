@@ -13,13 +13,21 @@ import type {
 } from "../runtime.js";
 import {
   applyRowFilters,
+  applyViewState,
   buildListProps,
   buildNewProps,
   buildProps,
   camelCase,
+  clearViewFlag,
+  closeRowOverlays,
+  emptyViewState,
   listEntities,
+  selectedRefs,
+  selectionPropOf,
+  toggleAllViewFlag,
+  toggleViewFlag,
 } from "../design/props.js";
-import type { GivenEntity, RowFilter } from "../design/props.js";
+import type { GivenEntity, RowFilter, ViewState } from "../design/props.js";
 import {
   applyEffects,
   childRelation,
@@ -28,8 +36,10 @@ import {
   entityOfPlural,
   ownedFields,
   ensureActorUser,
+  ensureGivenActorUsers,
   roleOfActor,
   saveRecord,
+  stateNamed,
 } from "../design/records.js";
 import { assignDefaultUsers, withNaturalKey } from "../design/rules.js";
 import type { NewRecordContext } from "../design/rules.js";
@@ -90,9 +100,12 @@ interface Session {
   pending: Map<string, Map<string, string>>;
   filters: RowFilter[];
   inputs: Map<string, TypedInput>;
+  view: ViewState;
 }
 
 const SURFACE_KEY = "";
+const SELECTION_KEY_PREFIX = "selection:";
+const SELECTED_FLAG = "selected";
 
 interface ScenarioStore {
   entities: Map<string, GivenEntity>;
@@ -208,10 +221,16 @@ export const designSteps: StepHandlers<WebAppStepArgs, DesignServices, WebAppCon
     const nextState = await control.getAttribute("data-next-state");
     const record = (await control.getAttribute("data-record")) || undefined;
     const mutation = await mutationOf(control);
-    if (mutation !== undefined) {
+    const viewClick = await viewClickOf(control);
+    const selection = await control.getAttribute("data-selection");
+    if (viewClick !== undefined) {
+      await applyViewClick(env, args.Actor, page, viewClick, record);
+    } else if (mutation !== undefined) {
       await applyMutation(env, args.Actor, page, mutation, record);
     } else if (href?.endsWith(ARTBOARD_SUFFIX) === true) {
       await followLink(env, args.Actor, page, href, record);
+    } else if (nextState !== null && selection !== null) {
+      await advanceSelected(env, args.Actor, page, selection, nextState);
     } else if (nextState !== null) {
       await advanceState(env, args.Actor, viewOf(page), nextState, record);
     }
@@ -468,14 +487,16 @@ async function load(env: Env, actorName: string, view: View, keepSession = false
   const page = pageOf(env, actorName);
   routeRenderedArtboards(env, page);
   keepSession || sessionByPage.set(page, emptySession());
-  propsByPage.set(page, propsFor(env, view, sessionOf(page)));
+  const session = sessionOf(page);
+  session.view.selection ??= selectionPropOf(readFileSync(file, "utf8"));
+  propsByPage.set(page, propsFor(env, view, session));
   await page.goto(`${env.services.baseURL}/${view.design}/${view.state}${ARTBOARD_SUFFIX}`);
   viewByPage.set(page, view);
   keepSession && (await restoreInputs(page));
 }
 
 function emptySession(): Session {
-  return { pending: new Map(), filters: [], inputs: new Map() };
+  return { pending: new Map(), filters: [], inputs: new Map(), view: emptyViewState() };
 }
 
 function sessionOf(page: Page): Session {
@@ -499,6 +520,7 @@ async function restoreInputs(page: Page): Promise<void> {
 function prepareUsers(env: Env, actorName: string): NewRecordContext {
   const store = storeOf(env);
   store.firstActor ??= actorName;
+  ensureGivenActorUsers(env.spec, store.entities);
   const firstUser = ensureActorUser(env.spec, store.entities, store.firstActor);
   const viewerUser = ensureActorUser(env.spec, store.entities, actorName);
   firstUser !== undefined && assignDefaultUsers(env.spec, store.entities, firstUser);
@@ -515,20 +537,105 @@ function propsFor(env: Env, view: View, session: Session): Props {
       : view.ref === undefined
         ? buildListProps(env.spec, givenOf(env), listedEntities(env, view.design), today, role)
         : buildProps(env.spec, givenOf(env), view.ref, today, role);
-  return applyRowFilters(base, session.filters);
+  return applyViewState(applyRowFilters(base, session.filters), session.view);
 }
 
-type Mutation = { kind: "saves" } | { kind: "creates"; target: string } | { kind: "removes" };
+type Mutation =
+  | { kind: "saves"; selection: string | undefined }
+  | { kind: "creates"; target: string }
+  | { kind: "removes" };
 
 async function mutationOf(control: Locator): Promise<Mutation | undefined> {
   const attributes = await control.evaluate((element) => ({
     saves: element.hasAttribute("data-saves"),
     creates: element.getAttribute("data-creates"),
     removes: element.hasAttribute("data-removes"),
+    selection: element.getAttribute("data-selection") ?? undefined,
   }));
-  if (attributes.saves) return { kind: "saves" };
+  if (attributes.saves) return { kind: "saves", selection: attributes.selection };
   if (attributes.creates !== null) return { kind: "creates", target: attributes.creates };
   return attributes.removes ? { kind: "removes" } : undefined;
+}
+
+type ViewClick =
+  | { kind: "toggles"; flag: string }
+  | { kind: "toggles-all"; flag: string; selection: string }
+  | { kind: "clears"; flag: string; selection: string };
+
+async function viewClickOf(control: Locator): Promise<ViewClick | undefined> {
+  const attributes = await control.evaluate((element) => ({
+    toggles: element.getAttribute("data-toggles"),
+    togglesAll: element.getAttribute("data-toggles-all"),
+    clears: element.getAttribute("data-clears"),
+    selection: element.getAttribute("data-selection"),
+  }));
+  if (attributes.toggles !== null) return { kind: "toggles", flag: attributes.toggles };
+  if (attributes.selection === null) return undefined;
+  if (attributes.togglesAll !== null) {
+    return { kind: "toggles-all", flag: attributes.togglesAll, selection: attributes.selection };
+  }
+  return attributes.clears === null
+    ? undefined
+    : { kind: "clears", flag: attributes.clears, selection: attributes.selection };
+}
+
+async function applyViewClick(
+  env: Env,
+  actorName: string,
+  page: Page,
+  click: ViewClick,
+  record: string | undefined,
+): Promise<void> {
+  const session = sessionOf(page);
+  const props = propsByPage.get(page) ?? {};
+  session.view =
+    click.kind === "toggles"
+      ? toggleViewFlag(session.view, click.flag, record)
+      : click.kind === "toggles-all"
+        ? toggleAllViewFlag(props, session.view, click.flag, click.selection)
+        : clearViewFlag(props, session.view, click.flag, click.selection);
+  await load(env, actorName, viewOf(page), true);
+}
+
+async function advanceSelected(
+  env: Env,
+  actorName: string,
+  page: Page,
+  selection: string,
+  nextState: string,
+): Promise<void> {
+  for (const ref of selectedRefs(propsByPage.get(page) ?? {}, selection)) {
+    moveRecord(env, actorName, ref, nextState);
+  }
+  await finishBulk(env, actorName, page, selection);
+}
+
+async function finishBulk(
+  env: Env,
+  actorName: string,
+  page: Page,
+  selection: string,
+): Promise<void> {
+  const session = sessionOf(page);
+  session.view = clearViewFlag(propsByPage.get(page) ?? {}, session.view, SELECTED_FLAG, selection);
+  await load(env, actorName, viewOf(page), true);
+}
+
+async function saveSelected(
+  env: Env,
+  actorName: string,
+  page: Page,
+  selection: string,
+): Promise<void> {
+  const session = sessionOf(page);
+  const key = `${SELECTION_KEY_PREFIX}${selection}`;
+  const pending = session.pending.get(key) ?? new Map<string, string>();
+  for (const ref of selectedRefs(propsByPage.get(page) ?? {}, selection)) {
+    saveRecord(env.spec, givenOf(env), ref, pending);
+  }
+  session.pending.delete(key);
+  clearFieldInputs(session);
+  await finishBulk(env, actorName, page, selection);
 }
 
 async function applyEdit(
@@ -547,6 +654,7 @@ async function applyEdit(
     filters: element.getAttribute("data-filters"),
     filterField: element.getAttribute("data-filter-field"),
     filterFlag: element.hasAttribute("data-filter-flag"),
+    selection: element.getAttribute("data-selection"),
   }));
   const session = sessionOf(page);
   if (attributes.filters !== null) {
@@ -568,7 +676,17 @@ async function applyEdit(
     await load(env, actorName, viewOf(page), true);
   } else if (attributes.field !== null) {
     const view = viewOf(page);
-    const key = attributes.record !== "" ? attributes.record : (view.ref ?? SURFACE_KEY);
+    const key =
+      attributes.selection !== null
+        ? `${SELECTION_KEY_PREFIX}${attributes.selection}`
+        : attributes.record !== ""
+          ? attributes.record
+          : (view.ref ?? SURFACE_KEY);
+    const stage = stageChange(env, attributes.record, attributes.field, options.optionValue, value);
+    if (stage !== undefined) {
+      await advanceState(env, actorName, view, stage, attributes.record);
+      return;
+    }
     if (
       (await page.locator("[data-saves]").count()) === 0 &&
       editsOwnField(env, view, key, attributes.field)
@@ -581,6 +699,20 @@ async function applyEdit(
     session.pending.set(key, pending);
     session.inputs.set(selector, { kind: "field", action, value });
   }
+}
+
+function stageChange(
+  env: Env,
+  record: string,
+  field: string,
+  optionValue: string | undefined,
+  label: string,
+): string | undefined {
+  const entity = record === "" ? undefined : givenOf(env).get(record)?.entity;
+  return entity === undefined
+    ? undefined
+    : (stateNamed(env.spec, entity, field, optionValue ?? "") ??
+        stateNamed(env.spec, entity, field, label));
 }
 
 function editsOwnField(env: Env, view: View, key: string, field: string): boolean {
@@ -631,6 +763,10 @@ async function applyMutation(
 ): Promise<void> {
   const view = viewOf(page);
   const session = sessionOf(page);
+  if (mutation.kind === "saves" && mutation.selection !== undefined) {
+    await saveSelected(env, actorName, page, mutation.selection);
+    return;
+  }
   const records = givenOf(env);
   const surfaceKey = view.ref ?? SURFACE_KEY;
   const targetKey = record ?? surfaceKey;
@@ -655,6 +791,7 @@ async function applyMutation(
     }
     session.pending.delete(targetKey);
     clearFieldInputs(session);
+    record !== undefined && (session.view = closeRowOverlays(session.view, record));
   } else {
     createFromPending(
       env,
@@ -733,10 +870,7 @@ async function advanceState(
   nextState: string,
   record?: string,
 ): Promise<void> {
-  const changed = record ?? view.ref;
-  recordStateChange(env, changed, nextState);
-  changed !== undefined &&
-    applyEffects(env.spec, givenOf(env), changed, nextState, prepareUsers(env, actorName));
+  moveRecord(env, actorName, record ?? view.ref, nextState);
   if (record !== undefined) {
     await load(env, actorName, view, true);
     return;
@@ -744,6 +878,17 @@ async function advanceState(
   const states = artboardStates(join(env.services.designsDirectory, view.design));
   const state = states.includes(nextState) ? nextState : view.state;
   await load(env, actorName, { ...view, state });
+}
+
+function moveRecord(
+  env: Env,
+  actorName: string,
+  refName: string | undefined,
+  nextState: string,
+): void {
+  recordStateChange(env, refName, nextState);
+  refName !== undefined &&
+    applyEffects(env.spec, givenOf(env), refName, nextState, prepareUsers(env, actorName));
 }
 
 function recordStateChange(env: Env, refName: string | undefined, nextState: string): void {

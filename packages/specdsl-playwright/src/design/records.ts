@@ -80,9 +80,20 @@ export function ensureActorUser(
   actorName: string,
 ): string | undefined {
   if (spec.model["User"] === undefined) return undefined;
-  records.has(actorName) ||
-    records.set(actorName, { entity: "User", fields: new Map(userFields(spec, actorName)) });
+  const existing = records.get(actorName);
+  existing === undefined
+    ? records.set(actorName, { entity: "User", fields: new Map(userFields(spec, actorName)) })
+    : fillMissingFields(existing.fields, userFields(spec, actorName), actorName);
   return actorName;
+}
+
+/** Gives every Given user whose ref is an actor's name that actor's role and display name. */
+export function ensureGivenActorUsers(spec: SpecAst, records: Records): void {
+  for (const [ref, record] of [...records]) {
+    record.entity === "User" &&
+      spec.actors[ref] !== undefined &&
+      ensureActorUser(spec, records, ref);
+  }
 }
 
 /** Creates a record of `entity` from the pending values it has fields for, named by its name, title or natural key; returns its ref. */
@@ -145,6 +156,19 @@ function filled(record: GivenEntity, template: string): string {
   );
 }
 
+/** The state of `entity`'s machine `field` that `text` names (a state or its option label, ignoring case), when `field` is a machine field. */
+export function stateNamed(
+  spec: SpecAst,
+  entity: string,
+  field: string,
+  text: string,
+): string | undefined {
+  const machine = Object.entries(spec.model[entity]?.machines ?? {}).find(
+    ([name]) => camelCase(name) === camelCase(field),
+  )?.[1];
+  return machine?.states.find((state) => state.toLowerCase() === text.trim().toLowerCase());
+}
+
 /** The names of pending fields that `entity` declares as fields or relations. */
 export function ownedFields(
   spec: SpecAst,
@@ -200,6 +224,17 @@ function uniqueRef(records: Records, wanted: string): string {
   let candidate = wanted;
   for (let suffix = 2; records.has(candidate); suffix += 1) candidate = `${wanted} ${suffix}`;
   return candidate;
+}
+
+function fillMissingFields(
+  fields: Map<string, string>,
+  defaults: [string, string][],
+  naturalKey: string,
+): void {
+  for (const [key, value] of defaults) {
+    const current = fields.get(key);
+    (current === undefined || current === naturalKey) && fields.set(key, value);
+  }
 }
 
 function userFields(spec: SpecAst, actorName: string): [string, string][] {

@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import type { SpecAst } from "@special/specdsl-core";
-import { applyEffects } from "./records.js";
+import { applyEffects, stateNamed } from "./records.js";
 import type { Records } from "./records.js";
 
 const spec: SpecAst = {
@@ -92,4 +92,10 @@ test("does nothing when the company has no contact", () => {
   held.delete("Ada");
   applyEffects(spec, held, "INV-001", "paid", context);
   expect(held.size).toBe(2);
+});
+
+test("a stage select names the machine state by value or label", () => {
+  expect(stateNamed(spec, "Invoice", "status", "Paid")).toBe("paid");
+  expect(stateNamed(spec, "Invoice", "status", "paid")).toBe("paid");
+  expect(stateNamed(spec, "Invoice", "number", "paid")).toBeUndefined();
 });

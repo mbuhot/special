@@ -86,6 +86,7 @@ defmodule InvoicingWeb.ContactLive.Edit do
           options={@company_options}
         />
         <.button id="save-contact" type="button" variant="primary" phx-click="save">Save</.button>
+        <.button id="cancel-contact" navigate={~p"/contacts"}>Cancel</.button>
       </.form>
     </Layouts.app>
     """

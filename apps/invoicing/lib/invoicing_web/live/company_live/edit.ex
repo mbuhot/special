@@ -70,6 +70,7 @@ defmodule InvoicingWeb.CompanyLive.Edit do
         <.input type="text" id="company-domain" field={@form[:domain]} label="Domain" />
         <.input type="text" id="company-industry" field={@form[:industry]} label="Industry" />
         <.button id="save-company" type="button" variant="primary" phx-click="save">Save</.button>
+        <.button id="cancel-company" navigate={~p"/companies"}>Cancel</.button>
       </.form>
     </Layouts.app>
     """

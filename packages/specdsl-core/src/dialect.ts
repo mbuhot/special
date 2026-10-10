@@ -1,3 +1,4 @@
+import type { InvariantKind } from "./ast.js";
 import { compilePattern, PatternError, type Matcher, type SlotDescriptor } from "./pattern.js";
 
 export type ContextScope = "suite" | "scenario" | "actor";
@@ -7,7 +8,7 @@ export type SectionBody = "steps" | "composites";
 export type ControlKind = "field" | "button" | "region" | "table" | "link";
 export type StepMode = "test" | "demo" | "domain";
 export type ItemRelation = "belongs-to" | "has-many";
-export type ItemOutput = "actors" | "contexts" | "policies";
+export type ItemOutput = "actors" | "contexts" | "policies" | "invariants";
 
 export interface NamespaceDefinition {
   scope?: string;
@@ -30,6 +31,7 @@ export interface ItemRule {
   context?: string;
   output?: ItemOutput;
   relation?: ItemRelation;
+  invariant?: InvariantKind;
 }
 
 export interface SectionDefinition {

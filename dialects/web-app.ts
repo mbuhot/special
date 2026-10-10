@@ -100,6 +100,42 @@ export default dialect({
         },
       ],
     }),
+    Invariants: section({
+      occurs: "once",
+      items: [
+        {
+          pattern: "<Entity>.<Field> = <Left=Field> * <Right=Field>",
+          output: "invariants",
+          invariant: "product",
+        },
+        {
+          pattern: "<Entity>.<Field> = sum of <Target=Entity>.<TargetField=Field>",
+          output: "invariants",
+          invariant: "sum",
+        },
+        {
+          pattern: "<Entity>.<Field> is unique",
+          output: "invariants",
+          invariant: "unique",
+        },
+        {
+          pattern: "<Entity>.<Field> only changes through <Action>, ...",
+          output: "invariants",
+          invariant: "frozen-except",
+        },
+        {
+          pattern: "<Entity> belongs to the same <Target=Entity> as its <Relation=Field>",
+          output: "invariants",
+          invariant: "same-parent",
+        },
+        {
+          pattern:
+            '<Entity>.<Field> is assigned on creation as "<Prefix=Text>" followed by a <Width=Value> digit sequence',
+          output: "invariants",
+          invariant: "sequence",
+        },
+      ],
+    }),
     Context: section({
       occurs: "once",
       items: [{ pattern: "Clock: <DateTime>", context: "clock", output: "contexts" }],

@@ -6,6 +6,7 @@ import {
   type EntityNode,
   type FieldNode,
   type FieldType,
+  type InvariantNode,
   type Scenario,
   type SpecAst,
   type SurfaceNode,
@@ -18,6 +19,7 @@ import {
   type MarkdownTree,
   type Section,
 } from "./markdown.js";
+import { resolveInvariant } from "./invariants.js";
 import { compilePattern, PatternError, type ListValue, type Match } from "./pattern.js";
 import { Registry, scopeKeyOf, type Entry } from "./registry.js";
 import { ScenarioResolver, type Composite } from "./scenario.js";
@@ -89,6 +91,7 @@ class Binder {
   private readonly actors: SpecAst["actors"] = {};
   private readonly model: SpecAst["model"] = {};
   private readonly policies: SpecAst["policies"] = {};
+  private readonly invariants: InvariantNode[] = [];
   private readonly listedSurfaces = new Set<string>();
   private readonly usedSurfaces = new Set<string>();
   private readonly composites: Composite[] = [];
@@ -110,6 +113,7 @@ class Binder {
       .flatMap((classified) => this.matchItems(classified));
     pending.forEach((item) => this.declare(item));
     pending.forEach((item) => this.complete(item));
+    pending.forEach((item) => this.recordInvariant(item));
     this.reconcileMachineFields();
     sections
       .filter((classified) => classified.definition.body === "composites")
@@ -324,6 +328,22 @@ class Binder {
     } else if (item.rule.emits === "Policy") {
       this.declarePolicies(item);
     }
+  }
+
+  private recordInvariant(item: PendingItem): void {
+    const kind = item.rule.invariant;
+    if (item.rule.output !== "invariants" || kind === undefined) {
+      return;
+    }
+    const node = resolveInvariant(
+      { kind, match: item.match, file: item.file, line: item.line },
+      {
+        registry: this.registry,
+        model: this.model,
+        report: (message) => this.report(item.file, item.line, message),
+      },
+    );
+    node !== undefined && this.invariants.push(node);
   }
 
   private checkReferences(item: PendingItem): void {
@@ -661,6 +681,7 @@ class Binder {
       surfaces: this.surfaceNodes(),
       model: this.model,
       policies: this.policies,
+      invariants: this.invariants,
       scenarios,
     };
     const feature = this.sources[this.sources.length - 1] as ParsedSource;

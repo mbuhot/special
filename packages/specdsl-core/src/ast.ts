@@ -76,6 +76,38 @@ export interface EntityNode {
   machines: Record<string, StateMachineNode>;
 }
 
+export interface InvariantSite {
+  line: number;
+  file: string;
+}
+
+export type InvariantNode = (
+  | { kind: "product"; entity: string; field: string; left: string; right: string }
+  | {
+      kind: "sum";
+      entity: string;
+      field: string;
+      relation: string;
+      target: string;
+      targetField: string;
+    }
+  | { kind: "unique"; entity: string; field: string }
+  | { kind: "frozen-except"; entity: string; field: string; actions: string[] }
+  | {
+      kind: "same-parent";
+      entity: string;
+      target: string;
+      relation: string;
+      parent: string;
+      relationEntity: string;
+      relationParent: string;
+    }
+  | { kind: "sequence"; entity: string; field: string; prefix: string; width: number }
+) &
+  InvariantSite;
+
+export type InvariantKind = InvariantNode["kind"];
+
 export interface SpecAst {
   dialect: { name: string; version: string; stepIds: string[] };
   contexts: Record<string, Record<string, string>>;
@@ -83,6 +115,7 @@ export interface SpecAst {
   surfaces: Record<string, SurfaceNode>;
   model: Record<string, EntityNode>;
   policies: Record<string, Record<string, string[]>>;
+  invariants: InvariantNode[];
   scenarios: Scenario[];
 }
 

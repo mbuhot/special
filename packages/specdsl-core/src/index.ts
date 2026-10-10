@@ -47,6 +47,8 @@ export type {
   Emission,
   FieldNode,
   FieldType,
+  InvariantKind,
+  InvariantNode,
   NarrationNode,
   Reference,
   RelationNode,

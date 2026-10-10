@@ -1,7 +1,7 @@
 defmodule SpecDSL.ASTTest do
   use ExUnit.Case, async: true
 
-  alias SpecDSL.{AST, Control, Entity, Field, Scenario, Step, Surface}
+  alias SpecDSL.{AST, Control, Entity, Field, Invariant, Scenario, Step, Surface}
 
   setup_all do
     {:ok, ast: AST.load!("test/fixtures/invoicing.ast.json")}
@@ -185,5 +185,85 @@ defmodule SpecDSL.ASTTest do
 
   test "reads no policies when the AST has none" do
     assert AST.from_map(%{}).policies == %{}
+  end
+
+  test "reads no invariants when the AST has none" do
+    assert AST.from_map(%{}).invariants == []
+  end
+
+  test "reads invariants with the kind and snake_case atom names" do
+    ast =
+      AST.from_map(%{
+        "invariants" => [
+          %{
+            "kind" => "product",
+            "entity" => "LineItem",
+            "field" => "total",
+            "left" => "quantity",
+            "right" => "unit price",
+            "file" => "specs/invariants.md",
+            "line" => 5
+          },
+          %{
+            "kind" => "sum",
+            "entity" => "Invoice",
+            "field" => "total",
+            "relation" => "line_item",
+            "target" => "LineItem",
+            "targetField" => "total"
+          },
+          %{
+            "kind" => "frozen-except",
+            "entity" => "Invoice",
+            "field" => "status",
+            "actions" => ["send", "mark paid"]
+          },
+          %{
+            "kind" => "same-parent",
+            "entity" => "Deal",
+            "target" => "Company",
+            "relation" => "contact",
+            "parent" => "company",
+            "relationEntity" => "Contact",
+            "relationParent" => "company"
+          },
+          %{
+            "kind" => "sequence",
+            "entity" => "Invoice",
+            "field" => "number",
+            "prefix" => "INV-",
+            "width" => 3
+          }
+        ]
+      })
+
+    assert [product, sum, frozen, same_parent, sequence] = ast.invariants
+
+    assert product == %Invariant{
+             kind: :product,
+             entity: "LineItem",
+             field: :total,
+             left: :quantity,
+             right: :unit_price,
+             file: "specs/invariants.md",
+             line: 5
+           }
+
+    assert {sum.kind, sum.relation, sum.target, sum.target_field} ==
+             {:sum, :line_item, "LineItem", :total}
+
+    assert {frozen.kind, frozen.actions} == {:frozen_except, [:send, :mark_paid]}
+
+    assert {same_parent.kind, same_parent.relation, same_parent.parent,
+            same_parent.relation_entity, same_parent.relation_parent} ==
+             {:same_parent, :contact, :company, "Contact", :company}
+
+    assert {sequence.kind, sequence.prefix, sequence.width} == {:sequence, "INV-", 3}
+  end
+
+  test "rejects an unknown invariant kind" do
+    assert_raise ArgumentError, ~r/unknown invariant kind "magic"/, fn ->
+      AST.from_map(%{"invariants" => [%{"kind" => "magic", "entity" => "Invoice"}]})
+    end
   end
 end

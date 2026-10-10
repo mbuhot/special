@@ -107,10 +107,53 @@ defmodule SpecDSL.Entity do
   def field_names(%__MODULE__{fields: fields}), do: Enum.map(fields, & &1.name)
 end
 
+defmodule SpecDSL.Invariant do
+  @moduledoc "A declarative rule from the Invariants section; entities keep their spec spelling, fields, relations and actions are snake_case atoms."
+
+  @type kind :: :product | :sum | :unique | :frozen_except | :same_parent | :sequence
+  @type t :: %__MODULE__{
+          kind: kind(),
+          entity: String.t(),
+          field: atom() | nil,
+          left: atom() | nil,
+          right: atom() | nil,
+          relation: atom() | nil,
+          target: String.t() | nil,
+          target_field: atom() | nil,
+          actions: [atom()],
+          prefix: String.t() | nil,
+          width: pos_integer() | nil,
+          parent: atom() | nil,
+          relation_entity: String.t() | nil,
+          relation_parent: atom() | nil,
+          file: String.t() | nil,
+          line: non_neg_integer() | nil
+        }
+
+  defstruct [
+    :kind,
+    :entity,
+    :field,
+    :left,
+    :right,
+    :relation,
+    :target,
+    :target_field,
+    :prefix,
+    :width,
+    :parent,
+    :relation_entity,
+    :relation_parent,
+    :file,
+    :line,
+    actions: []
+  ]
+end
+
 defmodule SpecDSL.AST do
   @moduledoc "Loads the AST JSON emitted by the spec compiler into structs."
 
-  alias SpecDSL.{Control, Entity, Field, Scenario, Step, Surface}
+  alias SpecDSL.{Control, Entity, Field, Invariant, Scenario, Step, Surface}
 
   @type t :: %__MODULE__{
           dialect: %{name: String.t(), version: String.t(), step_ids: [String.t()]},
@@ -119,6 +162,7 @@ defmodule SpecDSL.AST do
           surfaces: %{String.t() => Surface.t()},
           model: %{String.t() => Entity.t()},
           policies: %{String.t() => %{String.t() => [String.t()]}},
+          invariants: [Invariant.t()],
           scenarios: [Scenario.t()]
         }
 
@@ -129,6 +173,7 @@ defmodule SpecDSL.AST do
     surfaces: %{},
     model: %{},
     policies: %{},
+    invariants: [],
     scenarios: []
   ]
 
@@ -161,6 +206,14 @@ defmodule SpecDSL.AST do
     "enum" => :enum
   }
   @step_modes %{"test" => :test, "demo" => :demo, "domain" => :domain}
+  @invariant_kinds %{
+    "product" => :product,
+    "sum" => :sum,
+    "unique" => :unique,
+    "frozen-except" => :frozen_except,
+    "same-parent" => :same_parent,
+    "sequence" => :sequence
+  }
 
   @doc "Reads and decodes an AST JSON file."
   @spec load!(Path.t()) :: t()
@@ -186,6 +239,7 @@ defmodule SpecDSL.AST do
       surfaces: surfaces,
       model: raw |> Map.get("model", %{}) |> Map.new(&build_entity/1),
       policies: Map.get(raw, "policies", %{}),
+      invariants: raw |> Map.get("invariants", []) |> Enum.map(&build_invariant/1),
       scenarios: raw |> Map.get("scenarios", []) |> Enum.map(&build_scenario(&1, surfaces))
     }
   end
@@ -248,6 +302,30 @@ defmodule SpecDSL.AST do
          |> Enum.map(fn transition -> %{from: transition["from"], to: transition["to"]} end)
      }}
   end
+
+  defp build_invariant(raw) do
+    %Invariant{
+      kind: fetch_known!(@invariant_kinds, Map.fetch!(raw, "kind"), "invariant kind"),
+      entity: Map.fetch!(raw, "entity"),
+      field: raw |> Map.get("field") |> optional_atom(),
+      left: raw |> Map.get("left") |> optional_atom(),
+      right: raw |> Map.get("right") |> optional_atom(),
+      relation: raw |> Map.get("relation") |> optional_atom(),
+      target: Map.get(raw, "target"),
+      target_field: raw |> Map.get("targetField") |> optional_atom(),
+      actions: raw |> Map.get("actions", []) |> Enum.map(&snake_atom/1),
+      prefix: Map.get(raw, "prefix"),
+      width: Map.get(raw, "width"),
+      parent: raw |> Map.get("parent") |> optional_atom(),
+      relation_entity: Map.get(raw, "relationEntity"),
+      relation_parent: raw |> Map.get("relationParent") |> optional_atom(),
+      file: Map.get(raw, "file"),
+      line: Map.get(raw, "line")
+    }
+  end
+
+  defp optional_atom(nil), do: nil
+  defp optional_atom(name), do: snake_atom(name)
 
   defp build_surface({name, raw}) do
     controls =

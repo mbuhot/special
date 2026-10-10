@@ -121,6 +121,9 @@ describe("binding the invoicing spec", () => {
       fields: [
         { name: "number", type: "text", required: true },
         { name: "status", type: "enum", values: ["draft", "sent", "paid", "void"] },
+        { name: "issue date", type: "date", required: true },
+        { name: "due date", type: "date" },
+        { name: "notes", type: "text" },
         { name: "total", type: "money" },
       ],
       relations: [
@@ -133,6 +136,7 @@ describe("binding the invoicing spec", () => {
         { name: "description", type: "text", required: true },
         { name: "quantity", type: "integer", required: true },
         { name: "unit price", type: "money", required: true },
+        { name: "total", type: "money" },
       ],
       relations: [{ kind: "belongs-to", entity: "Invoice", name: "invoice" }],
     });

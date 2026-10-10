@@ -16,14 +16,14 @@ defmodule Invoicing.Billing.LineItem do
 
     create :create do
       primary? true
-      accept [:description, :quantity, :unit_price, :invoice_id]
+      accept [:description, :quantity, :unit_price, :tax_code, :invoice_id]
       validate Invoicing.Billing.Invoice.DraftOnly
     end
 
     update :update do
       primary? true
       require_atomic? false
-      accept [:description, :quantity, :unit_price]
+      accept [:description, :quantity, :unit_price, :tax_code]
       validate Invoicing.Billing.Invoice.DraftOnly
     end
 
@@ -65,6 +65,12 @@ defmodule Invoicing.Billing.LineItem do
       default: Decimal.new(0),
       public?: true,
       constraints: [min: 0]
+
+    attribute :tax_code, :atom,
+      allow_nil?: false,
+      public?: true,
+      default: :gst,
+      constraints: [one_of: [:gst, :"gst-free", :exempt]]
 
     timestamps()
   end

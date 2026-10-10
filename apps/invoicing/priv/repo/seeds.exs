@@ -21,3 +21,10 @@ if CRM.list_companies!(nil, authorize?: false) == [] do
     authorize?: false
   )
 end
+
+if Invoicing.Billing.list_businesses!(authorize?: false) == [] do
+  Ash.Seed.seed!(Invoicing.Billing.Business, %{
+    name: "Ledger Studio Pty Ltd",
+    abn: "51 824 753 556"
+  })
+end

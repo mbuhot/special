@@ -143,6 +143,12 @@ defmodule Invoicing.SpecAdapter do
 
   def app_count("Invoice", "unpaid", _today), do: Billing.count_unpaid_invoices(admin_user())
 
+  def app_count("Invoice", "tax invoice", _today) do
+    Invoicing.Billing.Invoice
+    |> Ash.read!(load: [:gst], authorize?: false)
+    |> Enum.count(&Decimal.gt?(&1.gst, 0))
+  end
+
   @impl true
   def read_as(entity_name, _role, actor_user) do
     actor = Factory.fetch("User", actor_user.id)

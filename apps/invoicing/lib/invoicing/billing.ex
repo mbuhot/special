@@ -20,6 +20,11 @@ defmodule Invoicing.Billing do
       define :void_invoice, action: :void
     end
 
+    resource Invoicing.Billing.Business do
+      define :update_business, action: :update
+      define :list_businesses, action: :read
+    end
+
     resource Invoicing.Billing.LineItem do
       define :create_line_item, action: :create
       define :update_line_item, action: :update

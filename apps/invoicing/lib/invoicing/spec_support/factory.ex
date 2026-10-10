@@ -6,7 +6,7 @@ defmodule Invoicing.SpecSupport.Factory do
   alias Invoicing.Accounts
   alias Invoicing.Accounts.User
   alias Invoicing.Billing
-  alias Invoicing.Billing.{Invoice, LineItem}
+  alias Invoicing.Billing.{Business, Invoice, LineItem}
   alias Invoicing.CRM
   alias Invoicing.CRM.{Activity, Company, Contact}
   alias Invoicing.Pipeline
@@ -14,6 +14,7 @@ defmodule Invoicing.SpecSupport.Factory do
 
   @resources %{
     "Activity" => Activity,
+    "Business" => Business,
     "Company" => Company,
     "Contact" => Contact,
     "Deal" => Deal,
@@ -23,7 +24,11 @@ defmodule Invoicing.SpecSupport.Factory do
     "User" => User
   }
 
-  @calculations %{Contact => [:full_name], Invoice => [:total], LineItem => [:total]}
+  @calculations %{
+    Contact => [:full_name],
+    Invoice => [:taxable, :subtotal, :gst, :total],
+    LineItem => [:total]
+  }
 
   @relationship_attributes %{
     "company" => "company_id",
@@ -31,6 +36,7 @@ defmodule Invoicing.SpecSupport.Factory do
     "deal" => "deal_id",
     "invoice" => "invoice_id",
     "owner" => "owner_id",
+    "supplier" => "supplier_id",
     "user" => "user_id",
     "author" => "user_id"
   }
@@ -41,6 +47,7 @@ defmodule Invoicing.SpecSupport.Factory do
   }
 
   @natural_keys %{
+    Business => "name",
     Invoice => "number",
     Company => "name",
     Deal => "name",
@@ -142,11 +149,25 @@ defmodule Invoicing.SpecSupport.Factory do
 
   defp build(attrs, Invoice) do
     {status, invoice_attrs} = Map.pop(attrs, "status")
+    {gst, invoice_attrs} = Map.pop(invoice_attrs, "gst")
 
     invoice_attrs
+    |> put_inputs_charging(gst)
     |> Map.put_new_lazy("company_id", fn -> create("Company", %{}).id end)
     |> Billing.create_invoice!(authorize?: false)
     |> put_status(status)
+    |> put_gst_line(gst)
+  end
+
+  defp build(attrs, Business) do
+    seed_attributes =
+      attrs
+      |> Map.put_new("name", "Business #{System.unique_integer([:positive])}")
+      |> Map.update!("name", &String.replace(&1, "-", " "))
+      |> Map.put_new("abn", "51824753556")
+      |> cast_attributes(Business)
+
+    Ash.Seed.seed!(Business, seed_attributes)
   end
 
   defp build(attrs, Deal) do
@@ -218,6 +239,26 @@ defmodule Invoicing.SpecSupport.Factory do
     end)
   end
 
+  defp put_inputs_charging(attrs, nil), do: attrs
+
+  defp put_inputs_charging(attrs, _gst),
+    do: attrs |> Map.put("gst_rate", "100") |> Map.put("prices", "exclude gst")
+
+  defp put_gst_line(invoice, nil), do: invoice
+
+  defp put_gst_line(invoice, gst) do
+    if Decimal.gt?(Decimal.new(gst), 0) do
+      create("LineItem", %{
+        "invoice_id" => invoice.id,
+        "quantity" => 1,
+        "unit_price" => gst,
+        "tax_code" => "gst"
+      })
+    end
+
+    invoice
+  end
+
   defp put_status(invoice, nil), do: invoice
 
   defp put_status(invoice, status) do
@@ -262,6 +303,7 @@ defmodule Invoicing.SpecSupport.Factory do
 
     Map.new(attrs, fn {field, value} ->
       snake_case_field = field |> to_string() |> String.replace(" ", "_")
+
       {Map.get(relationship_attributes, snake_case_field, snake_case_field), value}
     end)
   end

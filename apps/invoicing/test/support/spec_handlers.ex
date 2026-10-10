@@ -10,7 +10,7 @@ defmodule Invoicing.SpecHandlers do
   alias Ecto.Adapters.SQL.Sandbox
   alias Invoicing.{Accounts, Clock}
   alias Invoicing.SpecSupport.Factory
-  alias SpecDSL.{Ctx, Scenario}
+  alias SpecDSL.{Ctx, Derived, Scenario}
 
   @endpoint InvoicingWeb.Endpoint
 
@@ -132,6 +132,20 @@ defmodule Invoicing.SpecHandlers do
     ctx
   end
 
+  step "is-predicate", %{ref: ref_name, predicate: predicate_name}, ctx do
+    assert predicate_holds?(ctx, ref_name, predicate_name),
+           "expected #{ref_name} to be #{predicate_name}"
+
+    ctx
+  end
+
+  step "is-not-predicate", %{ref: ref_name, predicate: predicate_name}, ctx do
+    refute predicate_holds?(ctx, ref_name, predicate_name),
+           "expected #{ref_name} not to be #{predicate_name}"
+
+    ctx
+  end
+
   step "may", %{actor: actor, action: action, ref: ref_name}, ctx do
     assert may?(ctx, actor, action, ref_name),
            "expected #{actor} to be allowed to #{action} #{ref_name}"
@@ -188,6 +202,23 @@ defmodule Invoicing.SpecHandlers do
   end
 
   defp actor_email(actor_name), do: String.downcase(actor_name) <> "@example.com"
+
+  defp predicate_holds?(ctx, ref_name, predicate_name) do
+    %{entity: entity, id: id} = Ctx.ref(ctx, ref_name)
+
+    predicate =
+      Enum.find(ctx.ast.derived.predicates, &(&1.entity == entity and &1.name == predicate_name)) ||
+        raise ArgumentError, "unknown predicate #{predicate_name} of #{entity}"
+
+    reloaded = Factory.reload(entity, id)
+
+    record =
+      Map.new(Derived.fields(predicate), fn field ->
+        {field, Map.get(reloaded, Atom.to_string(field))}
+      end)
+
+    Derived.holds?(predicate, record, DateTime.to_date(Clock.now()))
+  end
 
   defp may?(ctx, actor, action, ref_name) do
     %{entity: entity, id: id} = Ctx.ref(ctx, ref_name)

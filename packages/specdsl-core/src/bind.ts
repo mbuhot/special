@@ -6,6 +6,7 @@ import {
   type EntityNode,
   type FieldNode,
   type FieldType,
+  type DerivedNode,
   type InvariantNode,
   type Scenario,
   type SpecAst,
@@ -19,6 +20,12 @@ import {
   type MarkdownTree,
   type Section,
 } from "./markdown.js";
+import {
+  resolveCount,
+  resolvePredicate,
+  type DerivedContext,
+  type DerivedSource,
+} from "./derived.js";
 import { resolveInvariant } from "./invariants.js";
 import {
   compilePattern,
@@ -98,6 +105,7 @@ class Binder {
   private readonly model: SpecAst["model"] = {};
   private readonly policies: SpecAst["policies"] = {};
   private readonly invariants: InvariantNode[] = [];
+  private readonly derived: DerivedNode = { predicates: [], counts: [] };
   private readonly listedSurfaces = new Set<string>();
   private readonly surfaceDesigns = new Map<string, string>();
   private readonly usedSurfaces = new Set<string>();
@@ -122,6 +130,12 @@ class Binder {
     pending.forEach((item) => this.complete(item));
     pending.forEach((item) => this.recordInvariant(item));
     this.reconcileMachineFields();
+    pending
+      .filter((item) => item.rule.derived === "predicate")
+      .forEach((item) => this.recordDerived(item));
+    pending
+      .filter((item) => item.rule.derived === "count")
+      .forEach((item) => this.recordDerived(item));
     sections
       .filter((classified) => classified.definition.body === "composites")
       .forEach((classified) => this.collectComposites(classified));
@@ -351,6 +365,42 @@ class Binder {
       },
     );
     node !== undefined && this.invariants.push(node);
+  }
+
+  private recordDerived(item: PendingItem): void {
+    const kind = item.rule.derived;
+    if (item.rule.output !== "derived" || kind === undefined) {
+      return;
+    }
+    const source = { kind, match: item.match, file: item.file, line: item.line };
+    const context = {
+      registry: this.registry,
+      model: this.model,
+      predicates: this.derived.predicates,
+      report: (message: string) => this.report(item.file, item.line, message),
+    };
+    kind === "predicate"
+      ? this.recordPredicate(source, context)
+      : this.recordCount(source, context);
+  }
+
+  private recordPredicate(source: DerivedSource, context: DerivedContext): void {
+    const node = resolvePredicate(source, context);
+    const earlier = this.derived.predicates.find(
+      (candidate) =>
+        candidate.entity === node?.entity &&
+        candidate.name.toLowerCase() === node.name.toLowerCase(),
+    );
+    earlier !== undefined &&
+      context.report(
+        `Predicate "${node?.name}" of ${node?.entity} is already declared in ${earlier.file}:${earlier.line}`,
+      );
+    node !== undefined && earlier === undefined && this.derived.predicates.push(node);
+  }
+
+  private recordCount(source: DerivedSource, context: DerivedContext): void {
+    const node = resolveCount(source, context);
+    node !== undefined && this.derived.counts.push(node);
   }
 
   private checkReferences(item: PendingItem): void {
@@ -709,6 +759,7 @@ class Binder {
       model: this.model,
       policies: this.policies,
       invariants: this.invariants,
+      derived: this.derived,
       scenarios,
     };
     const feature = this.sources[this.sources.length - 1] as ParsedSource;

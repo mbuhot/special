@@ -9,12 +9,14 @@ export default dialect({
     Entity: ns(),
     Field: ns({ scope: "Entity" }),
     Action: ns({ scope: "Entity" }),
+    Predicate: ns({ scope: "Entity" }),
     State: ns({ scope: "Field" }),
     Surface: ns(),
     Control: ns({ scope: "Surface", kinds: ["field", "button", "region", "table", "link"] }),
     Actor: ns(),
     Ref: ns({ scope: "scenario" }),
     Name: freeText,
+    Condition: freeText,
     Design: freeText,
     Type: freeText,
     Value: freeText,
@@ -142,6 +144,24 @@ export default dialect({
         },
       ],
     }),
+    Derived: section({
+      occurs: "once",
+      items: [
+        {
+          pattern: "<Entity> is <Predicate> when <Condition>",
+          declares: ["Predicate"],
+          references: ["Entity"],
+          output: "derived",
+          derived: "predicate",
+        },
+        {
+          pattern: "<Name> counts <Entity> that are <Predicate>",
+          references: ["Entity", "Predicate"],
+          output: "derived",
+          derived: "count",
+        },
+      ],
+    }),
     Context: section({
       occurs: "once",
       items: [{ pattern: "Clock: <DateTime>", context: "clock", output: "contexts" }],
@@ -207,6 +227,16 @@ export default dialect({
       uses: ["data", "actor"],
       modes: ["domain", "demo"],
       emits: { kind: "PolicyUse", fields: { Actor: "Actor", Action: "Action", Ref: "Ref" } },
+    }),
+    step("<Ref> is <Predicate>", {
+      id: "is-predicate",
+      uses: ["data"],
+      modes: ["domain"],
+    }),
+    step("<Ref> is not <Predicate>", {
+      id: "is-not-predicate",
+      uses: ["data"],
+      modes: ["domain"],
     }),
     step('<Actor> does not see "<Control>"', {
       id: "does-not-see",

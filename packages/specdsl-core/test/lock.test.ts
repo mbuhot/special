@@ -21,6 +21,8 @@ describe("lock file", () => {
       "job-runs",
       "may",
       "may-not",
+      "is-predicate",
+      "is-not-predicate",
       "does-not-see",
     ]);
   });

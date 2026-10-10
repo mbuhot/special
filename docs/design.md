@@ -181,6 +181,21 @@ Merging is add-only: redeclaring an entity, actor, or surface is an error naming
 | sequence   | within a scenario, consecutive `observed` emissions follow a declared `machine` transition |
 | referenced | every entry in `declared` is referenced by some step                                       |
 
+### Derived
+
+A `## Derived` section in a base file declares named predicates and counts over them. Three closed shapes:
+
+| Shape                                         | Example                                                            |
+| --------------------------------------------- | ------------------------------------------------------------------ |
+| `<Entity> is <Predicate> when <Condition>`    | `Task is overdue when status is open and due date is before today` |
+| `<Name> counts <Entity> that are <Predicate>` | `Overdue tasks counts Task that are overdue`                       |
+
+A condition is comparisons joined by `and` / `or` (no parentheses; `and` binds tighter). A comparison is `<Field> is <Value>`, `<Field> is not <Value>`, `<Field> is before <Value>` or `<Field> is after <Value>`. Enum fields compare against their states or `one of` values; `before` and `after` apply to date fields, whose value is `today` or `YYYY-MM-DD`. Fields and values that the model does not declare are bind errors with the line.
+
+A scenario step `<Ref> is <Predicate>` or `<Ref> is not <Predicate>` asserts a predicate on a record. It runs in domain mode only. The invariant shapes `Entity.field = left * right` and `= sum of Target.field` remain in `## Invariants`.
+
+`SpecDSL.Derived.holds?(predicate, record, today)` evaluates a predicate over a map of field atoms to values; the conformance test holds the app's counts to it.
+
 ## AST JSON
 
 ```json
@@ -232,6 +247,30 @@ Merging is add-only: redeclaring an entity, actor, or surface is an error naming
     }
   },
   "policies": { "Invoice": { "accountant": ["read"], "admin": ["read", "mark paid"] } },
+  "derived": {
+    "predicates": [
+      {
+        "entity": "Invoice",
+        "name": "unpaid",
+        "condition": {
+          "op": "or",
+          "left": { "op": "is", "field": "status", "value": "draft" },
+          "right": { "op": "is", "field": "status", "value": "sent" }
+        },
+        "file": "specs/invoicing/derived.md",
+        "line": 5
+      }
+    ],
+    "counts": [
+      {
+        "name": "Unpaid invoices",
+        "entity": "Invoice",
+        "predicate": "unpaid",
+        "file": "specs/invoicing/derived.md",
+        "line": 6
+      }
+    ]
+  },
   "scenarios": [
     {
       "name": "Line total updates as quantity changes",

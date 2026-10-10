@@ -198,6 +198,8 @@ export const designSteps: StepHandlers<WebAppStepArgs, DesignServices, WebAppCon
   async "has-field"() {},
   async may() {},
   async "may-not"() {},
+  async "is-predicate"() {},
+  async "is-not-predicate"() {},
   async "does-not-see"(args, env) {
     const page = pageOf(env, args.Actor);
     if ((await page.locator(selectorOf(args.Control)).count()) > 0) {

@@ -39,12 +39,14 @@ Story: As the sales rep, I need to see Send proposal listed as overdue once its 
 Given a Company "Acme"
 Given a Deal "Big deal" with stage lead, company Acme
 Given a Task "Send proposal" with title Send-proposal, due date 2026-01-16, deal Big deal, status open
+And Send proposal is not overdue
 When Sales rep opens Deal page for Big deal
 Narrate: The deal page for Big deal lists the task Send proposal, due on the sixteenth of January.
 Then Sales rep does not see "Overdue tasks"
 Narrate: The page has no overdue tasks region.
 When time advances 2 days
 Narrate: Two days pass. The due date is now behind.
+And Send proposal is overdue
 And Sales rep opens Deal page for Big deal
 Narrate: The deal page is opened again.
 Then Sales rep sees "Send-proposal" in "Overdue tasks"

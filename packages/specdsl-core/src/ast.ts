@@ -109,6 +109,35 @@ export type InvariantNode = (
 
 export type InvariantKind = InvariantNode["kind"];
 
+export type ComparisonOp = "is" | "is not" | "before" | "after";
+
+export type ConditionNode =
+  | { op: "and" | "or"; left: ConditionNode; right: ConditionNode }
+  | { op: ComparisonOp; field: string; value: string };
+
+export interface PredicateNode {
+  entity: string;
+  name: string;
+  condition: ConditionNode;
+  file: string;
+  line: number;
+}
+
+export interface CountNode {
+  name: string;
+  entity: string;
+  predicate: string;
+  file: string;
+  line: number;
+}
+
+export interface DerivedNode {
+  predicates: PredicateNode[];
+  counts: CountNode[];
+}
+
+export type DerivedKind = "predicate" | "count";
+
 export interface SpecAst {
   dialect: { name: string; version: string; stepIds: string[] };
   contexts: Record<string, Record<string, string>>;
@@ -117,6 +146,7 @@ export interface SpecAst {
   model: Record<string, EntityNode>;
   policies: Record<string, Record<string, string[]>>;
   invariants: InvariantNode[];
+  derived: DerivedNode;
   scenarios: Scenario[];
 }
 

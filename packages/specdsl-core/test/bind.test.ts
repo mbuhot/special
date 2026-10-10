@@ -275,14 +275,14 @@ describe("binding errors", () => {
   });
 
   it("reports a step no pattern matches", () => {
-    const source = specWith("## Scenario: Gibberish", "Then the moon is full");
+    const source = specWith("## Scenario: Gibberish", "Then the moon wanes");
     expect(bindSource(source)).toEqual({
       ok: false,
       errors: [
         {
           file: "spec.md",
           line: lineOf(source, "the moon"),
-          message: 'No step matches "Then the moon is full"',
+          message: 'No step matches "Then the moon wanes"',
         },
       ],
     });

@@ -74,6 +74,8 @@ export interface WebAppStepArgs {
   "has-field": { Ref: string; Field: string; Value: string };
   may: { Actor: string; Action: string; Ref: string };
   "may-not": { Actor: string; Action: string; Ref: string };
+  "is-predicate": { Ref: string; Predicate: string };
+  "is-not-predicate": { Ref: string; Predicate: string };
   "does-not-see": { Actor: string; Control: ResolvedControl; Surface?: ResolvedSurface };
   "time-advances": { Duration: string };
   "job-runs": { Job: string };
@@ -225,6 +227,8 @@ export const webAppSteps: StepHandlers<WebAppStepArgs, WebAppServices, WebAppCon
   },
   async may() {},
   async "may-not"() {},
+  async "is-predicate"() {},
+  async "is-not-predicate"() {},
   async "does-not-see"(args, env) {
     await expect(locate(env, args.Actor, args.Control)).toHaveCount(0);
   },

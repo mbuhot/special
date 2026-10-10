@@ -150,6 +150,98 @@ defmodule SpecDSL.Invariant do
   ]
 end
 
+defmodule SpecDSL.Predicate do
+  @moduledoc "A named condition over one entity; the condition is a tree of and/or nodes over field comparisons whose fields are snake_case atoms."
+
+  @type condition ::
+          %{op: :and | :or, left: condition(), right: condition()}
+          | %{op: :is | :is_not | :before | :after, field: atom(), value: String.t()}
+  @type t :: %__MODULE__{
+          entity: String.t(),
+          name: String.t(),
+          condition: condition(),
+          file: String.t() | nil,
+          line: non_neg_integer() | nil
+        }
+
+  defstruct [:entity, :name, :condition, :file, :line]
+end
+
+defmodule SpecDSL.Count do
+  @moduledoc "A named count of the records of an entity for which a predicate holds."
+
+  @type t :: %__MODULE__{
+          name: String.t(),
+          entity: String.t(),
+          predicate: String.t(),
+          file: String.t() | nil,
+          line: non_neg_integer() | nil
+        }
+
+  defstruct [:name, :entity, :predicate, :file, :line]
+end
+
+defmodule SpecDSL.Derived do
+  @moduledoc "Declared predicates and counts, with a pure evaluator over plain field maps."
+
+  alias SpecDSL.Predicate
+
+  @type t :: %__MODULE__{predicates: [Predicate.t()], counts: [SpecDSL.Count.t()]}
+
+  defstruct predicates: [], counts: []
+
+  @doc "Whether the record map, keyed by field atoms, satisfies the predicate on the given date."
+  @spec holds?(Predicate.t() | Predicate.condition(), map(), Date.t()) :: boolean()
+  def holds?(%Predicate{condition: condition}, record, today),
+    do: holds?(condition, record, today)
+
+  def holds?(%{op: :and, left: left, right: right}, record, today),
+    do: holds?(left, record, today) and holds?(right, record, today)
+
+  def holds?(%{op: :or, left: left, right: right}, record, today),
+    do: holds?(left, record, today) or holds?(right, record, today)
+
+  def holds?(%{op: :is, field: field, value: value}, record, today),
+    do: equal?(Map.get(record, field), value, today)
+
+  def holds?(%{op: :is_not, field: field, value: value}, record, today),
+    do: not equal?(Map.get(record, field), value, today)
+
+  def holds?(%{op: :before, field: field, value: value}, record, today),
+    do: compare_dates(Map.get(record, field), value, today) == :lt
+
+  def holds?(%{op: :after, field: field, value: value}, record, today),
+    do: compare_dates(Map.get(record, field), value, today) == :gt
+
+  @doc "The field atoms a predicate or condition reads, without repeats."
+  @spec fields(Predicate.t() | Predicate.condition()) :: [atom()]
+  def fields(%Predicate{condition: condition}), do: fields(condition)
+  def fields(%{left: left, right: right}), do: Enum.uniq(fields(left) ++ fields(right))
+  def fields(%{field: field}), do: [field]
+
+  defp equal?(%Date{} = actual, value, today),
+    do: Date.compare(actual, date_value(value, today)) == :eq
+
+  defp equal?(%DateTime{} = actual, value, today),
+    do: equal?(DateTime.to_date(actual), value, today)
+
+  defp equal?(actual, value, _today), do: normalise(actual) == normalise(value)
+
+  defp compare_dates(nil, _value, _today), do: nil
+
+  defp compare_dates(%DateTime{} = actual, value, today),
+    do: compare_dates(DateTime.to_date(actual), value, today)
+
+  defp compare_dates(%Date{} = actual, value, today),
+    do: Date.compare(actual, date_value(value, today))
+
+  defp date_value("today", today), do: today
+  defp date_value(value, _today), do: Date.from_iso8601!(value)
+
+  defp normalise(nil), do: nil
+  defp normalise(value), do: value |> to_string() |> String.downcase() |> String.replace(" ", "_")
+end
+
 defmodule SpecDSL.AST do
   @moduledoc "Loads the AST JSON emitted by the spec compiler into structs."
 
@@ -163,6 +255,7 @@ defmodule SpecDSL.AST do
           model: %{String.t() => Entity.t()},
           policies: %{String.t() => %{String.t() => [String.t()]}},
           invariants: [Invariant.t()],
+          derived: SpecDSL.Derived.t(),
           scenarios: [Scenario.t()]
         }
 
@@ -174,6 +267,7 @@ defmodule SpecDSL.AST do
     model: %{},
     policies: %{},
     invariants: [],
+    derived: %SpecDSL.Derived{},
     scenarios: []
   ]
 
@@ -215,6 +309,8 @@ defmodule SpecDSL.AST do
     "sequence" => :sequence
   }
 
+  @comparison_ops %{"is" => :is, "is not" => :is_not, "before" => :before, "after" => :after}
+
   @doc "Reads and decodes an AST JSON file."
   @spec load!(Path.t()) :: t()
   def load!(path) do
@@ -240,6 +336,7 @@ defmodule SpecDSL.AST do
       model: raw |> Map.get("model", %{}) |> Map.new(&build_entity/1),
       policies: Map.get(raw, "policies", %{}),
       invariants: raw |> Map.get("invariants", []) |> Enum.map(&build_invariant/1),
+      derived: raw |> Map.get("derived", %{}) |> build_derived(),
       scenarios: raw |> Map.get("scenarios", []) |> Enum.map(&build_scenario(&1, surfaces))
     }
   end
@@ -319,6 +416,47 @@ defmodule SpecDSL.AST do
       parent: raw |> Map.get("parent") |> optional_atom(),
       relation_entity: Map.get(raw, "relationEntity"),
       relation_parent: raw |> Map.get("relationParent") |> optional_atom(),
+      file: Map.get(raw, "file"),
+      line: Map.get(raw, "line")
+    }
+  end
+
+  defp build_derived(raw) do
+    %SpecDSL.Derived{
+      predicates: raw |> Map.get("predicates", []) |> Enum.map(&build_predicate/1),
+      counts: raw |> Map.get("counts", []) |> Enum.map(&build_count/1)
+    }
+  end
+
+  defp build_predicate(raw) do
+    %SpecDSL.Predicate{
+      entity: Map.fetch!(raw, "entity"),
+      name: Map.fetch!(raw, "name"),
+      condition: raw |> Map.fetch!("condition") |> build_condition(),
+      file: Map.get(raw, "file"),
+      line: Map.get(raw, "line")
+    }
+  end
+
+  defp build_condition(%{"op" => op, "left" => left, "right" => right}) when op in ["and", "or"],
+    do: %{
+      op: String.to_existing_atom(op),
+      left: build_condition(left),
+      right: build_condition(right)
+    }
+
+  defp build_condition(%{"op" => op, "field" => field, "value" => value}),
+    do: %{
+      op: fetch_known!(@comparison_ops, op, "comparison"),
+      field: snake_atom(field),
+      value: value
+    }
+
+  defp build_count(raw) do
+    %SpecDSL.Count{
+      name: Map.fetch!(raw, "name"),
+      entity: Map.fetch!(raw, "entity"),
+      predicate: Map.fetch!(raw, "predicate"),
       file: Map.get(raw, "file"),
       line: Map.get(raw, "line")
     }

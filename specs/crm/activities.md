@@ -23,8 +23,8 @@ Given a Company "Acme"
 Given a Contact "Ada Lovelace" with first name Ada, last name Lovelace, company Acme
 When Sales rep opens Contact page for Ada Lovelace
 Narrate: The contact page for Ada Lovelace has a timeline and a form for logging an activity.
-And Sales rep selects note in "Activity kind"
-Narrate: The activity kind is set to note.
+And Sales rep selects Note in "Activity kind"
+Narrate: The activity kind is set to Note.
 And Sales rep enters Called-about-renewal into "Activity body"
 Narrate: The note text is typed into the activity body.
 And Sales rep clicks "Log activity"
@@ -42,8 +42,8 @@ When Sales rep opens Contact page for Ada Lovelace
 Narrate: The contact page for Ada Lovelace has an empty timeline.
 And time advances 2 days
 Narrate: Two days pass.
-And Sales rep selects meeting in "Activity kind"
-Narrate: The activity kind is set to meeting.
+And Sales rep selects Meeting in "Activity kind"
+Narrate: The activity kind is set to Meeting.
 And Sales rep enters Kickoff into "Activity body"
 Narrate: The meeting text Kickoff is typed into the activity body.
 And Sales rep clicks "Log activity"

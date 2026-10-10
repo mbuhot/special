@@ -1,4 +1,4 @@
-import { link, region, surface } from "../packages/specdsl-core/src/index.ts";
+import { button, link, region, surface } from "../packages/specdsl-core/src/index.ts";
 
 export const shellSurfaces = {
   Sidebar: surface({
@@ -10,6 +10,7 @@ export const shellSurfaces = {
       Pipeline: link({ css: "#nav-pipeline", lv: "#nav-pipeline" }),
       Invoices: link({ css: "#nav-invoices", lv: "#nav-invoices" }),
       "Signed in as": region({ css: "#signed-in-as", lv: "#signed-in-as" }),
+      "Sign out": button({ css: "#sign-out", lv: "#sign-out" }),
     },
   }),
 };

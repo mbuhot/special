@@ -141,7 +141,7 @@ Given a Contact "Ada Lovelace" with first name Ada, last name Lovelace, company 
 Given a Deal "Big deal" with stage qualified, amount 12000, close date 2026-03-31, company Acme, contact Ada Lovelace
 When Sales manager opens Deal page for Big deal
 Narrate: This is the deal page for Big deal. A properties panel sits below the deal name.
-Then Sales manager sees "12,000.00" in "Properties"
+Then Sales manager sees "$12,000.00" in "Properties"
 Narrate: The properties panel shows the amount, twelve thousand.
 And Sales manager sees "31 Mar 2026" in "Properties"
 Narrate: It shows the close date, the thirty-first of March 2026.

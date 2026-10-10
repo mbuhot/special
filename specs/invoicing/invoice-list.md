@@ -22,5 +22,7 @@ Narrate: The invoice list has a New invoice button above the invoice table.
 And Accounts clicks "New invoice"
 Then Accounts is on Invoice editor
 Narrate: The invoice editor opens.
+And Accounts sees "INV-001" in "Invoice number"
+Narrate: The invoice number reads INV-001. A new invoice is numbered INV- followed by a three digit sequence.
 And Accounts sees "draft" in "Status"
 Narrate: The status region shows draft. A new invoice starts as a draft.

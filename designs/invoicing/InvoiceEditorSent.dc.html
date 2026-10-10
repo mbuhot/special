@@ -1,0 +1,591 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Invoice editor (sent)</title>
+    <script src="./support.js"></script>
+  </head>
+  <body>
+    <x-dc>
+      <helmet>
+        <style>
+          body {
+            margin: 0;
+            font-family:
+              system-ui,
+              -apple-system,
+              "Segoe UI",
+              sans-serif;
+            color: #0f172a;
+          }
+          a {
+            color: #1d4ed8;
+          }
+          a:hover {
+            color: #1e40af;
+          }
+        </style>
+      </helmet>
+      <div
+        style="
+          width: 1280px;
+          height: 800px;
+          display: flex;
+          background: #ffffff;
+          color: #0f172a;
+          font-family:
+            system-ui,
+            -apple-system,
+            &quot;Segoe UI&quot;,
+            sans-serif;
+          overflow: hidden;
+        "
+      >
+        <nav
+          data-surface="Sidebar"
+          style="
+            width: 240px;
+            height: 800px;
+            box-sizing: border-box;
+            flex: none;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            padding: 20px 16px;
+            background: #ffffff;
+            border-right: 1px solid #e2e8f0;
+          "
+        >
+          <div style="padding: 4px 12px; font-size: 18px; font-weight: 700; color: #0f172a">
+            Ledger CRM
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 4px">
+            <a
+              href="#"
+              data-control="Dashboard"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 10px 12px;
+                border-radius: 8px;
+                color: #334155;
+                font-size: 14px;
+                font-weight: 500;
+                text-decoration: none;
+              "
+            >
+              <svg
+                aria-hidden="true"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                style="flex: none"
+              >
+                <rect x="3" y="3" width="7" height="9" rx="1" />
+                <rect x="14" y="3" width="7" height="5" rx="1" />
+                <rect x="14" y="12" width="7" height="9" rx="1" />
+                <rect x="3" y="16" width="7" height="5" rx="1" />
+              </svg>
+              <span>Dashboard</span>
+            </a>
+            <a
+              href="#"
+              data-control="Contacts"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 10px 12px;
+                border-radius: 8px;
+                color: #334155;
+                font-size: 14px;
+                font-weight: 500;
+                text-decoration: none;
+              "
+            >
+              <svg
+                aria-hidden="true"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                style="flex: none"
+              >
+                <circle cx="12" cy="8" r="4" />
+                <path d="M4 21c0-4 3.6-7 8-7s8 3 8 7" />
+              </svg>
+              <span>Contacts</span>
+            </a>
+            <a
+              href="#"
+              data-control="Companies"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 10px 12px;
+                border-radius: 8px;
+                color: #334155;
+                font-size: 14px;
+                font-weight: 500;
+                text-decoration: none;
+              "
+            >
+              <svg
+                aria-hidden="true"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                style="flex: none"
+              >
+                <path d="M4 21V5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v16" />
+                <path d="M14 10h5a1 1 0 0 1 1 1v10" />
+                <path d="M8 8h2M8 12h2M8 16h2M2 21h20" />
+              </svg>
+              <span>Companies</span>
+            </a>
+            <a
+              href="#"
+              data-control="Pipeline"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 10px 12px;
+                border-radius: 8px;
+                color: #334155;
+                font-size: 14px;
+                font-weight: 500;
+                text-decoration: none;
+              "
+            >
+              <svg
+                aria-hidden="true"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                style="flex: none"
+              >
+                <path d="M3 4h18l-7 8v7l-4 2v-9z" />
+              </svg>
+              <span>Pipeline</span>
+            </a>
+            <a
+              href="#"
+              data-control="Invoices"
+              aria-current="page"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 10px 12px;
+                border-radius: 8px;
+                background: #eff6ff;
+                color: #1d4ed8;
+                font-size: 14px;
+                font-weight: 600;
+                text-decoration: none;
+              "
+            >
+              <svg
+                aria-hidden="true"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                style="flex: none"
+              >
+                <path d="M6 3h9l4 4v14H6z" />
+                <path d="M14 3v5h5" />
+                <path d="M9 13h7M9 17h7" />
+              </svg>
+              <span>Invoices</span>
+            </a>
+          </div>
+          <div style="flex: 1"></div>
+          <div
+            data-control="Signed in as"
+            style="
+              display: flex;
+              flex-direction: column;
+              gap: 2px;
+              padding: 12px;
+              border-top: 1px solid #e2e8f0;
+            "
+          >
+            <div style="font-size: 12px; color: #64748b">Signed in as</div>
+            <div style="font-size: 14px; font-weight: 600; color: #0f172a">Sales rep</div>
+            <div style="font-size: 12px; color: #64748b">sales-rep@example.com</div>
+          </div>
+        </nav>
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column">
+          <header
+            style="
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              gap: 16px;
+              height: 72px;
+              box-sizing: border-box;
+              flex: none;
+              padding: 0 32px;
+              border-bottom: 1px solid #e2e8f0;
+            "
+          >
+            <div style="display: flex; align-items: center; gap: 12px">
+              <h1
+                data-control="Invoice number"
+                style="margin: 0; font-size: 24px; font-weight: 600; color: #0f172a"
+              >
+                INV-001
+              </h1>
+              <span
+                data-control="Status"
+                style="
+                  padding: 2px 10px;
+                  border-radius: 9999px;
+                  background: #eff6ff;
+                  color: #1d4ed8;
+                  font-size: 12px;
+                  font-weight: 600;
+                "
+                >Sent</span
+              >
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px">
+              <button
+                type="button"
+                data-control="Mark paid"
+                style="
+                  padding: 8px 16px;
+                  border: 0;
+                  border-radius: 8px;
+                  background: #1d4ed8;
+                  color: #ffffff;
+                  font-size: 14px;
+                  font-weight: 600;
+                  font-family: inherit;
+                  cursor: pointer;
+                "
+              >
+                Mark paid
+              </button>
+            </div>
+          </header>
+          <main
+            data-surface="Invoice editor"
+            style="
+              flex: 1;
+              display: grid;
+              grid-template-columns: 360px minmax(0, 1fr);
+              gap: 24px;
+              align-items: start;
+              padding: 32px;
+              background: #ffffff;
+            "
+          >
+            <section
+              style="
+                display: flex;
+                flex-direction: column;
+                box-sizing: border-box;
+                padding: 20px;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                background: #ffffff;
+              "
+            >
+              <h2 style="margin: 0 0 12px; font-size: 16px; font-weight: 600; color: #0f172a">
+                Details
+              </h2>
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: space-between;
+                  gap: 16px;
+                  padding: 12px 0;
+                  border-top: 1px solid #e2e8f0;
+                "
+              >
+                <span style="font-size: 13px; color: #64748b">Company</span>
+                <span style="display: flex; align-items: center; gap: 12px">
+                  <span data-control="Company" style="font-size: 14px; color: #0f172a">Acme</span>
+                  <a
+                    href="#"
+                    data-control="Company link"
+                    style="font-size: 12px; font-weight: 600; text-decoration: none"
+                    >Open company</a
+                  >
+                </span>
+              </div>
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: space-between;
+                  gap: 16px;
+                  padding: 12px 0;
+                  border-top: 1px solid #e2e8f0;
+                "
+              >
+                <span style="font-size: 13px; color: #64748b">Issue date</span>
+                <span data-control="Issue date" style="font-size: 14px; color: #0f172a"
+                  >15 Jan 2026</span
+                >
+              </div>
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: space-between;
+                  gap: 16px;
+                  padding: 12px 0;
+                  border-top: 1px solid #e2e8f0;
+                "
+              >
+                <span style="font-size: 13px; color: #64748b">Due date</span>
+                <span data-control="Due date" style="font-size: 14px; color: #0f172a"
+                  >14 Feb 2026</span
+                >
+              </div>
+              <div
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  gap: 4px;
+                  padding: 12px 0;
+                  border-top: 1px solid #e2e8f0;
+                "
+              >
+                <span style="font-size: 13px; color: #64748b">Notes</span>
+                <span data-control="Notes" style="font-size: 14px; color: #0f172a"
+                  >Thanks for your business</span
+                >
+              </div>
+            </section>
+            <section
+              style="
+                display: flex;
+                flex-direction: column;
+                box-sizing: border-box;
+                padding: 20px;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                background: #ffffff;
+              "
+            >
+              <h2 style="margin: 0 0 12px; font-size: 16px; font-weight: 600; color: #0f172a">
+                Lines
+              </h2>
+              <table
+                data-control="Lines"
+                style="width: 100%; border-collapse: collapse; font-size: 14px"
+              >
+                <thead>
+                  <tr>
+                    <th
+                      style="
+                        width: auto;
+                        text-align: left;
+                        padding: 8px 12px 8px 0;
+                        font-size: 12px;
+                        font-weight: 600;
+                        text-transform: uppercase;
+                        letter-spacing: 0.04em;
+                        color: #64748b;
+                      "
+                    >
+                      Description
+                    </th>
+                    <th
+                      style="
+                        width: 72px;
+                        text-align: left;
+                        padding: 8px 12px 8px 0;
+                        font-size: 12px;
+                        font-weight: 600;
+                        text-transform: uppercase;
+                        letter-spacing: 0.04em;
+                        color: #64748b;
+                      "
+                    >
+                      Qty
+                    </th>
+                    <th
+                      style="
+                        width: 112px;
+                        text-align: left;
+                        padding: 8px 12px 8px 0;
+                        font-size: 12px;
+                        font-weight: 600;
+                        text-transform: uppercase;
+                        letter-spacing: 0.04em;
+                        color: #64748b;
+                      "
+                    >
+                      Unit price
+                    </th>
+                    <th
+                      style="
+                        width: 96px;
+                        text-align: right;
+                        padding: 8px 0 8px 12px;
+                        font-size: 12px;
+                        font-weight: 600;
+                        text-transform: uppercase;
+                        letter-spacing: 0.04em;
+                        color: #64748b;
+                      "
+                    >
+                      Line total
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td
+                      style="
+                        padding: 12px 12px 12px 0;
+                        border-top: 1px solid #e2e8f0;
+                        color: #0f172a;
+                      "
+                    >
+                      Consulting
+                    </td>
+                    <td
+                      style="
+                        padding: 12px 12px 12px 0;
+                        border-top: 1px solid #e2e8f0;
+                        color: #334155;
+                      "
+                    >
+                      2
+                    </td>
+                    <td
+                      style="
+                        padding: 12px 12px 12px 0;
+                        border-top: 1px solid #e2e8f0;
+                        color: #334155;
+                      "
+                    >
+                      $100.00
+                    </td>
+                    <td
+                      style="
+                        padding: 12px 0 12px 12px;
+                        border-top: 1px solid #e2e8f0;
+                        text-align: right;
+                        color: #0f172a;
+                      "
+                    >
+                      $200.00
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      style="
+                        padding: 12px 12px 12px 0;
+                        border-top: 1px solid #e2e8f0;
+                        color: #0f172a;
+                      "
+                    >
+                      Support
+                    </td>
+                    <td
+                      style="
+                        padding: 12px 12px 12px 0;
+                        border-top: 1px solid #e2e8f0;
+                        color: #334155;
+                      "
+                    >
+                      3
+                    </td>
+                    <td
+                      style="
+                        padding: 12px 12px 12px 0;
+                        border-top: 1px solid #e2e8f0;
+                        color: #334155;
+                      "
+                    >
+                      $40.00
+                    </td>
+                    <td
+                      style="
+                        padding: 12px 0 12px 12px;
+                        border-top: 1px solid #e2e8f0;
+                        text-align: right;
+                        color: #0f172a;
+                      "
+                    >
+                      $120.00
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <div
+                data-control="Totals"
+                style="
+                  align-self: flex-end;
+                  width: 240px;
+                  display: flex;
+                  flex-direction: column;
+                  gap: 8px;
+                  margin-top: 16px;
+                  padding-top: 12px;
+                  border-top: 1px solid #e2e8f0;
+                  font-size: 14px;
+                "
+              >
+                <div style="display: flex; justify-content: space-between; color: #334155">
+                  <span>Subtotal</span><span>$320.00</span>
+                </div>
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    color: #0f172a;
+                    font-weight: 700;
+                  "
+                >
+                  <span>Total</span><span>$320.00</span>
+                </div>
+              </div>
+            </section>
+          </main>
+        </div>
+      </div>
+    </x-dc>
+    <script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
+      class Component extends DCLogic {
+      renderVals() {
+      return {};
+      }
+      }
+    </script>
+  </body>
+</html>

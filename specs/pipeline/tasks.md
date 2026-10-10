@@ -17,7 +17,7 @@ Narrate: The due date is the twentieth of January.
 And Sales rep clicks "Add task"
 Then Sales rep sees "Send-proposal" in "Tasks"
 Narrate: The task Send-proposal appears in the task table.
-And Sales rep sees "2026-01-20" in "Tasks"
+And Sales rep sees "20 Jan 2026" in "Tasks"
 Narrate: The task row shows its due date.
 
 ## Scenario: Completing a task
@@ -29,8 +29,8 @@ Given a Task "Send proposal" with title Send-proposal, due date 2026-01-20, deal
 When Sales rep opens Deal page for Big deal
 Narrate: The deal page for Big deal lists the open task Send proposal. It has a Complete task button.
 And Sales rep clicks "Complete task"
-Then Sales rep sees "done" in "Tasks"
-Narrate: The task status changes to done.
+Then Sales rep sees "Done" in "Tasks"
+Narrate: The task status changes to Done.
 And Send proposal has status done
 
 ## Scenario: A task becomes overdue as time advances

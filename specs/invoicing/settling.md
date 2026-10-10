@@ -57,3 +57,20 @@ When Admin opens Contact page for Ada Lovelace
 Narrate: This is the contact page for Ada Lovelace.
 Then Admin sees "Invoice INV-001 paid" in "Timeline"
 Narrate: The timeline holds a new note. The note reads Invoice INV-001 paid.
+
+## Scenario: A sent invoice is read only
+
+Story: As accounts, I need a sent invoice to stay unchanged, so that the customer is billed what was sent.
+Given a Company "Acme"
+Given an Invoice "INV-001" with status sent, company Acme
+Given a LineItem "Consulting" with invoice INV-001, quantity 1, unit price 100
+When Accounts opens Invoice editor for INV-001
+Narrate: The invoice editor shows INV-001 with status sent and the line Consulting.
+Then Accounts does not see "Add line"
+Narrate: The editor has no Add line button.
+And Accounts does not see "Remove line"
+Narrate: The editor has no Remove line button.
+And Accounts sees "Consulting" in "Lines"
+Narrate: The lines table still holds Consulting.
+And Accounts sees "$100.00" in "Totals"
+Narrate: The totals region shows one hundred dollars.

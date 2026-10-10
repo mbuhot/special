@@ -45,3 +45,12 @@ Narrate: The dashboard is shown again.
 And Sales rep clicks "View invoices"
 Then Sales rep is on Invoice list
 Narrate: The link on the unpaid invoices card opens the invoice list. Each card opens its section.
+
+## Scenario: Signing out returns to the login page
+
+Story: As the sales rep, I need to sign out, so that nobody else can use my account on this computer.
+When Sales rep opens Dashboard
+Narrate: The sidebar has a Sign out button at its foot.
+And Sales rep clicks "Sign out"
+Then Sales rep is on Login
+Narrate: The login page opens. The sidebar is gone.

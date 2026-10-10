@@ -16,6 +16,7 @@ export const dashboardSurfaces = {
       "Recent activity": region({ css: "#recent-activity", lv: "#recent-activity" }),
       "View pipeline": link({ css: "#view-pipeline", lv: "#view-pipeline" }),
       "View invoices": link({ css: "#view-invoices", lv: "#view-invoices" }),
+      "View tasks": link({ css: "#view-tasks", lv: "#view-tasks" }),
     },
   }),
 };

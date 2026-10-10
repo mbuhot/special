@@ -35,6 +35,7 @@ export default dialect({
       controls: {
         "Invoice number": region({ css: "#invoice-number", lv: "#invoice-number" }),
         Status: region({ css: "#invoice-status", lv: "#invoice-status" }),
+        Supplier: region({ css: "#invoice-supplier", lv: "#invoice-supplier" }),
         Company: field({
           css: "#invoice-company",
           lv: "invoice[company_id]",
@@ -48,6 +49,16 @@ export default dialect({
         "Due date": field({
           css: "#invoice-due-date",
           lv: "invoice[due_date]",
+          form: "#invoice-form",
+        }),
+        "GST rate": field({
+          css: "#invoice-gst-rate",
+          lv: "invoice[gst_rate]",
+          form: "#invoice-form",
+        }),
+        Prices: field({
+          css: "#invoice-prices",
+          lv: "invoice[prices]",
           form: "#invoice-form",
         }),
         Notes: field({
@@ -71,10 +82,17 @@ export default dialect({
           lv: "invoice[lines][0][unit_price]",
           form: "#invoice-form",
         }),
+        "Tax code": field({
+          css: "#line-0-tax-code",
+          lv: "invoice[lines][0][tax_code]",
+          form: "#invoice-form",
+        }),
         "Line total": region({ css: "#line-0-total", lv: "#line-0-total" }),
         "Add line": button({ css: "#add-line", lv: "#add-line" }),
         "Remove line": button({ css: "#line-0-remove", lv: "#line-0-remove" }),
         Totals: region({ css: "#totals", lv: "#totals" }),
+        Subtotal: region({ css: "#invoice-subtotal", lv: "#invoice-subtotal" }),
+        GST: region({ css: "#invoice-gst", lv: "#invoice-gst" }),
         Send: button({ css: "#send-invoice", lv: "#send-invoice" }),
         "Mark paid": button({ css: "#mark-paid-invoice", lv: "#mark-paid-invoice" }),
         Void: button({ css: "#void-invoice", lv: "#void-invoice" }),

@@ -28,6 +28,14 @@ Data props: an artboard declares `data-props` on its `text/x-dc` script (`defaul
 
 List surfaces: a surface opened without a Ref whose artboard declares a plural prop (`deals`) and no `<entity>` prop gets every Given record of that entity as rows, in Given order, built like child rows. Filter and group with `sc-if` on the row flags.
 
+Runtime conventions (design mode supplies all data and flags; artboards hold no logic):
+
+- Permission flags: every record object and row carries `can<Action>` booleans (`canWin`, `canMarkPaid`, `canUpdate`) from the spec's Policies for the role of the actor who opened the surface; list surfaces also carry `canCreate<Entity>` (`canCreateDeal`).
+- Edits: a control with `data-field="<field>"` collects `enters`/`selects` values as a pending edit of the surface record, or of the row named by `data-record="{{ row.name }}"`. A click on `data-saves` applies the pending values and re-renders. A click on `data-creates="<relation plural or entity plural>"` creates a record from the pending values (child of the surface record for a has-many relation, top-level for an entity plural on a list surface), named by `name`, `title` or the unique field, then re-renders. A click on `data-removes` with `data-record` deletes that row. An editor opened without a Ref starts with an empty record of its entity, taken from the first word of the surface name (Contact editor: Contact); `data-saves` there creates the record.
+- Text filter: `data-filters="<rows prop>"` on a field sets each row's `matches` to whether any string field contains the entered text, ignoring case. `data-filters="<rows prop>"` with `data-filter-field="<field>"` on a select sets `matches` by equality on that field (a belongs-to field compares the related record's name). Rows start with `matches: true`; the artboard hides rows with `sc-if` on `matches`.
+- Counts: top-level props hold every Derived count (`overdueTasks`, `unpaidInvoices`) at the scenario clock and `<state><EntityPlural>Count` for every machine state (`leadDealsCount`).
+- Belongs-to: a record or row exposes the related record's name as `<relation>` (`deal.company`) and its fields as `<relation>Record`.
+
 Markup contract:
 
 - `data-surface="<Name>"` marks a screen region; the value is the spec's surface name.

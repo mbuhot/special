@@ -349,6 +349,7 @@ Step semantics in design mode:
 
 - `opens` keeps a record store filled from `Given` lines. The surface record is the Ref, or the first Given entity with a machine state. The artboard named by that state is rendered, else `default`, else the first file, with props built from the record (see "Artboard props").
 - `clicks` highlights the `data-control` element, then follows an `<a href="*.dc.html">`, or applies `data-next-state` to the machine field of the record named by `data-record` (else the surface record) and re-renders. With `data-record` the same artboard is re-rendered; the control chosen among several matches is the one on the card of the only record not in a final state, else the first.
+- Design mode adds `can<Action>` permission flags, `data-field` pending edits with `data-saves`, `data-creates`, `data-removes`, `data-filters` row filtering (`matches`), count props and `<relation>Record` objects; see `designs/README.md`.
 - `time advances` moves the scenario clock, which starts at the Context clock.
 - `sees`, `no longer sees`, `does not see` and `is on` compare against the artboard; mismatches go to `report.json` and do not fail the run.
 - A mismatch outlines the control in red and captions "Design differs: expected ..., found ..." for 2 seconds in the video.

@@ -99,3 +99,15 @@ docs/reviews/2026-10-10-iteration-2.md: FAIL. Record pages closed UX 3, 4 and sp
 ### Effects (follow-up)
 
 - Add an app conformance check holding the Ash resources to `## Effects` (marking an invoice paid creates the declared Activity).
+
+## Lifecycle lap: My tasks
+
+Scope agreed with the user (2026-10-10):
+
+- Surface `Task list` ("My tasks"): sales reps see their own open tasks; sales manager and admin see everyone's with an Assignee column.
+- Filter: All open, Overdue, Due this week.
+- Actions: Complete (row leaves the list), open the deal, Add task (title, due date, deal; assigned to the creator; managers may pick an assignee), Reassign (sales manager and admin; to users with role sales or manager).
+- Reached from the sidebar, the dashboard's Overdue tasks card, and a "View all my tasks" link on the deal page.
+- User gains `name (text, required)`; actors carry person names; names replace role labels wherever a person is shown.
+
+Stops: spec language (within N days, actor names) → spec → design on the canvas → /design-sync → pnpm design → failing scenarios → implementation → demo.

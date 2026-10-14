@@ -921,6 +921,10 @@ input[type="date"]::-webkit-date-and-time-value {
   text-align: left;
 }
 
+.ds-datepicker__popover[hidden] {
+  display: none;
+}
+
 .ds-datepicker__months {
   display: flex;
   align-items: flex-start;

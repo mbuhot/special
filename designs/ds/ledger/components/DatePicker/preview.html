@@ -266,4 +266,152 @@
   </div>
 </div>
 
-<script>window.Ledger.attach(document);</script>
+<script>
+/* Preview stand-in for the app: owns open state, the visible months and the chosen date. Ships only in this preview. */
+(function () {
+  var TODAY = "2026-10-14";
+  var HAS_ITEMS = ["2026-10-16", "2026-11-05"];
+  var MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  var WEEKDAYS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
+
+  function iso(date) {
+    return date.toISOString().slice(0, 10);
+  }
+
+  function parse(value) {
+    var parts = value.split("-");
+    return new Date(Date.UTC(+parts[0], +parts[1] - 1, +parts[2]));
+  }
+
+  function addDays(date, days) {
+    return new Date(date.getTime() + days * 86400000);
+  }
+
+  function mondayIndex(date) {
+    return (date.getUTCDay() + 6) % 7;
+  }
+
+  function display(value) {
+    if (!value) return "";
+    var date = parse(value);
+    return date.getUTCDate() + " " + MONTHS[date.getUTCMonth()].slice(0, 3) + " " + date.getUTCFullYear();
+  }
+
+  function dayButton(date, month, selected) {
+    var value = iso(date);
+    var classes = ["ds-datepicker__day"];
+    if (date.getUTCMonth() !== month) classes.push("ds-datepicker__day--outside");
+    if (value === TODAY) classes.push("ds-datepicker__day--today");
+    if (value === selected) classes.push("ds-datepicker__day--selected");
+    if (HAS_ITEMS.indexOf(value) >= 0) classes.push("ds-datepicker__day--has-items");
+    return (
+      '<button type="button" data-ds-grid-cell class="' + classes.join(" ") + '" aria-label="' +
+      date.getUTCDate() + " " + MONTHS[date.getUTCMonth()] + '" data-value="' + value +
+      '" data-field="dueDate" data-toggles="datePickerOpen"' +
+      (value === selected ? ' aria-pressed="true"' : "") + ">" + date.getUTCDate() + "</button>"
+    );
+  }
+
+  function grid(first, selected) {
+    var last = new Date(Date.UTC(first.getUTCFullYear(), first.getUTCMonth() + 1, 0));
+    var end = addDays(last, 6 - mondayIndex(last));
+    var cells = [];
+    for (var day = addDays(first, -mondayIndex(first)); day <= end; day = addDays(day, 1)) {
+      cells.push(dayButton(day, first.getUTCMonth(), selected));
+    }
+    return cells.join("");
+  }
+
+  function iconButton(classes, label, glyph) {
+    return '<button type="button" class="ds-button ds-button--ghost ds-button--icon ' + classes + '" aria-label="' + label + '">' + glyph + "</button>";
+  }
+
+  function header(first, index, count) {
+    var title = '<span class="ds-datepicker__title">' + MONTHS[first.getUTCMonth()] + " " + first.getUTCFullYear() + "</span>";
+    if (index === 0) {
+      return iconButton("ds-datepicker__prev", "Previous month", "&#8249;") + title +
+        iconButton("ds-datepicker__next ds-datepicker__next--narrow", "Next month", "&#8250;");
+    }
+    return title + (index === count - 1 ? iconButton("ds-datepicker__next", "Next month", "&#8250;") : "");
+  }
+
+  function panel(first, index, count, selected) {
+    return (
+      '<div class="ds-datepicker__month"><div class="ds-datepicker__header">' + header(first, index, count) +
+      '</div><div class="ds-datepicker__weekdays">' +
+      WEEKDAYS.map(function (name) { return '<span class="ds-datepicker__weekday">' + name + "</span>"; }).join("") +
+      '</div><div class="ds-datepicker__grid" data-ds-grid data-ds-grid-columns="7">' + grid(first, selected) + "</div></div>"
+    );
+  }
+
+  function standIn(picker) {
+    var input = picker.querySelector(".ds-datepicker__input");
+    var trigger = picker.querySelector("[data-ds-popover-trigger]");
+    var popover = picker.querySelector("[data-ds-popover-panel]");
+    var months = picker.querySelector(".ds-datepicker__months");
+    var count = months.querySelectorAll(".ds-datepicker__month").length;
+    var pressed = picker.querySelector('[aria-pressed="true"]');
+    var state = {
+      open: !popover.hasAttribute("hidden"),
+      value: pressed ? pressed.getAttribute("data-value") : "",
+      view: parse((pressed ? pressed.getAttribute("data-value") : TODAY).slice(0, 8) + "01"),
+    };
+
+    function render(focusValue) {
+      input.value = display(state.value);
+      trigger.setAttribute("aria-expanded", String(state.open));
+      if (state.open) popover.removeAttribute("hidden");
+      else popover.setAttribute("hidden", "");
+      var panels = [];
+      for (var index = 0; index < count; index++) {
+        panels.push(panel(new Date(Date.UTC(state.view.getUTCFullYear(), state.view.getUTCMonth() + index, 1)), index, count, state.value));
+      }
+      months.innerHTML = panels.join("");
+      window.Ledger.attach(document);
+      var focusTarget = focusValue && months.querySelector('[data-value="' + focusValue + '"]');
+      if (focusTarget) focusTarget.focus();
+    }
+
+    function page(step, focusValue) {
+      state.view = new Date(Date.UTC(state.view.getUTCFullYear(), state.view.getUTCMonth() + step, 1));
+      render(focusValue);
+    }
+
+    picker.addEventListener("click", function (event) {
+      var target = event.target.closest("button");
+      if (!target || !picker.contains(target)) return;
+      if (target === trigger) {
+        state.open = !state.open;
+        render();
+      } else if (target.classList.contains("ds-datepicker__prev")) {
+        page(-1);
+      } else if (target.classList.contains("ds-datepicker__next")) {
+        page(1);
+      } else if (target.hasAttribute("data-value")) {
+        state.value = target.getAttribute("data-value");
+        if (state.value) state.view = parse(state.value.slice(0, 8) + "01");
+        state.open = false;
+        render();
+      }
+    });
+
+    picker.addEventListener("ds:dismiss", function () {
+      state.open = false;
+      render();
+    });
+
+    picker.addEventListener("ds:page", function (event) {
+      var step = event.detail.direction === "next" ? 1 : -1;
+      var focused = document.activeElement && document.activeElement.getAttribute("data-value");
+      var target = focused ? parse(focused) : state.view;
+      var moved = new Date(Date.UTC(target.getUTCFullYear(), target.getUTCMonth() + step, Math.min(target.getUTCDate(), new Date(Date.UTC(target.getUTCFullYear(), target.getUTCMonth() + step + 1, 0)).getUTCDate())));
+      page(step, iso(moved));
+    });
+
+    render();
+  }
+
+  window.Ledger.attach(document);
+  Array.prototype.forEach.call(document.querySelectorAll(".ds-datepicker"), standIn);
+})();
+</script>

@@ -24,12 +24,19 @@ import {Socket} from "phoenix"
 import {LiveSocket} from "phoenix_live_view"
 import {hooks as colocatedHooks} from "phoenix-colocated/invoicing"
 import topbar from "../vendor/topbar"
+import "./ds-behaviours"
 
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
+const DsBehaviours = {
+  mounted() { window.Ledger.attach(this.el) },
+  updated() { window.Ledger.attach(this.el) },
+  destroyed() { window.Ledger.detach(this.el) },
+}
+
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
-  hooks: {...colocatedHooks},
+  hooks: {...colocatedHooks, DsBehaviours},
 })
 
 // Show progress bar on live navigation and form submits

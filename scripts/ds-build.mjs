@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const system = join(root, "designs/ds/ledger");
 const appStylesheet = join(root, "apps/invoicing/assets/css/ds.css");
+const appBehaviours = join(root, "apps/invoicing/assets/js/ds-behaviours.js");
 
 const tokens = JSON.parse(readFileSync(join(system, "tokens.json"), "utf8"));
 const themeIds = tokens.color.themes.map((theme) => theme.id);
@@ -92,3 +93,4 @@ writeFileSync(
   appStylesheet,
   generatedTokens + "\n" + readFileSync(join(system, "components/bundle.css"), "utf8"),
 );
+writeFileSync(appBehaviours, readFileSync(join(system, "components/bundle.js"), "utf8"));

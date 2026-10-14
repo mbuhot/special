@@ -8,6 +8,7 @@
     "server": "cd apps/invoicing && mix phx.server",
     "build": "pnpm -r build",
     "ds:build": "node scripts/ds-build.mjs",
+    "test:ds": "node --test designs/ds/ledger/behaviours.test.mjs",
     "bind": "pnpm --filter @special/specdsl-core build && pnpm --filter @special/specdsl-core exec specdsl bind-all ../../specs",
     "lock": "pnpm --filter @special/specdsl-core build && pnpm --filter @special/specdsl-core exec specdsl lock --dialect ../../dialects/invoicing.ts --out ../../dialects/invoicing.lock.json",
     "test": "pnpm bind && pnpm lock && pnpm test:core && pnpm test:render && pnpm test:spec-dsl && pnpm test:app && pnpm e2e",

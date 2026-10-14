@@ -28,3 +28,7 @@ Day modifiers: `--outside` (other month, muted), `--today` (ring), `--selected` 
 - Every day is a `button` with an `aria-label` naming the full date, `data-value="<ISO date>"` and `data-field="<field>"`; a click sets the field and `data-toggles` closes the popover. Today and Clear carry the same attributes (Clear with an empty `data-value`). Mark the chosen day `aria-pressed="true"`.
 - Show the popover only while the toggle is open; Esc or a click outside cancels in the app.
 - Use for any date field: task due dates, deal close dates, invoice dates.
+
+## Behaviour
+
+The component script attaches by attribute: `data-ds-popover` on `ds-datepicker` with `data-ds-popover-trigger` on the toggle and `data-ds-popover-panel` on the popover; `data-ds-grid` with `data-ds-grid-columns="7"` on each `ds-datepicker__grid`; `data-ds-grid-cell` on each day. Arrow keys, Home and End move focus between days (roving tabindex), Enter and Space click the focused day, and focus returns to the toggle when the popover is removed or hidden. The script holds no state: Esc or a pointer down outside dispatches `ds:dismiss` on the `data-ds-popover` container, and PageUp or PageDown dispatches `ds:page` on the grid with `detail.direction` of `previous` or `next`; the app listens and decides what closes or which month shows.

@@ -22,7 +22,7 @@
   - one screen (a column, a moved element, copy, which controls a surface shows): edit that artboard on the canvas;
   - every screen (a colour, spacing, type, control size, a component's look): edit the design system artifact (`project/tokens.json` or `project/components/bundle.css`), then reinstall it on the canvas (copy its files into `project/ds/ledger/` and update the `designSystems` record's version in `project/canvas.json`). Artboards link the copy by path, so they need no edit.
 - Never edit the installed copy under `project/ds/` on the canvas, nor `designs/ds/` in the repo: both are overwritten from the system.
-- Inline styles in an artboard are for one-off layout only; anything reusable is a class in the design system.
+- Inline styles in an artboard are for one-off layout only; anything reusable is a class in the design system. Styling repeated within one screen (the cards on a board, rows in a list) is reusable too: it becomes a design-system pattern named for what it is (`ds-board-card`), never for the screen.
 - A canvas comment gets an artboard or design-system edit and a reply in its thread (`/design-comments`); syncing to the repo is `/design-sync`.
 
 # Gates

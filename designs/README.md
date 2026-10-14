@@ -2,6 +2,11 @@
 
 Artboards for the Ledger CRM sample app, one self-contained `*.dc.html` file per surface state (1280x800).
 
+## Where to make a change
+
+- One screen's layout or content: the artboard, on the canvas.
+- Anything every screen shares (tokens, component styles): the design system https://claude.ai/artifact/PUHF3hyTt87V4opkdiSQWe, then reinstall it on the canvas. `ds/ledger/` here is a copy of it; never edit it.
+
 ```
 designs/
   <project>/

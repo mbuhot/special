@@ -31,7 +31,13 @@ export function renderArtboard(html: string, props: Props = {}): string {
   const helmet = /<helmet>([\s\S]*?)<\/helmet>/.exec(body)?.[1] ?? "";
   const content = renderTemplate(body.replace(/<helmet>[\s\S]*?<\/helmet>/, ""), scope);
   const title = /<title>[\s\S]*?<\/title>/.exec(html)?.[0] ?? "";
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8" />${title}${helmet}</head><body>${content}</body></html>`;
+  const stylesheets = headStylesheets(html);
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8" />${title}${stylesheets}${helmet}</head><body>${content}</body></html>`;
+}
+
+function headStylesheets(html: string): string {
+  const head = /<head>([\s\S]*?)<\/head>/.exec(html)?.[1] ?? "";
+  return (head.match(/<link\b[^>]*rel="stylesheet"[^>]*>/g) ?? []).join("");
 }
 
 /** Renders a template fragment against a scope of props. */

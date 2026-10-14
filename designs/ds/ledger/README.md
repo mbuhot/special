@@ -17,6 +17,7 @@ ds/ledger/
 ## Classes
 
 Layout
+
 - `ds-shell`, `ds-shell__body`: page frame and the column beside the sidebar
 - `ds-sidebar` (`__brand __nav __spacer __user __user-label __user-name __user-email __signout`)
 - `ds-nav-link` (`aria-current="page"` marks the current page, `__icon`)
@@ -25,6 +26,7 @@ Layout
 - `ds-stack` (`--tight`), `ds-row` (`--tight --end --right --between --padded`), `ds-grid` (`--aside --two`)
 
 Components
+
 - `ds-card` (`--row`, `__title`, `__footer`)
 - `ds-properties` (`__row __term __value`): `dl` of label and value rows
 - `ds-table` (`--compact`, `__head __cell __actions`; `--end --check --muted` on head and cell)
@@ -44,15 +46,13 @@ Utilities: `ds-sr-only`, `ds-muted`, `ds-numeric`
 ```html
 <head>
   <script src="./support.js"></script>
+  <link rel="stylesheet" href="../../ds/ledger/tokens.css" />
+  <link rel="stylesheet" href="../../ds/ledger/ds.css" />
 </head>
-<x-dc>
-  <helmet>
-    <link rel="stylesheet" href="../../ds/ledger/tokens.css" />
-    <link rel="stylesheet" href="../../ds/ledger/ds.css" />
-  </helmet>
 ```
 
-`support.js` stays first in head. The design runtime applies stylesheets linked in `<helmet>` and ignores links in head. The path is relative to `designs/<project>/<surface>/`. The design runtime serves `designs/`, so `ds/ledger/` resolves. The canvas installs the system as `project/ds/ledger/`; its editor reads `tokens.json`.
+`support.js` stays first in head, as the canvas requires; the design runtime carries the head stylesheet links into the page it renders. The path is relative to `designs/<project>/<surface>/`. The design runtime serves `designs/`, so `ds/ledger/` resolves. The canvas installs the system as `project/ds/ledger/`; its editor reads `tokens.json`.
+
 ## App
 
 `pnpm ds:build` regenerates `tokens.css` from `tokens.json` and writes `apps/invoicing/assets/css/ds.css` (tokens followed by `ds.css`). Edit values in `tokens.json` only. The app links that file from the root layout and emits the same class names; `data-theme` on `<html>` switches theme.

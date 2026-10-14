@@ -112,6 +112,7 @@
   --ds-textarea-min-height: 80px;
   --ds-board-column-min-height: 400px;
   --ds-user-gap: 2px;
+  --ds-datepicker-two-month-width: 472px;
   --ds-z-menu: 10;
   --ds-z-dialog: 11;
   --font-sans: system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -908,6 +909,9 @@ input[type="date"]::-webkit-date-and-time-value {
   display: flex;
   flex-direction: column;
   gap: var(--ds-space-2);
+  container-type: inline-size;
+  width: calc(var(--ds-datepicker-two-month-width) + 2 * var(--ds-space-3) + 2 * var(--ds-border-width));
+  max-width: calc(100vw - 2 * var(--ds-space-4));
   padding: var(--ds-space-3);
   border: var(--ds-border-width) solid var(--ds-border);
   border-radius: var(--ds-radius);
@@ -917,16 +921,52 @@ input[type="date"]::-webkit-date-and-time-value {
   text-align: left;
 }
 
-.ds-datepicker__header {
+.ds-datepicker__months {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--ds-space-6);
+}
+
+.ds-datepicker__month {
+  display: flex;
+  flex-direction: column;
   gap: var(--ds-space-2);
 }
 
+.ds-datepicker__header {
+  display: grid;
+  grid-template-columns: var(--ds-control-height-small) 1fr var(--ds-control-height-small);
+  align-items: center;
+  gap: var(--ds-space-2);
+}
+
+.ds-datepicker__prev {
+  grid-column: 1;
+}
+
 .ds-datepicker__title {
+  grid-column: 2;
   font-size: var(--ds-text-md);
   font-weight: var(--ds-weight-semibold);
+  text-align: center;
+}
+
+.ds-datepicker__next {
+  grid-column: 3;
+}
+
+.ds-datepicker__next--narrow {
+  display: none;
+}
+
+@container (width < 472px) {
+  .ds-datepicker__month:nth-child(n + 2) {
+    display: none;
+  }
+
+  .ds-datepicker__next--narrow {
+    display: inline-flex;
+  }
 }
 
 .ds-datepicker__weekdays,

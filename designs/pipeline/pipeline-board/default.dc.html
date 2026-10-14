@@ -4,119 +4,19 @@
     <meta charset="utf-8" />
     <title>Pipeline board</title>
     <script src="./support.js"></script>
+    <link rel="stylesheet" href="../../ds/ledger/tokens.css" />
+    <link rel="stylesheet" href="../../ds/ledger/components/bundle.css" />
   </head>
   <body>
     <x-dc>
       <helmet>
-        <style>
-          input:not([type="checkbox"]):not([type="radio"]), select, button {
-            box-sizing: border-box;
-            height: 36px;
-            margin: 0;
-            font-family: inherit;
-            font-size: 14px;
-            line-height: 20px;
-            vertical-align: middle;
-          }
-          select, input[type="date"] {
-            -webkit-appearance: none;
-            appearance: none;
-          }
-          select {
-            padding-right: 28px !important;
-            background-image: linear-gradient(45deg, transparent 50%, #64748b 50%), linear-gradient(135deg, #64748b 50%, transparent 50%) !important;
-            background-position: calc(100% - 15px) 50%, calc(100% - 10px) 50% !important;
-            background-size: 5px 5px, 5px 5px !important;
-            background-repeat: no-repeat !important;
-          }
-          td input:not([type="checkbox"]), td select, td button {
-            height: 32px;
-            font-size: 13px;
-          }
-          a[data-control][style*="border-radius: 8px"][style*="padding: 8px 16px"] {
-            box-sizing: border-box;
-            display: inline-flex;
-            align-items: center;
-            height: 36px;
-          }
-          body {
-            margin: 0;
-            font-family:
-              system-ui,
-              -apple-system,
-              "Segoe UI",
-              sans-serif;
-            color: #0f172a;
-          }
-          a {
-            color: #1d4ed8;
-          }
-          a:hover {
-            color: #1e40af;
-          }
-        </style>
       </helmet>
-      <div
-        style="
-          width: 1280px;
-          height: 800px;
-          display: flex;
-          background: #ffffff;
-          color: #0f172a;
-          font-family:
-            system-ui,
-            -apple-system,
-            &quot;Segoe UI&quot;,
-            sans-serif;
-          overflow: hidden;
-        "
-      >
-        <nav
-          data-surface="Sidebar"
-          style="
-            width: 240px;
-            height: 800px;
-            box-sizing: border-box;
-            flex: none;
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-            padding: 20px 16px;
-            background: #ffffff;
-            border-right: 1px solid #e2e8f0;
-          "
-        >
-          <div style="padding: 4px 12px; font-size: 18px; font-weight: 700; color: #0f172a">
-            Ledger CRM
-          </div>
-          <div style="display: flex; flex-direction: column; gap: 4px">
-            <a
-              href="../../dashboard/dashboard/default.dc.html"
-              data-control="Dashboard"
-              style="
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                padding: 10px 12px;
-                border-radius: 8px;
-                color: #334155;
-                font-size: 14px;
-                font-weight: 500;
-                text-decoration: none;
-              "
-            >
-              <svg
-                aria-hidden="true"
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.75"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                style="flex: none"
-              >
+      <div class="ds-shell" style="width: 1280px; height: 800px; overflow: hidden">
+        <nav data-surface="Sidebar" class="ds-sidebar">
+          <div class="ds-sidebar__brand">Ledger CRM</div>
+          <div class="ds-sidebar__nav">
+            <a href="../../dashboard/dashboard/default.dc.html" class="ds-nav-link" data-control="Dashboard">
+              <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="ds-nav-link__icon">
                 <rect x="3" y="3" width="7" height="9" rx="1" />
                 <rect x="14" y="3" width="7" height="5" rx="1" />
                 <rect x="14" y="12" width="7" height="9" rx="1" />
@@ -124,163 +24,36 @@
               </svg>
               <span>Dashboard</span>
             </a>
-            <a
-              href="../../crm/contact-list/default.dc.html"
-              data-control="Contacts"
-              style="
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                padding: 10px 12px;
-                border-radius: 8px;
-                color: #334155;
-                font-size: 14px;
-                font-weight: 500;
-                text-decoration: none;
-              "
-            >
-              <svg
-                aria-hidden="true"
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.75"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                style="flex: none"
-              >
+            <a href="../../crm/contact-list/default.dc.html" class="ds-nav-link" data-control="Contacts">
+              <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="ds-nav-link__icon">
                 <circle cx="12" cy="8" r="4" />
                 <path d="M4 21c0-4 3.6-7 8-7s8 3 8 7" />
               </svg>
               <span>Contacts</span>
             </a>
-            <a
-              href="../../crm/company-list/default.dc.html"
-              data-control="Companies"
-              style="
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                padding: 10px 12px;
-                border-radius: 8px;
-                color: #334155;
-                font-size: 14px;
-                font-weight: 500;
-                text-decoration: none;
-              "
-            >
-              <svg
-                aria-hidden="true"
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.75"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                style="flex: none"
-              >
+            <a href="../../crm/company-list/default.dc.html" class="ds-nav-link" data-control="Companies">
+              <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="ds-nav-link__icon">
                 <path d="M4 21V5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v16" />
                 <path d="M14 10h5a1 1 0 0 1 1 1v10" />
                 <path d="M8 8h2M8 12h2M8 16h2M2 21h20" />
               </svg>
               <span>Companies</span>
             </a>
-            <a
-              href="../../pipeline/pipeline-board/default.dc.html"
-              data-control="Pipeline"
-              aria-current="page"
-              style="
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                padding: 10px 12px;
-                border-radius: 8px;
-                background: #eff6ff;
-                color: #1d4ed8;
-                font-size: 14px;
-                font-weight: 600;
-                text-decoration: none;
-              "
-            >
-              <svg
-                aria-hidden="true"
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.75"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                style="flex: none"
-              >
+            <a href="../../pipeline/pipeline-board/default.dc.html" class="ds-nav-link" data-control="Pipeline" aria-current="page">
+              <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="ds-nav-link__icon">
                 <path d="M3 4h18l-7 8v7l-4 2v-9z" />
               </svg>
               <span>Pipeline</span>
             </a>
-            <a
-              href="../../pipeline/task-list/default.dc.html"
-              data-control="My tasks"
-              style="
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                padding: 10px 12px;
-                border-radius: 8px;
-                color: #334155;
-                font-size: 14px;
-                font-weight: 500;
-                text-decoration: none;
-              "
-            >
-              <svg
-                aria-hidden="true"
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.75"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                style="flex: none"
-              >
+            <a href="../../pipeline/task-list/default.dc.html" class="ds-nav-link" data-control="My tasks">
+              <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="ds-nav-link__icon">
                 <rect x="4" y="4" width="16" height="16" rx="2" />
                 <path d="m8 12 3 3 5-6" />
               </svg>
               <span>My tasks</span>
             </a>
-            <a
-              href="../../invoicing/invoice-list/default.dc.html"
-              data-control="Invoices"
-              style="
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                padding: 10px 12px;
-                border-radius: 8px;
-                color: #334155;
-                font-size: 14px;
-                font-weight: 500;
-                text-decoration: none;
-              "
-            >
-              <svg
-                aria-hidden="true"
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.75"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                style="flex: none"
-              >
+            <a href="../../invoicing/invoice-list/default.dc.html" class="ds-nav-link" data-control="Invoices">
+              <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="ds-nav-link__icon">
                 <path d="M6 3h9l4 4v14H6z" />
                 <path d="M14 3v5h5" />
                 <path d="M9 13h7M9 17h7" />
@@ -288,125 +61,98 @@
               <span>Invoices</span>
             </a>
           </div>
-          <div style="flex: 1"></div>
-          <div
-            data-control="Signed in as"
-            style="
-              display: flex;
-              flex-direction: column;
-              gap: 2px;
-              padding: 12px;
-              border-top: 1px solid #e2e8f0;
-            "
-          >
-            <div style="font-size: 12px; color: #64748b">Signed in as</div>
-            <div style="font-size: 14px; font-weight: 600; color: #0f172a">{{ user.name }}</div>
-            <div style="font-size: 12px; color: #64748b">sales-rep@example.com</div>
+          <div class="ds-sidebar__spacer"></div>
+          <div data-control="Signed in as" class="ds-sidebar__user">
+            <div class="ds-sidebar__user-label">Signed in as</div>
+            <div class="ds-sidebar__user-name">{{ user.name }}</div>
+            <div class="ds-sidebar__user-email">sales-rep@example.com</div>
           </div>
-          <a
-            href="../../shell/login/default.dc.html"
-            data-control="Sign out"
-            style="
-              margin-top: -12px;
-              padding: 8px 12px;
-              border: 1px solid #cbd5e1;
-              border-radius: 8px;
-              background: #ffffff;
-              color: #334155;
-              font-size: 14px;
-              font-weight: 600;
-              cursor: pointer;
-              text-align: center;
-              text-decoration: none;
-            "
-          >
-            Sign out
-          </a>
+          <a href="../../shell/login/default.dc.html" data-control="Sign out" class="ds-button ds-button--secondary ds-sidebar__signout">Sign out</a>
         </nav>
-        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column">
-          <header style="display: flex; align-items: center; justify-content: space-between; gap: 16px; height: 72px; box-sizing: border-box; flex: none; padding: 0 32px; border-bottom: 1px solid #e2e8f0;">
-            <h1 style="margin: 0; font-size: 24px; font-weight: 600; color: #0f172a">Pipeline</h1>
-            <sc-if value="{{ canCreateDeal }}" hint-placeholder-val="{{ true }}"><a href="../deal-editor/default.dc.html" data-control="New deal" style="padding: 8px 16px; border: 0; border-radius: 8px; background: #1d4ed8; color: #ffffff; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; text-decoration: none;">New deal</a></sc-if>
+        <div class="ds-shell__body">
+          <header class="ds-page-header">
+            <h1 class="ds-page-header__title">Pipeline</h1>
+            <sc-if value="{{ canCreateDeal }}" hint-placeholder-val="{{ true }}"><a href="../deal-editor/default.dc.html" data-control="New deal" class="ds-button ds-button--primary">New deal</a></sc-if>
           </header>
-          <main data-surface="Pipeline board" style="flex: 1; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; align-items: start; padding: 32px; background: #ffffff;">
-            <section data-control="Lead column" data-drop-state="lead" style="display: flex; flex-direction: column; gap: 12px; box-sizing: border-box; min-height: 400px; padding: 16px; border: 1px solid #e2e8f0; border-radius: 8px; background: #f8fafc;">
-              <h2 style="margin: 0; font-size: 14px; font-weight: 600; color: #0f172a">Lead</h2>
+          <main data-surface="Pipeline board" class="ds-main ds-board">
+            <section data-control="Lead column" data-drop-state="lead" class="ds-board__column">
+              <h2 class="ds-board__heading">Lead</h2>
               <sc-for list="{{ deals }}" as="deal">
                 <sc-if value="{{ deal.isLead }}">
-              <div draggable="true" data-drag-record="{{ deal.name }}" style="display: flex; flex-direction: column; gap: 8px; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; background: #ffffff; cursor: grab">
-                <a href="../deal-page/default.dc.html" data-record="{{ deal.name }}" style="font-size: 14px; font-weight: 600; text-decoration: none">{{ deal.name }}</a>
-                <span style="font-size: 13px; color: #64748b">{{ deal.company }}</span>
-                <span style="font-size: 13px; color: #0f172a">{{ deal.amount }}</span>
-                <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: #64748b">Stage
-                  <select data-control="Stage" data-field="stage" data-record="{{ deal.name }}" aria-label="Stage of {{ deal.name }}" style="flex: 1; min-width: 0; height: 30px; padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 8px; background-color: #ffffff; color: #0f172a; font-size: 13px;">
-                    <option value="lead" selected>Lead</option>
-                    <sc-if value="{{ deal.canQualify }}" hint-placeholder-val="{{ true }}"><option value="qualified">Qualified</option></sc-if>
-                    <sc-if value="{{ deal.canLose }}" hint-placeholder-val="{{ true }}"><option value="lost">Lost</option></sc-if>
-                  </select>
-                </label>
-              </div>
+                  <div draggable="true" data-drag-record="{{ deal.name }}" class="ds-board-card">
+                    <a href="../deal-page/default.dc.html" data-record="{{ deal.name }}" class="ds-board-card__title">{{ deal.name }}</a>
+                    <span class="ds-board-card__meta">{{ deal.company }}</span>
+                    <span class="ds-board-card__value">{{ deal.amount }}</span>
+                    <label class="ds-board-card__field">Stage
+                      <select data-control="Stage" data-field="stage" data-record="{{ deal.name }}" aria-label="Stage of {{ deal.name }}" class="ds-select ds-select--small">
+                        <option value="lead" selected>Lead</option>
+                        <sc-if value="{{ deal.canQualify }}" hint-placeholder-val="{{ true }}"><option value="qualified">Qualified</option></sc-if>
+                        <sc-if value="{{ deal.canLose }}" hint-placeholder-val="{{ true }}"><option value="lost">Lost</option></sc-if>
+                      </select>
+                    </label>
+                  </div>
                 </sc-if>
               </sc-for>
             </section>
-            <section data-control="Qualified column" data-drop-state="qualified" style="display: flex; flex-direction: column; gap: 12px; box-sizing: border-box; min-height: 400px; padding: 16px; border: 1px solid #e2e8f0; border-radius: 8px; background: #f8fafc;">
-              <h2 style="margin: 0; font-size: 14px; font-weight: 600; color: #0f172a">Qualified</h2>
+            <section data-control="Qualified column" data-drop-state="qualified" class="ds-board__column">
+              <h2 class="ds-board__heading">Qualified</h2>
               <sc-for list="{{ deals }}" as="deal">
                 <sc-if value="{{ deal.isQualified }}">
-              <div draggable="true" data-drag-record="{{ deal.name }}" style="display: flex; flex-direction: column; gap: 8px; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; background: #ffffff; cursor: grab">
-                <a href="../deal-page/default.dc.html" data-record="{{ deal.name }}" style="font-size: 14px; font-weight: 600; text-decoration: none">{{ deal.name }}</a>
-                <span style="font-size: 13px; color: #64748b">{{ deal.company }}</span>
-                <span style="font-size: 13px; color: #0f172a">{{ deal.amount }}</span>
-                <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: #64748b">Stage
-                  <select data-control="Stage" data-field="stage" data-record="{{ deal.name }}" aria-label="Stage of {{ deal.name }}" style="flex: 1; min-width: 0; height: 30px; padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 8px; background-color: #ffffff; color: #0f172a; font-size: 13px;">
-                    <option value="qualified" selected>Qualified</option>
-                    <sc-if value="{{ deal.canPropose }}" hint-placeholder-val="{{ true }}"><option value="proposal">Proposal</option></sc-if>
-                    <sc-if value="{{ deal.canLose }}" hint-placeholder-val="{{ true }}"><option value="lost">Lost</option></sc-if>
-                  </select>
-                </label>
-              </div>
+                  <div draggable="true" data-drag-record="{{ deal.name }}" class="ds-board-card">
+                    <a href="../deal-page/default.dc.html" data-record="{{ deal.name }}" class="ds-board-card__title">{{ deal.name }}</a>
+                    <span class="ds-board-card__meta">{{ deal.company }}</span>
+                    <span class="ds-board-card__value">{{ deal.amount }}</span>
+                    <label class="ds-board-card__field">Stage
+                      <select data-control="Stage" data-field="stage" data-record="{{ deal.name }}" aria-label="Stage of {{ deal.name }}" class="ds-select ds-select--small">
+                        <option value="qualified" selected>Qualified</option>
+                        <sc-if value="{{ deal.canPropose }}" hint-placeholder-val="{{ true }}"><option value="proposal">Proposal</option></sc-if>
+                        <sc-if value="{{ deal.canLose }}" hint-placeholder-val="{{ true }}"><option value="lost">Lost</option></sc-if>
+                      </select>
+                    </label>
+                  </div>
                 </sc-if>
               </sc-for>
             </section>
-            <section data-control="Proposal column" data-drop-state="proposal" style="display: flex; flex-direction: column; gap: 12px; box-sizing: border-box; min-height: 400px; padding: 16px; border: 1px solid #e2e8f0; border-radius: 8px; background: #f8fafc;">
-              <h2 style="margin: 0; font-size: 14px; font-weight: 600; color: #0f172a">Proposal</h2>
+            <section data-control="Proposal column" data-drop-state="proposal" class="ds-board__column">
+              <h2 class="ds-board__heading">Proposal</h2>
               <sc-for list="{{ deals }}" as="deal">
                 <sc-if value="{{ deal.isProposal }}">
-              <div draggable="true" data-drag-record="{{ deal.name }}" style="display: flex; flex-direction: column; gap: 8px; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; background: #ffffff; cursor: grab">
-                <a href="../deal-page/default.dc.html" data-record="{{ deal.name }}" style="font-size: 14px; font-weight: 600; text-decoration: none">{{ deal.name }}</a>
-                <span style="font-size: 13px; color: #64748b">{{ deal.company }}</span>
-                <span style="font-size: 13px; color: #0f172a">{{ deal.amount }}</span>
-                <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: #64748b">Stage
-                  <select data-control="Stage" data-field="stage" data-record="{{ deal.name }}" aria-label="Stage of {{ deal.name }}" style="flex: 1; min-width: 0; height: 30px; padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 8px; background-color: #ffffff; color: #0f172a; font-size: 13px;">
-                    <option value="proposal" selected>Proposal</option>
-                    <sc-if value="{{ deal.canWin }}" hint-placeholder-val="{{ true }}"><option value="won">Won</option></sc-if>
-                    <sc-if value="{{ deal.canLose }}" hint-placeholder-val="{{ true }}"><option value="lost">Lost</option></sc-if>
-                  </select>
-                </label>
-              </div>
+                  <div draggable="true" data-drag-record="{{ deal.name }}" class="ds-board-card">
+                    <a href="../deal-page/default.dc.html" data-record="{{ deal.name }}" class="ds-board-card__title">{{ deal.name }}</a>
+                    <span class="ds-board-card__meta">{{ deal.company }}</span>
+                    <span class="ds-board-card__value">{{ deal.amount }}</span>
+                    <label class="ds-board-card__field">Stage
+                      <select data-control="Stage" data-field="stage" data-record="{{ deal.name }}" aria-label="Stage of {{ deal.name }}" class="ds-select ds-select--small">
+                        <option value="proposal" selected>Proposal</option>
+                        <sc-if value="{{ deal.canWin }}" hint-placeholder-val="{{ true }}"><option value="won">Won</option></sc-if>
+                        <sc-if value="{{ deal.canLose }}" hint-placeholder-val="{{ true }}"><option value="lost">Lost</option></sc-if>
+                      </select>
+                    </label>
+                  </div>
                 </sc-if>
               </sc-for>
             </section>
-            <section data-control="Won column" data-drop-state="won" style="display: flex; flex-direction: column; gap: 12px; box-sizing: border-box; min-height: 400px; padding: 16px; border: 1px solid #e2e8f0; border-radius: 8px; background: #f8fafc;">
-              <h2 style="margin: 0; font-size: 14px; font-weight: 600; color: #0f172a">Won</h2>
+            <section data-control="Won column" data-drop-state="won" class="ds-board__column">
+              <h2 class="ds-board__heading">Won</h2>
               <sc-for list="{{ deals }}" as="deal">
                 <sc-if value="{{ deal.isWon }}">
-              <div draggable="true" data-drag-record="{{ deal.name }}" style="display: flex; flex-direction: column; gap: 8px; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; background: #ffffff; cursor: grab">
-                <a href="../deal-page/default.dc.html" data-record="{{ deal.name }}" style="font-size: 14px; font-weight: 600; text-decoration: none">{{ deal.name }}</a>
-                <span style="font-size: 13px; color: #64748b">{{ deal.company }}</span>
-                <span style="font-size: 13px; color: #0f172a">{{ deal.amount }}</span>
-              </div>
+                  <div draggable="true" data-drag-record="{{ deal.name }}" class="ds-board-card">
+                    <a href="../deal-page/default.dc.html" data-record="{{ deal.name }}" class="ds-board-card__title">{{ deal.name }}</a>
+                    <span class="ds-board-card__meta">{{ deal.company }}</span>
+                    <span class="ds-board-card__value">{{ deal.amount }}</span>
+                  </div>
                 </sc-if>
               </sc-for>
             </section>
-            <section data-control="Lost column" data-drop-state="lost" style="display: flex; flex-direction: column; gap: 12px; box-sizing: border-box; min-height: 400px; padding: 16px; border: 1px solid #e2e8f0; border-radius: 8px; background: #f8fafc;">
-              <h2 style="margin: 0; font-size: 14px; font-weight: 600; color: #0f172a">Lost</h2>
+            <section data-control="Lost column" data-drop-state="lost" class="ds-board__column">
+              <h2 class="ds-board__heading">Lost</h2>
               <sc-for list="{{ deals }}" as="deal">
                 <sc-if value="{{ deal.isLost }}">
-              <div draggable="true" data-drag-record="{{ deal.name }}" style="display: flex; flex-direction: column; gap: 8px; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; background: #ffffff; cursor: grab">
-                <a href="../deal-page/default.dc.html" data-record="{{ deal.name }}" style="font-size: 14px; font-weight: 600; text-decoration: none">{{ deal.name }}</a>
-                <span style="font-size: 13px; color: #64748b">{{ deal.company }}</span>
-                <span style="font-size: 13px; color: #0f172a">{{ deal.amount }}</span>
-              </div>
+                  <div draggable="true" data-drag-record="{{ deal.name }}" class="ds-board-card">
+                    <a href="../deal-page/default.dc.html" data-record="{{ deal.name }}" class="ds-board-card__title">{{ deal.name }}</a>
+                    <span class="ds-board-card__meta">{{ deal.company }}</span>
+                    <span class="ds-board-card__value">{{ deal.amount }}</span>
+                  </div>
                 </sc-if>
               </sc-for>
             </section>

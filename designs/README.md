@@ -72,4 +72,4 @@ Commands:
 - `pnpm design:lint` reports controls declared but not designed, designed but not declared, wrong `data-surface` values and missing directories.
 - `pnpm design -- --scenario "<name>"` records a narrated walkthrough to `design-output/<slug>/design.mp4` and writes `report.json` listing text mismatches.
 
-Artboards are published to a claude.ai design canvas and serve as the build reference. `ds/ledger/` holds the plain-CSS design system (`tokens.json`, `tokens.css`, `ds.css`); artboards link `../../ds/ledger/tokens.css` then `../../ds/ledger/ds.css` in `<head>` after the `support.js` line, and `pnpm ds:build` regenerates the app stylesheet from it.
+Artboards are published to a claude.ai design canvas and serve as the build reference. `ds/ledger/` holds the plain-CSS design system (`tokens.json`, generated `tokens.css`, `components/bundle.css`, a README and preview per component); artboards link `../../ds/ledger/tokens.css` then `../../ds/ledger/components/bundle.css` in `<head>` after the `support.js` line, and `pnpm ds:build` regenerates the app stylesheet from it.

@@ -1,0 +1,40 @@
+<!-- @dsCard height=288 -->
+<style>
+  body { margin: 0; }
+  .cover { position: relative; width: 960px; height: 288px; overflow: hidden; background: var(--ds-bg); }
+  .cover svg { position: absolute; inset: 0; }
+  .brand { fill: var(--ds-accent); }
+  .ink { fill: var(--ds-text); }
+  .good { fill: var(--ds-success); }
+  .soft { fill: var(--ds-accent-soft); }
+  .alert { fill: var(--ds-danger); }
+  .tile { rx: var(--ds-radius); }
+  .rule { stroke: var(--ds-border-strong); stroke-width: var(--ds-border-width); }
+  .text { position: absolute; left: var(--ds-space-8); bottom: var(--ds-space-6); width: 440px; }
+  .name { margin: 0; color: var(--ds-text); font-family: var(--font-sans); font-size: 120px; font-weight: var(--ds-weight-bold); line-height: 0.95; }
+  .tagline { margin: var(--ds-space-2) 0 0; color: var(--ds-text-muted); font-family: var(--font-sans); font-size: 14px; line-height: 20px; }
+</style>
+<div class="cover">
+  <svg width="960" height="288" viewBox="0 0 960 288" aria-hidden="true">
+    <!--
+      blocks: ds-accent 240x192 slab, ds-text 240x120, ds-success 240x96, ds-accent-soft 240x96, ds-danger 96x72 (24px steps)
+      arrangement: two columns of unequal slabs bleeding off the top and right edges
+      pattern: hairline ledger rules, because the system is a ruled-ledger CRM with 1px borders and no shadows
+      scales: rules ds-border-strong at ds-border-width on a 48px pitch; tiles cut by ds-radius
+    -->
+    <rect class="brand tile" x="480" y="-8" width="240" height="200" />
+    <rect class="ink tile" x="728" y="-8" width="240" height="128" />
+    <rect class="good tile" x="728" y="128" width="240" height="88" />
+    <rect class="soft tile" x="480" y="200" width="240" height="96" />
+    <rect class="alert tile" x="864" y="224" width="104" height="72" />
+    <line class="rule" x1="480" y1="48" x2="960" y2="48" />
+    <line class="rule" x1="480" y1="96" x2="960" y2="96" />
+    <line class="rule" x1="480" y1="144" x2="960" y2="144" />
+    <line class="rule" x1="480" y1="192" x2="960" y2="192" />
+    <line class="rule" x1="480" y1="240" x2="960" y2="240" />
+  </svg>
+  <div class="text">
+    <h1 class="name">Ledger</h1>
+    <p class="tagline">Plain CSS for CRM and invoicing.</p>
+  </div>
+</div>

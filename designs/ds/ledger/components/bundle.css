@@ -1,4 +1,8 @@
-/* Base */
+:root {
+  --ds-control-height: var(--ds-control-height-default);
+  --ds-control-font-size: var(--ds-text-md);
+}
+
 *,
 *::before,
 *::after {
@@ -9,13 +13,13 @@ body {
   margin: 0;
   background: var(--ds-bg);
   color: var(--ds-text);
-  font-family: var(--ds-font-family);
+  font-family: var(--font-sans);
   font-size: var(--ds-text-md);
   line-height: var(--ds-line-height);
 }
 
 a {
-  color: var(--ds-accent);
+  color: var(--ds-accent-ink);
 }
 
 a:hover {
@@ -56,7 +60,7 @@ input[type="date"]::-webkit-date-and-time-value {
 }
 
 :focus-visible {
-  outline: var(--ds-focus-ring);
+  outline: var(--ds-focus-ring-width) solid var(--ds-focus-ring);
   outline-offset: var(--ds-border-width);
 }
 
@@ -66,7 +70,7 @@ input[type="date"]::-webkit-date-and-time-value {
   min-height: 100vh;
   background: var(--ds-bg);
   color: var(--ds-text);
-  font-family: var(--ds-font-family);
+  font-family: var(--font-sans);
 }
 
 .ds-shell__body {
@@ -143,7 +147,7 @@ input[type="date"]::-webkit-date-and-time-value {
 
 .ds-nav-link[aria-current="page"] {
   background: var(--ds-accent-soft);
-  color: var(--ds-accent);
+  color: var(--ds-accent-ink);
   font-weight: var(--ds-weight-semibold);
 }
 
@@ -353,7 +357,7 @@ input[type="date"]::-webkit-date-and-time-value {
 }
 
 .ds-button--primary:hover {
-  background: var(--ds-accent-strong);
+  background: var(--ds-accent-hover);
   color: var(--ds-accent-text);
 }
 
@@ -369,7 +373,7 @@ input[type="date"]::-webkit-date-and-time-value {
 }
 
 .ds-button--ghost {
-  color: var(--ds-accent);
+  color: var(--ds-accent-ink);
 }
 
 .ds-button--ghost:hover {
@@ -514,7 +518,7 @@ input[type="date"]::-webkit-date-and-time-value {
   position: absolute;
   top: var(--ds-control-height-small);
   right: 0;
-  z-index: 10;
+  z-index: var(--ds-z-menu);
   display: flex;
   flex-direction: column;
   border: var(--ds-border-width) solid var(--ds-border);
@@ -550,7 +554,7 @@ input[type="date"]::-webkit-date-and-time-value {
 }
 
 .ds-dialog {
-  z-index: 11;
+  z-index: var(--ds-z-dialog);
   gap: var(--ds-space-2);
   width: var(--ds-dialog-width);
   padding: var(--ds-space-3);
@@ -599,7 +603,7 @@ input[type="date"]::-webkit-date-and-time-value {
 }
 
 .ds-link {
-  color: var(--ds-accent);
+  color: var(--ds-accent-ink);
   text-decoration: none;
 }
 

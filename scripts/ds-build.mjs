@@ -7,36 +7,88 @@ const system = join(root, "designs/ds/ledger");
 const appStylesheet = join(root, "apps/invoicing/assets/css/ds.css");
 
 const tokens = JSON.parse(readFileSync(join(system, "tokens.json"), "utf8"));
+const themeIds = tokens.color.themes.map((theme) => theme.id);
+const [firstTheme, ...laterThemes] = themeIds;
+const plainFamilies = Object.keys(tokens).filter(
+  (key) => !["name", "version", "color", "type", "shadow", "spacing", "radius"].includes(key),
+);
 
-function declarations(values, indent) {
-  return Object.entries(values)
-    .map(([name, value]) => `${indent}${name}: ${value};`)
-    .join("\n");
+function themeValue(token, theme) {
+  if (typeof token.value === "string") return theme === firstTheme ? token.value : undefined;
+  return token.value[theme];
 }
 
-function tokensCss({ light, dark }) {
-  return [
-    "/* Generated from tokens.json by scripts/ds-build.mjs */",
-    ":root {",
-    "  color-scheme: light;",
-    declarations(light, "  "),
-    "}",
-    "",
-    "@media (prefers-color-scheme: dark) {",
-    '  :root:not([data-theme="light"]) {',
-    "    color-scheme: dark;",
-    declarations(dark, "    "),
-    "  }",
-    "}",
-    "",
-    ':root[data-theme="dark"] {',
-    "  color-scheme: dark;",
-    declarations(dark, "  "),
-    "}",
-    "",
-  ].join("\n");
+function cssValue(value) {
+  const alias = /^\{(.+)\}$/.exec(value);
+  return alias ? `var(--${alias[1]})` : value;
 }
 
-const generatedTokens = tokensCss(tokens);
+function declaration(token, value, indent = "  ") {
+  return `${indent}--${token.name}: ${cssValue(value)};`;
+}
+
+function themedTokens() {
+  return [...tokens.color.tokens, ...(tokens.shadow?.tokens ?? [])];
+}
+
+function firstThemeBlock() {
+  const lines = themedTokens().map((token) =>
+    declaration(token, themeValue(token, firstTheme) ?? Object.values(token.value)[0]),
+  );
+  return [`:root, [data-theme="${firstTheme}"] {`, ...lines, "}"].join("\n");
+}
+
+function isOverride(token, theme) {
+  const value = themeValue(token, theme);
+  if (value === undefined) return false;
+  return value !== themeValue(token, firstTheme) || /^\{.+\}$/.test(value);
+}
+
+function laterThemeBlock(theme) {
+  const lines = themedTokens()
+    .filter((token) => isOverride(token, theme))
+    .map((token) => declaration(token, themeValue(token, theme)));
+  return [`[data-theme="${theme}"] {`, ...lines, "}"].join("\n");
+}
+
+function plainBlock() {
+  const lines = [
+    ...tokens.spacing.tokens,
+    ...tokens.radius.tokens,
+    ...plainFamilies.flatMap((family) => tokens[family].tokens),
+  ].map((token) => declaration(token, token.value));
+  const fonts = Object.entries(tokens.type.families).map(
+    ([key, stack]) => `  --font-${key}: ${stack};`,
+  );
+  return [":root {", ...lines, ...fonts, "}"].join("\n");
+}
+
+function styleClasses() {
+  return tokens.type.groups.flatMap((group) =>
+    group.styles.map((style) =>
+      [
+        `.${style.name} {`,
+        `  font-family: var(--font-${group.family});`,
+        `  font-size: ${style.fontSize};`,
+        `  line-height: ${style.lineHeight};`,
+        `  font-weight: ${style.fontWeight};`,
+        "}",
+      ].join("\n"),
+    ),
+  );
+}
+
+const generatedTokens =
+  [
+    `/* ${tokens.name} — generated from tokens.json */`,
+    firstThemeBlock(),
+    ...laterThemes.map(laterThemeBlock),
+    plainBlock(),
+    ...styleClasses(),
+  ].join("\n") + "\n";
+
 writeFileSync(join(system, "tokens.css"), generatedTokens);
-writeFileSync(appStylesheet, generatedTokens + "\n" + readFileSync(join(system, "ds.css"), "utf8"));
+writeFileSync(
+  appStylesheet,
+  generatedTokens + "\n" + readFileSync(join(system, "components/bundle.css"), "utf8"),
+);

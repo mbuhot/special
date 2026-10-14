@@ -11,7 +11,7 @@ Design comments are not part of this command. A comment on the canvas is answere
 
 ## Pass 1: pull and propose
 
-1. Pull. For each canvas, read `project/canvas.json`, then every `project/<project>/<surface-slug>/<state>.dc.html` it lists, and write each byte for byte to `designs/<project>/<surface-slug>/<state>.dc.html`. Never format these files. Report boards whose path is not three segments under `project/`. List local artboards the canvas no longer has; delete them only after the user confirms.
+1. Pull. For each canvas, read `project/canvas.json`, then every `project/<project>/<surface-slug>/<state>.dc.html` it lists, and write each byte for byte to `designs/<project>/<surface-slug>/<state>.dc.html`. Never format these files. Also pull every file under `project/ds/<folder>/` byte for byte into `designs/ds/<folder>/`, then run `pnpm ds:build` so the app stylesheet follows the design system. For each record in the index's `designSystems`, compare its `version` with the design system artifact's current version; when it is behind, report "design system update available" (a designer reinstalls it on the canvas; the sync never edits the system). Report boards whose path is not three segments under `project/`. List local artboards the canvas no longer has; delete them only after the user confirms.
 2. Show the design change: `git diff --stat designs/`, and per artboard the `data-control` names added and removed (`git diff -U0 designs/ | grep data-control`).
 3. Apply the mechanical spec changes, which need no approval:
    - a control added to an artboard: declare it on the surface line in `specs/<project>/surfaces.md` and add its locator to the surface map in `dialects/<project>.ts`;
@@ -23,7 +23,7 @@ Design comments are not part of this command. A comment on the canvas is answere
    - each control on a surface that no artboard has any more: whether to drop it from the spec or restore it in the design. Do not guess.
    - model, policy, derived or invariant changes the design implies (a new field shown, a new action offered).
    Write the drafts to `docs/proposals/design-sync-<date>.md`, one section per change, each with the file it would change and the exact text.
-5. Run `pnpm bind` and fix only mechanical errors. Commit the designs and the mechanical spec changes in two commits with explicit `git add`; commit the proposal file.
+5. Run `pnpm bind` and fix only mechanical errors. Commit the designs and the mechanical spec changes in two commits (the first includes `designs/ds/` and the regenerated `apps/invoicing/assets/css/ds.css`) with explicit `git add`; commit the proposal file.
 6. Report and stop: artboards changed; mechanical changes applied; the proposal file with a one-line summary of each proposed change. Ask the user to review the proposal and run `/design-sync approved` (or edit the proposal first).
 
 ## Pass 2: apply the approved proposal
